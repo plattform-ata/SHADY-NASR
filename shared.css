@@ -6144,7 +6144,7 @@ html[dir="ltr"] .home-ann__chev { transform: scaleX(-1); }
 .ad-count.is-near { color: #c0392b; }
 @media (max-width: 520px) { .ad-form .form-row { grid-template-columns: minmax(0, 1fr); } }
 .ad-form .ad-actions .btn { min-height: 46px; }
-@media (max-width: 640px) { .ad-form .ad-actions .btn { flex: 1 1 100%; } }
+@media (max-width: 640px) { .ad-form .ad-actions .btn { flex: 0 0 auto; width: 100%; } }
 
 
 /* ===== مركز الإعدادات (لوحة الطالب) ===== */
