@@ -1,6427 +1,2685 @@
 /* ==========================================================================
-   Bloom English — Design Tokens
-   Palette: Deep Berry (primary) / Vanilla Cloud (surface-light) / Sunset (accent)
-   Concept: language skills "ripening" — berry-dark depth meeting warm sunset light
+   shared.js — logica UI condivisa (tema, lingua, form password, auth steps)
+   Le chiamate reali a Firebase / EmailJS vanno agganciate dove indicato TODO.
    ========================================================================== */
 
-:root {
-  color-scheme: light;
+/* --- لو المستخدم مسجّل دخول بالفعل وفتح الصفحة الرئيسية (index.html)، نوجّهه فورًا
+   للوحة تحكمه (studenti.html أو admin.html) بدل ما يشوف صفحة الهبوط تاني في كل مرة.
+   الفحص بيتنفّذ فورًا (مش جوه DOMContentLoaded) عشان يحصل أسرع ما يمكن ويقلل ومضة
+   ظهور صفحة index قبل التحويل. */
+/* حماية الصفحات اللي قبل الدخول بقت في auth.js */
 
-  /* --- Brand palette: مستخرجة من اللوجو (تركواز + كريمي) ---
-     ملحوظة: أسماء المتغيرات القديمة (berry / vanilla / sunset) اتسابت زي ما هي
-     عشان باقي الكود يفضل شغال، لكن قيمها دلوقتي من ألوان اللوجو:
-     berry   = درجات التركواز الغامق (للنص والعناوين)
-     vanilla = الكريمي الدافي (الخلفية)
-     sunset  = التركواز الأساسي (الأزرار والعنصر النشط) */
-  --berry-950: #0f2d35;
-  --berry-900: #17404b;
-  --berry-800: #1d5260;
-  --berry-700: #25687a;
-  --berry-500: #3c90a8;
+/* --- Tema chiaro/scuro --- */
+function initTheme() {
+  const root = document.documentElement;
+  const saved = localStorage.getItem("theme");
+  if (saved) root.setAttribute("data-theme", saved);
 
-  --vanilla: #f4eee0;
-  --vanilla-dim: #e8e1ce;
-
-  --sunset-500: #2c8097;
-  --sunset-600: #226a7e;
-  --sunset-300: #8fcfd2;
-
-  /* --- Semantic tokens: LIGHT mode --- */
-  --bg: var(--vanilla);
-  --bg-soft: var(--vanilla-dim);
-  --ink: var(--berry-950);
-  --ink-soft: #4d6a71;
-  --surface-glass: #fbf8ef;
-  --surface-glass-border: rgba(15, 45, 53, 0.14);
-  --surface-glass-shadow: transparent;
-  --brand: var(--berry-800);
-  --brand-strong: var(--berry-950);
-  --accent: var(--sunset-500);
-  --accent-ink: #ffffff;
-  --blob-a: var(--berry-700);
-  --blob-b: var(--sunset-300);
-  --overlay: rgba(11, 33, 40, 0.5);
-
-  /* --- Type --- */
-  --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
-  --font-body: "Tajawal", "Cairo", system-ui, sans-serif;
-
-  /* --- Scale & shape --- */
-  --radius-lg: 22px;
-  --radius-md: 14px;
-  --radius-pill: 999px;
-  --container: 1180px;
-  --nav-h: 76px;
-  --blur: 0px;
-
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  const btns = document.querySelectorAll(".theme-btn");
+  if (!btns.length) return;
+  btns.forEach((btn) => {
+    if (btn.dataset.themeBound) return; // منع الربط المزدوج (كان بيخلّي الزرار يبدّل مرتين ويرجع زي ما كان)
+    btn.dataset.themeBound = "1";
+    btn.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+    });
+  });
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0f2b33;
-  --bg-soft: #0b2128;
-  --ink: var(--vanilla);
-  --ink-soft: #a9c4c8;
-  --surface-glass: #173b45;
-  --surface-glass-border: rgba(244, 238, 224, 0.15);
-  --surface-glass-shadow: transparent;
-  --brand: var(--vanilla);
-  --brand-strong: #ffffff;
-  --sunset-500: #5fb8c4;
-  --sunset-600: #4aa3b0;
-  --accent: var(--sunset-500);
-  --accent-ink: #0b2128;
-  --blob-a: var(--berry-700);
-  --blob-b: #1d5260;
-  --overlay: rgba(0, 0, 0, 0.62);
+/* --- Lingua AR/EN: dizionario i18n + swap testi/dir/lang --- */
+const I18N = {
+  ar: {
+    skip_link: "تخطى إلى المحتوى",
+    nav_home: "الرئيسية",
+    nav_prep: "الإعدادية",
+    nav_secondary: "الثانوية",
+    nav_teacher: "الأستاذ",
+    lang_aria: "تغيير اللغة",
+    theme_aria: "تغيير المظهر",
+    menu_theme_title: "تغيير المظهر",
+    menu_theme_sub: "فاتح أو غامق",
+    menu_lang_title: "تغيير اللغة",
+    login_btn: "تسجيل الدخول",
+    start_free_btn: "ابدأ مجانًا",
+    hero_eyebrow: "منصة تعليم اللغة الإنجليزية",
+    hero_title: 'اتعلم إنجليزي صح مع <em>الأستاذ Shady Nasr</em>',
+    hero_desc: "دروس تفاعلية لكل مراحل الإعدادي والثانوي، بمتابعة مباشرة وتمارين وامتحانات تتابع مستواك خطوة بخطوة.",
+    hero_cta_start: "ابدأ دلوقتي",
+    hero_cta_view: "شوف الفصول الدراسية",
+    hero_card_title: "متابعة أسبوعية لمستواك",
+    hero_card_desc: "كل ما تخلّص درس وتحل الامتحان بتاعه، بنحدّثلك تقدمك أول بأول",
+    progress_grammar: "القواعد",
+    progress_vocab: "المفردات",
+    progress_listening: "الاستماع",
+    video_play_aria: "تشغيل الفيديو",
+    video_badge: "فيديو تعريفي",
+    teacher_eyebrow: "مين الأستاذ بتاعك",
+    teacher_role: "مدرّس لغة إنجليزية — إعدادي وثانوي",
+    teacher_bio: "بخبرة سنين في تبسيط قواعد اللغة الإنجليزية للطلبة، وبناء منهج تفاعلي يوصل الفكرة من غير تعقيد، مع متابعة لصفحة كل طالب لحد ما يوصل لمستوى ممتاز.",
+    badge_1: "منهج مبسّط لكل المراحل الدراسية",
+    badge_2: "فيديوهات شرح ودروس PDF لكل درس",
+    badge_3: "امتحانات تفاعلية ومتابعة أسبوعية",
+    join_btn: "انضم للمنصة",
+    stats_eyebrow: "بالأرقام",
+    stats_title: "منصة بيثق فيها آلاف الطلبة",
+    stat_students: "طالب مسجّل",
+    stat_success: "نسبة نجاح الطلبة",
+    stat_experience: "سنوات خبرة",
+    stat_satisfaction: "نسبة رضا أولياء الأمور",
+    prep_eyebrow: "المرحلة الإعدادية",
+    choose_grade_title: "اختار صفك الدراسي",
+    prep_desc: "كل صف فيه دروس وفيديوهات وامتحانات مخصّصة — دوس على صفك عشان تشوف المحتوى",
+    prep1_title: "الصف الأول الإعدادي",
+    prep1_desc: "الأساسيات: القواعد والمفردات الأولى في رحلتك مع الإنجليزي",
+    prep2_title: "الصف الثاني الإعدادي",
+    prep2_desc: "قواعد أعمق وقصص قراءة تبني حصيلتك اللغوية",
+    prep3_title: "الصف الثالث الإعدادي",
+    prep3_desc: "مراجعة شاملة واستعداد كامل لامتحان الشهادة الإعدادية",
+    view_lessons: "شوف الدروس",
+    secondary_eyebrow: "المرحلة الثانوية",
+    secondary_desc: "نفس نظام الدروس والامتحانات، بمستوى مناسب لكل سنة ثانوي",
+    sec1_title: "الصف الأول الثانوي",
+    sec1_desc: "بداية مرحلة جديدة بمستوى أعلى من القواعد والتعبير",
+    sec2_title: "الصف الثاني الثانوي",
+    sec2_desc: "تعميق المهارات استعدادًا للسنة النهائية",
+    sec3_title: "الصف الثالث الثانوي",
+    sec3_desc: "مراجعة نهائية شاملة واستعداد كامل للامتحان النهائي",
+    footer_text: "© 2026 Shady Nasr English Platform. كل الحقوق محفوظة.",
+    footer_desc: "تم تصميم هذه المنصة عشان تساعد الطالب على إتقان اللغة الإنجليزية في كل مراحل الإعدادي والثانوي.",
+    footer_pages_title: "الصفحات",
+    footer_help: "المساعدة",
+    footer_register: "انشاء حساب جديد",
+    footer_social_title: "السوشيال ميديا",
+    footer_facebook: "فيسبوك",
+    footer_instagram: "انستجرام",
+    footer_youtube: "يوتيوب",
+
+    promo_eyebrow: "مواعيد الحصص والسناتر",
+    promo_title: "حمل جدول المواعيد الكامل أو استعرض المواعيد المتاحة",
+    promo_desc: "تعرف على أوقات وأماكن التواجد في جميع السناتر لكل المراحل الدراسية.",
+    promo_btn_schedule: "جدول المواعيد",
+    promo_btn_contact: "حجز واستفسار",
+    install_app_btn: "حمّل التطبيق",
+    back_home: "الرئيسية",
+
+    schedule_title: "مواعيد الصفوف الدراسية",
+    schedule_desc: "يمكنك استعراض الجدول، اضغط عليه لتكبيره أو حمله مباشرة على جهازك",
+    schedule_file_name: "جدول مواعيد مستر شادي نصر",
+    schedule_download_btn: "تحميل جدول المواعيد PDF / صورة",
+    lightbox_close_aria: "إغلاق",
+    centers_schedule_title: "مواعيد كل سنتر على حدة",
+    centers_schedule_desc: "اختار السنتر القريب منك وشوف الصفوف والمواعيد المتاحة فيه",
+
+    contact_eyebrow: "لنبدأ بالتواصل المباشر",
+    contact_title: "لديك استفسار؟<br />تواصل معنا بسهولة.",
+    contact_desc: "شاركنا استفسارك أو المرحلة الدراسية المهتم بها، وسنرد عليك بكافة التفاصيل والمواعيد المتاحة في السناتر.",
+    field_fullname_placeholder: "الاسم بالكامل",
+    field_inquiry: "أخبرنا عن الاستفسار",
+    field_inquiry_placeholder: "ما الذي تريد الاستفسار عنه؟ (السناتر، المواعيد، الأونلاين...)",
+    contact_submit_btn: "إرسال التفاصيل عبر واتساب",
+    contact_submit_hint: "بالضغط على إرسال ستفتح رسالة واتساب جاهزة بالتفاصيل اللي أدخلتها.",
+    contact_wa_greeting: "السلام عليكم، أنا",
+    contact_wa_grade: "الصف الدراسي",
+    contact_wa_inquiry: "الاستفسار",
+
+    page_title_login: "تسجيل الدخول — Shady Nasr English Platform",
+    auth_title_login: "أهلاً بيك تاني",
+    auth_title_register: "ابدأ رحلتك معنا",
+    auth_subtitle: "سجّل دخولك عشان تكمّل دروسك",
+    auth_tab_login: "تسجيل الدخول",
+    auth_tab_register: "إنشاء حساب",
+    field_email: "البريد الإلكتروني",
+    field_password: "كلمة المرور",
+    field_fullname: "الاسم بالكامل",
+    field_age: "السن",
+    field_grade: "الصف الدراسي",
+    field_gender: "النوع",
+    gender_male: "ذكر",
+    gender_female: "أنثى",
+    option_choose_grade: "اختر الصف",
+    hint_min_chars: "6 أحرف على الأقل",
+    btn_continue: "متابعة",
+    btn_create_account: "إنشاء الحساب",
+    btn_back: "رجوع",
+    btn_confirm_code: "تأكيد الكود",
+    btn_resend: "إعادة الإرسال",
+    otp_title: "أدخل كود التحقق",
+    otp_subtitle_login: "بعتنالك كود مكوّن من 6 أرقام على إيميلك",
+    otp_subtitle_register: "أكّد إيميلك بالكود اللي وصلك عشان تفعّل حسابك",
+    otp_not_received: "مستلمتش الكود؟",
+    otp_resend_success: "تمت إعادة الإرسال",
+    otp_spam_hint: "لو الكود مجاش، دوّر عليه في فولدر الرسائل غير المرغوب فيها (Spam)، لأن كود تسجيل الدخول ممكن يوصل هناك بس.",
+    forgot_link: "نسيت كلمة المرور؟",
+    forgot_title: "استعادة كلمة المرور",
+    forgot_subtitle: "اكتب الإيميل اللي مسجّل بيه وهنبعتلك كود تحقق",
+    forgot_send_code: "إرسال الكود",
+    forgot_otp_subtitle: "بعتنالك كود مكوّن من 6 أرقام على إيميلك لاستعادة كلمة المرور",
+    forgot_spam_hint: "لو الكود مجاش، دوّر عليه في فولدر الرسائل غير المرغوب فيها (Spam).",
+    forgot_new_title: "كلمة المرور الجديدة",
+    forgot_new_subtitle: "اكتب كلمة المرور الجديدة وأكّدها",
+    field_new_password: "كلمة المرور الجديدة",
+    field_confirm_password: "تأكيد كلمة المرور",
+    btn_save_password: "حفظ ودخول المنصة",
+    reset_err_not_found: "الإيميل ده مش مسجّل عندنا على المنصة",
+    reset_err_admin: "الحساب ده مش متاح له استعادة كلمة المرور من هنا",
+    reset_err_send: "تعذر إرسال الكود، حاول تاني بعد لحظات",
+    reset_err_code_len: "اكتب الكود كامل (6 أرقام)",
+    reset_err_expired: "الكود منتهي الصلاحية، اضغط إعادة الإرسال",
+    reset_err_wrong: "الكود غلط، حاول تاني",
+    reset_err_too_many: "محاولات كتير غلط. اطلب كود جديد بالضغط على إعادة الإرسال",
+    reset_err_no_otp: "مفيش كود صالح، اضغط إعادة الإرسال",
+    reset_err_short: "كلمة المرور لازم تكون 6 أحرف على الأقل",
+    reset_err_mismatch: "كلمتا المرور مش متطابقتين",
+    reset_err_generic: "حصل خطأ، حاول تاني",
+    brand_update_msg: "فيه تحديث جديد للمنصة (الاسم / اللوجو)",
+    brand_update_btn: "تحديث",
+    success_title: "تم تسجيل الدخول بنجاح",
+    success_subtitle: "جاري تحويلك للمنصة...",
+    aria_show_password: "إظهار كلمة المرور",
+  },
+  en: {
+    skip_link: "Skip to content",
+    nav_home: "Home",
+    nav_prep: "Prep Stage",
+    nav_secondary: "Secondary Stage",
+    nav_teacher: "Teacher",
+    lang_aria: "Change language",
+    theme_aria: "Toggle theme",
+    menu_theme_title: "Toggle theme",
+    menu_theme_sub: "Light or dark",
+    menu_lang_title: "Change language",
+    login_btn: "Log In",
+    start_free_btn: "Start Free",
+    hero_eyebrow: "English Language Learning Platform",
+    hero_title: 'Learn English right with <em>Mr. Shady Nasr</em>',
+    hero_desc: "Interactive lessons for every prep and secondary stage, with live tracking, exercises, and exams that follow your progress step by step.",
+    hero_cta_start: "Get Started Now",
+    hero_cta_view: "View the Classes",
+    hero_card_title: "Weekly Progress Tracking",
+    hero_card_desc: "As soon as you finish a lesson and its exam, we update your progress right away",
+    progress_grammar: "Grammar",
+    progress_vocab: "Vocabulary",
+    progress_listening: "Listening",
+    video_play_aria: "Play video",
+    video_badge: "Intro Video",
+    teacher_eyebrow: "Meet Your Teacher",
+    teacher_role: "English Language Teacher — Prep & Secondary",
+    teacher_bio: "With years of experience simplifying English grammar for students, building an interactive curriculum that delivers ideas without complexity, and tracking every student's page until they reach an excellent level.",
+    badge_1: "Simplified curriculum for every school stage",
+    badge_2: "Explanation videos and PDF lessons for every lesson",
+    badge_3: "Interactive exams and weekly tracking",
+    join_btn: "Join the Platform",
+    stats_eyebrow: "By the Numbers",
+    stats_title: "A platform trusted by thousands of students",
+    stat_students: "Registered Students",
+    stat_success: "Student Success Rate",
+    stat_experience: "Years of Experience",
+    stat_satisfaction: "Parent Satisfaction Rate",
+    prep_eyebrow: "Prep Stage",
+    choose_grade_title: "Choose Your Grade",
+    prep_desc: "Every grade has dedicated lessons, videos, and exams — tap your grade to see the content",
+    prep1_title: "1st Prep Grade",
+    prep1_desc: "The basics: grammar and your first vocabulary in your English journey",
+    prep2_title: "2nd Prep Grade",
+    prep2_desc: "Deeper grammar and reading stories that build your vocabulary",
+    prep3_title: "3rd Prep Grade",
+    prep3_desc: "Comprehensive review and full preparation for the prep certificate exam",
+    view_lessons: "View Lessons",
+    secondary_eyebrow: "Secondary Stage",
+    secondary_desc: "The same lesson and exam system, at a level suited to every secondary year",
+    sec1_title: "1st Secondary Grade",
+    sec1_desc: "The start of a new stage with a higher level of grammar and expression",
+    sec2_title: "2nd Secondary Grade",
+    sec2_desc: "Deepening skills in preparation for the final year",
+    sec3_title: "3rd Secondary Grade",
+    sec3_desc: "Final comprehensive review and full preparation for the final exam",
+    footer_text: "© 2026 Shady Nasr English Platform. All rights reserved.",
+    footer_desc: "This platform is designed to help students master English across every prep and secondary stage.",
+    footer_pages_title: "Pages",
+    footer_help: "Help",
+    footer_register: "Create New Account",
+    footer_social_title: "Social Media",
+    footer_facebook: "Facebook",
+    footer_instagram: "Instagram",
+    footer_youtube: "YouTube",
+
+    promo_eyebrow: "Class & Center Schedule",
+    promo_title: "Download the Full Schedule or Browse Available Times",
+    promo_desc: "See the times and locations of every center, for all school stages.",
+    promo_btn_schedule: "View Schedule",
+    promo_btn_contact: "Book & Inquire",
+    install_app_btn: "Install App",
+    back_home: "Home",
+
+    schedule_title: "Class Schedule",
+    schedule_desc: "Browse the schedule — click it to zoom in or download it to your device",
+    schedule_file_name: "Mr. Shady Nasr's Schedule",
+    schedule_download_btn: "Download Schedule PDF / Image",
+    lightbox_close_aria: "Close",
+    centers_schedule_title: "Schedule for Each Center",
+    centers_schedule_desc: "Pick the center closest to you and see its grades and available times",
+
+    contact_eyebrow: "Let's Talk Directly",
+    contact_title: "Have a question?<br />Get in touch easily.",
+    contact_desc: "Tell us what you'd like to know or which grade you're interested in, and we'll reply with all the details and available times at our centers.",
+    field_fullname_placeholder: "Full name",
+    field_inquiry: "Tell us about your inquiry",
+    field_inquiry_placeholder: "What would you like to ask about? (centers, schedule, online classes...)",
+    contact_submit_btn: "Send via WhatsApp",
+    contact_submit_hint: "Tapping send will open a ready-made WhatsApp message with the details you entered.",
+    contact_wa_greeting: "Hello, I'm",
+    contact_wa_grade: "Grade",
+    contact_wa_inquiry: "Inquiry",
+
+    page_title_login: "Login — Shady Nasr English Platform",
+    auth_title_login: "Welcome Back",
+    auth_title_register: "Start Your Journey With Us",
+    auth_subtitle: "Log in to continue your lessons",
+    auth_tab_login: "Log In",
+    auth_tab_register: "Create Account",
+    field_email: "Email",
+    field_password: "Password",
+    field_fullname: "Full Name",
+    field_age: "Age",
+    field_grade: "Grade",
+    field_gender: "Gender",
+    gender_male: "Male",
+    gender_female: "Female",
+    option_choose_grade: "Choose Your Grade",
+    hint_min_chars: "At least 6 characters",
+    btn_continue: "Continue",
+    btn_create_account: "Create Account",
+    btn_back: "Back",
+    btn_confirm_code: "Confirm Code",
+    btn_resend: "Resend",
+    otp_title: "Enter Verification Code",
+    otp_subtitle_login: "We sent a 6-digit code to your email",
+    otp_subtitle_register: "Confirm your email with the code you received to activate your account",
+    otp_not_received: "Didn't receive the code?",
+    otp_resend_success: "Sent again",
+    otp_spam_hint: "If the code doesn't show up, check your Spam/Junk folder — the login code email may land there only.",
+    forgot_link: "Forgot password?",
+    forgot_title: "Reset Password",
+    forgot_subtitle: "Enter the email you registered with and we'll send you a verification code",
+    forgot_send_code: "Send Code",
+    forgot_otp_subtitle: "We sent a 6-digit code to your email to reset your password",
+    forgot_spam_hint: "If the code doesn't show up, check your Spam/Junk folder.",
+    forgot_new_title: "New Password",
+    forgot_new_subtitle: "Enter your new password and confirm it",
+    field_new_password: "New password",
+    field_confirm_password: "Confirm password",
+    btn_save_password: "Save & Enter Platform",
+    reset_err_not_found: "This email is not registered on the platform",
+    reset_err_admin: "Password reset isn't available for this account here",
+    reset_err_send: "Couldn't send the code, please try again in a moment",
+    reset_err_code_len: "Enter the full code (6 digits)",
+    reset_err_expired: "The code has expired, press Resend",
+    reset_err_wrong: "Wrong code, try again",
+    reset_err_too_many: "Too many wrong attempts. Request a new code with Resend",
+    reset_err_no_otp: "No valid code found, press Resend",
+    reset_err_short: "Password must be at least 6 characters",
+    reset_err_mismatch: "Passwords don't match",
+    reset_err_generic: "Something went wrong, try again",
+    brand_update_msg: "A new platform update is available (name / logo)",
+    brand_update_btn: "Update",
+    success_title: "Logged In Successfully",
+    success_subtitle: "Redirecting you to the platform...",
+    aria_show_password: "Show password",
+  },
+};
+
+/* Restituisce il testo tradotto per la lingua corrente (fallback: arabo) */
+function t(key) {
+  const lang = document.documentElement.lang === "en" ? "en" : "ar";
+  return (I18N[lang] && I18N[lang][key]) || (I18N.ar && I18N.ar[key]) || key;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
+function applyTranslations(lang) {
+  const dict = I18N[lang] || I18N.ar;
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (dict[key] == null) return;
+    if (el.hasAttribute("data-i18n-html")) el.innerHTML = dict[key];
+    else el.textContent = dict[key];
+  });
+
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (dict[key] != null) el.setAttribute("aria-label", dict[key]);
+  });
+
+  document.querySelectorAll("[data-i18n-label]").forEach((el) => {
+    const key = el.dataset.i18nLabel;
+    if (dict[key] != null) el.label = dict[key];
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (dict[key] != null) el.setAttribute("placeholder", dict[key]);
+  });
+
+  // Ricostruisce i pannelli delle custom-select con i testi nella lingua nuova.
+  document.querySelectorAll("[data-custom-select]").forEach((wrapper) => {
+    if (wrapper._refreshCustomSelect) wrapper._refreshCustomSelect();
+  });
+
+  // Ridisegna i carousel dei sub-item già aperti/generati con la lingua corrente.
+  document.querySelectorAll(".grade-carousel__track").forEach((track) => {
+    if (track.dataset.populated) populateCarousel(track);
+  });
+
+  // Titolo h1 della pagina di login (dipende anche dal tab attivo) e sottotitolo OTP dinamico.
+  if (document.getElementById("authTitle")) updateAuthTitle();
+  const otpSubtitle = document.getElementById("otpSubtitle");
+  if (otpSubtitle) otpSubtitle.textContent = t(`otp_subtitle_${authOtpFlow}`);
+
+  // إعادة رسم جداول السناتر باللغة الجديدة
+  if (document.getElementById("centersScheduleGrid")) renderCentersSchedule();
+}
+
+function applyLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll(".lang-btn .lang-code").forEach((el) => {
+    el.textContent = lang === "ar" ? "EN" : "AR";
+  });
+  applyTranslations(lang);
+}
+
+/* Aggiorna il titolo h1 dello step credenziali in base al tab attivo + lingua corrente */
+function updateAuthTitle() {
+  const titleEl = document.getElementById("authTitle");
+  if (!titleEl) return;
+  const activeTab = document.querySelector(".auth-tab.is-active");
+  const tabName = activeTab ? activeTab.dataset.tab : "login";
+  titleEl.textContent = t(tabName === "register" ? "auth_title_register" : "auth_title_login");
+}
+
+/* Traccia se lo step OTP corrente appartiene al flusso login o register, per ri-tradurlo al volo */
+let authOtpFlow = "login";
+
+function initLang() {
+  const saved = localStorage.getItem("lang");
+  if (saved) applyLanguage(saved);
+
+  const btns = document.querySelectorAll(".lang-btn");
+  if (!btns.length) return;
+  btns.forEach((btn) => {
+    if (btn.dataset.langBound) return; // منع الربط المزدوج
+    btn.dataset.langBound = "1";
+    btn.addEventListener("click", () => {
+      const next = document.documentElement.lang === "ar" ? "en" : "ar";
+      applyLanguage(next);
+      localStorage.setItem("lang", next);
+    });
+  });
+}
+
+/* --- Custom select: dropdown personalizzato per <select data-enhance> (stile coerente col sito) --- */
+function buildCustomSelectUI(select) {
+  const wrapper = select.closest("[data-custom-select]");
+  if (!wrapper || wrapper.querySelector(".custom-select__trigger")) return;
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "custom-select__trigger";
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.tabIndex = -1; // la tastiera/accessibilità restano sul <select> reale
+
+  trigger.innerHTML =
+    '<span class="custom-select__value"></span>' +
+    '<svg class="custom-select__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
+  const valueSpan = trigger.querySelector(".custom-select__value");
+
+  const panel = document.createElement("ul");
+  panel.className = "custom-select__panel";
+  panel.setAttribute("role", "listbox");
+  panel.hidden = true;
+
+  // نفس سلوك الـ select الحقيقي: input ثم change (لوحة الأدمن بتسمع على input)
+  function choose(value) {
+    if (select.value === value) return;
+    nativeSet(value);
+    syncValue();
+    select.dispatchEvent(new Event("input", { bubbles: true }));
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function appendOption(opt) {
+    const li = document.createElement("li");
+    li.className = "custom-select__option";
+    li.setAttribute("role", "option");
+    li.dataset.value = opt.value;
+    li.textContent = opt.textContent;
+    li.addEventListener("click", () => {
+      choose(opt.value);
+      closePanel();
+    });
+    panel.appendChild(li);
+  }
+
+  function renderOptions() {
+    panel.innerHTML = "";
+    Array.from(select.children).forEach((node) => {
+      if (node.tagName === "OPTGROUP") {
+        const groupLabel = document.createElement("li");
+        groupLabel.className = "custom-select__group";
+        groupLabel.textContent = node.label;
+        panel.appendChild(groupLabel);
+        Array.from(node.children).forEach(appendOption);
+      } else if (node.tagName === "OPTION" && !(node.disabled && !node.value)) {
+        appendOption(node); // بنتخطى بس الـ placeholder المعطّل (القيمة الفاضية المسموحة زي "كل الصفوف" بتظهر)
+      }
+    });
+  }
+
+  function syncValue() {
+    const selectedOption = select.options[select.selectedIndex];
+    valueSpan.textContent = selectedOption ? selectedOption.textContent : "";
+    valueSpan.classList.toggle("is-placeholder", !select.value);
+    panel.querySelectorAll(".custom-select__option").forEach((li) => {
+      li.classList.toggle("is-selected", li.dataset.value === select.value);
+    });
+  }
+
+  // على الموبايل (للقوائم المعلّمة data-sheet) القايمة بتفتح كنافذة بتصميم المنصة بدل قايمة معلّقة
+  function useSheet() {
+    return wrapper.hasAttribute("data-sheet") && window.snDialog && window.snDialog.pick &&
+      window.matchMedia && window.matchMedia("(max-width: 700px)").matches;
+  }
+  function labelText() {
+    const l = select.id && document.querySelector('label[for="' + select.id + '"]');
+    return (l && l.textContent.trim()) || select.getAttribute("aria-label") || "";
+  }
+
+  function openPanel() {
+    if (useSheet()) {
+      const items = Array.from(panel.querySelectorAll(".custom-select__option")).map((li) => ({ value: li.dataset.value, label: li.textContent }));
+      trigger.setAttribute("aria-expanded", "true");
+      window.snDialog.pick({ title: labelText(), options: items, value: select.value }).then((v) => {
+        trigger.setAttribute("aria-expanded", "false");
+        if (v != null) choose(v);
+      });
+      return;
+    }
+    panel.hidden = false;
+    wrapper.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+  }
+  function closePanel() {
+    panel.hidden = true;
+    wrapper.classList.remove("is-open");
+    trigger.setAttribute("aria-expanded", "false");
+  }
+
+  trigger.addEventListener("click", () => {
+    if (panel.hidden) openPanel();
+    else closePanel();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrapper.contains(e.target)) closePanel();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanel();
+  });
+
+  // لما الكود يغيّر select.value أو الـ options برمجيًا، الشكل لازم يتحدّث
+  const valueDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+  function nativeSet(v) { valueDesc.set.call(select, v); }
+  try {
+    Object.defineProperty(select, "value", {
+      configurable: true,
+      get() { return valueDesc.get.call(select); },
+      set(v) { valueDesc.set.call(select, v); syncValue(); },
+    });
+  } catch (e) { /* مش مشكلة: التحديث هيحصل مع أول change */ }
+  try {
+    new MutationObserver(() => { renderOptions(); syncValue(); }).observe(select, { childList: true, subtree: true });
+  } catch (e) {}
+  select.addEventListener("change", syncValue);
+  select.addEventListener("blur", closePanel);
+
+  renderOptions();
+  syncValue();
+
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(panel);
+
+  // Richiamata quando le traduzioni cambiano lingua (i testi delle option/optgroup sono già aggiornati)
+  wrapper._refreshCustomSelect = () => {
+    renderOptions();
+    syncValue();
+  };
+}
+
+function initCustomSelects() {
+  document.querySelectorAll("select[data-enhance]").forEach((select) => {
+    // select مش جوه غلاف: نلفّه بنفسنا (لوحة الأدمن) ونفتحه كنافذة على الموبايل
+    if (!select.closest("[data-custom-select]")) {
+      const wrap = document.createElement("div");
+      wrap.className = "custom-select custom-select--auto";
+      wrap.setAttribute("data-custom-select", "");
+      wrap.setAttribute("data-sheet", "");
+      select.parentNode.insertBefore(wrap, select);
+      wrap.appendChild(select);
+      select.classList.add("custom-select__native");
+    }
+    buildCustomSelectUI(select);
+  });
+}
+
+/* --- Mostra/nascondi password --- */
+function initPasswordToggles() {
+  document.querySelectorAll(".password-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.toggleFor);
+      if (!input) return;
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      btn.classList.toggle("is-visible", !showing);
+    });
+  });
+}
+
+/* --- OTP: خانة واحدة (تقبل اللصق/النسخ) — بنشيل أي حاجة مش رقم ونقصّ على 6 --- */
+function initOtpBoxes() {
+  const input = document.getElementById("otpCode");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const clean = input.value.replace(/\D/g, "").slice(0, 6);
+    if (input.value !== clean) input.value = clean;
+  });
+}
+
+/* --- Navigazione tra tab login/registrati --- */
+function activateAuthTab(tabName) {
+  const tabs = document.querySelectorAll(".auth-tab");
+  if (!tabs.length) return;
+  let matched = false;
+  tabs.forEach((t) => {
+    const isMatch = t.dataset.tab === tabName;
+    if (isMatch) matched = true;
+    t.classList.toggle("is-active", isMatch);
+    t.setAttribute("aria-selected", isMatch ? "true" : "false");
+  });
+  if (!matched) return; // nome non valido: non tocca lo stato attuale
+  document.querySelectorAll(".auth-form[data-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.panel !== tabName;
+  });
+
+  // Titolo dinamico in base al tab e alla lingua corrente (es. "أهلاً بيك تاني" / "Welcome Back")
+  updateAuthTitle();
+}
+
+function initAuthTabs() {
+  const tabs = document.querySelectorAll(".auth-tab");
+  if (!tabs.length) return;
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activateAuthTab(tab.dataset.tab));
+  });
+
+  // Apre il tab giusto in base all'hash dell'URL (es. login.html#register)
+  const requested = window.location.hash.replace("#", "");
+  if (requested === "login" || requested === "register") {
+    activateAuthTab(requested);
   }
 }
 
-/* --- Reset --- */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* --- Navigazione tra step (credenziali -> otp -> successo) --- */
+function goToStep(name) {
+  document.querySelectorAll(".auth-step").forEach((step) => {
+    step.classList.toggle("is-active", step.dataset.step === name);
+  });
 }
 
-html {
-  scroll-behavior: smooth;
+function initAuthSteps() {
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const otpForm = document.getElementById("otpForm");
+  const otpBack = document.getElementById("otpBack");
+  const otpResend = document.getElementById("otpResend");
+  const otpSubtitle = document.getElementById("otpSubtitle");
+
+  // بيانات الجلسة الجارية لخطوة التحقق بالكود: مين، وأنهي مسار (دخول ولا حساب جديد).
+  let pendingAuth = null;
+
+  function setFormError(el, msg) {
+    if (!el) return;
+    if (!msg) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function setSubmitLoading(form, loading) {
+    const btn = form.querySelector("button[type=submit]");
+    if (!btn) return;
+    if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent;
+    btn.disabled = loading;
+    btn.textContent = loading ? "جاري التحميل..." : btn.dataset.originalText;
+  }
+
+  function getOtpErrorMessage(err) {
+    if (err && err.message === "EMAIL_SEND_FAILED") {
+      if (window.location.protocol === "file:") {
+        return "الموقع مفتوح كملف مباشر، وEmailJS يرفض إرسال الكود بهذه الطريقة. شغّله عبر localhost أو ارفعه على الدومين أولًا.";
+      }
+      if (String(err.code).toLowerCase().includes("origin") || String(err.code) === "403") {
+        return "تم فتح شاشة الكود، لكن EmailJS رفض الموقع الحالي. أضف الدومين في Allowed Origins داخل EmailJS.";
+      }
+      if (String(err.code) === "400" || String(err.code) === "422") {
+        return "تم فتح شاشة الكود، لكن إعدادات EmailJS أو بيانات القالب غير صحيحة. راجع Service ID وTemplate ID ومتغيرات القالب.";
+      }
+      return "تم فتح شاشة الكود، لكن تعذر إرسال الإيميل. اضغط إعادة الإرسال أو راجع إعدادات EmailJS.";
+    }
+    if (err && (String(err.message).includes("PERMISSION_DENIED") || err.code === "PERMISSION_DENIED")) {
+      return "تم فتح شاشة الكود، لكن Firebase رفض حفظ الكود. راجع صلاحيات Realtime Database.";
+    }
+    return "تم فتح شاشة الكود، لكن حصل خطأ أثناء إرسال الكود. اضغط إعادة الإرسال وحاول تاني.";
+  }
+
+  /* تخزين نسخة خفيفة من الجلسة + كاش كامل لبيانات المستخدم، عشان studenti.html يلاقيها جاهزة فورًا */
+  function cacheUserAndRedirect(user) {
+    localStorage.setItem("shadynasr-auth", "1");
+    localStorage.setItem(
+      "shadynasr-current-user",
+      JSON.stringify({ id: user.id, fullName: user.fullName, email: user.email, grade: user.grade, role: user.role || "student" })
+    );
+    try {
+      const raw = JSON.parse(localStorage.getItem("shadynasr-db-users"));
+      const users = Array.isArray(raw) ? raw : [];
+      const idx = users.findIndex((u) => u.id === user.id);
+      if (idx >= 0) users[idx] = user;
+      else users.push(user);
+      localStorage.setItem("shadynasr-db-users", JSON.stringify(users));
+    } catch {
+      /* لو الكاش المحلي فيه مشكلة، مش مؤثر: studenti.html هيجيب البيانات من Firebase تاني */
+    }
+
+    window.location.replace(user.role === "admin" ? "admin.html" : "studenti.html");
+  }
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("loginError");
+      setFormError(errorEl, "");
+
+      if (!window.SNAuth) {
+        setFormError(errorEl, "تعذر الاتصال بالخادم، حاول تاني بعد لحظات");
+        return;
+      }
+
+      const email = loginForm.email.value.trim();
+      const password = loginForm.password.value;
+
+      setSubmitLoading(loginForm, true);
+      try {
+        const user = await window.SNAuth.verifyLogin(email, password);
+
+        // الأدمن: مفيش كود على إيميله العادي. بنحوّله لصفحة admin-verify.html اللي
+        // بتبعت الكود على "إيميل تحقق الأدمن" المحدد في إعدادات لوحة الأدمن.
+        if (user.role === "admin") {
+          sessionStorage.setItem(
+            "shadynasr-admin-pending",
+            JSON.stringify({ id: user.id, email: user.email, fullName: user.fullName, ts: Date.now() })
+          );
+          window.location.replace("admin-verify.html");
+          return;
+        }
+
+        pendingAuth = { email: user.email, name: user.fullName, flow: "login" };
+        authOtpFlow = "login";
+        otpSubtitle.textContent = t("otp_subtitle_login");
+        goToStep("otp");
+        try {
+          await window.SNAuth.requestOtp(user.email, user.fullName, "login");
+        } catch (otpErr) {
+          setFormError(document.getElementById("otpError"), getOtpErrorMessage(otpErr));
+        }
+      } catch (err) {
+        const msg =
+          err && (err.message === "NOT_FOUND" || err.message === "WRONG_PASSWORD")
+            ? "الإيميل أو كلمة المرور غير صحيحة"
+            : "حصل خطأ أثناء تسجيل الدخول، حاول تاني";
+        setFormError(errorEl, msg);
+      } finally {
+        setSubmitLoading(loginForm, false);
+      }
+    });
+  }
+
+  if (registerForm) {
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("registerError");
+      setFormError(errorEl, "");
+
+      if (!window.SNAuth) {
+        setFormError(errorEl, "تعذر الاتصال بالخادم، حاول تاني بعد لحظات");
+        return;
+      }
+
+      const fd = new FormData(registerForm);
+      const data = {
+        fullName: String(fd.get("name") || "").trim(),
+        email: String(fd.get("email") || "").trim(),
+        password: fd.get("password"),
+        age: fd.get("age"),
+        grade: fd.get("grade"),
+        track: fd.get("track") || "",
+        gender: fd.get("gender"),
+      };
+
+      setSubmitLoading(registerForm, true);
+      try {
+        const user = await window.SNAuth.createUser(data);
+        pendingAuth = { email: user.email, name: user.fullName, flow: "register" };
+        authOtpFlow = "register";
+        otpSubtitle.textContent = t("otp_subtitle_register");
+        goToStep("otp");
+        try {
+          await window.SNAuth.requestOtp(user.email, user.fullName, "register");
+        } catch (otpErr) {
+          setFormError(document.getElementById("otpError"), getOtpErrorMessage(otpErr));
+        }
+      } catch (err) {
+        const msg = err && err.message === "EMAIL_EXISTS" ? "في حساب مسجّل بالإيميل ده بالفعل" : "حصل خطأ أثناء إنشاء الحساب، حاول تاني";
+        setFormError(errorEl, msg);
+      } finally {
+        setSubmitLoading(registerForm, false);
+      }
+    });
+  }
+
+  if (otpForm) {
+    otpForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("otpError");
+      setFormError(errorEl, "");
+
+      if (!pendingAuth || !window.SNAuth) {
+        goToStep("credentials");
+        return;
+      }
+
+      const code = (document.getElementById("otpCode").value || "").replace(/\D/g, "");
+      if (code.length !== 6) {
+        setFormError(errorEl, "اكتب الكود كامل (6 أرقام)");
+        return;
+      }
+
+      setSubmitLoading(otpForm, true);
+      try {
+        await window.SNAuth.verifyOtpCode(pendingAuth.email, code);
+        const user = await window.SNAuth.markVerifiedAndFetch(pendingAuth.email);
+        goToStep("success");
+        setTimeout(() => cacheUserAndRedirect(user), 900);
+      } catch (err) {
+        const msg =
+          err && err.message === "EXPIRED"
+            ? "الكود منتهي الصلاحية، اضغط إعادة الإرسال"
+            : err && err.message === "WRONG_CODE"
+            ? "الكود غلط، حاول تاني"
+            : "حصل خطأ أثناء التحقق، حاول تاني";
+        setFormError(errorEl, msg);
+      } finally {
+        setSubmitLoading(otpForm, false);
+      }
+    });
+  }
+
+  /* ===== استعادة كلمة المرور: إيميل -> كود -> كلمة مرور جديدة -> دخول المنصة ===== */
+  let pendingReset = null; // { email, name, code }
+
+  const forgotLink = document.getElementById("forgotLink");
+  const forgotEmailForm = document.getElementById("forgotEmailForm");
+  const forgotOtpForm = document.getElementById("forgotOtpForm");
+  const forgotNewForm = document.getElementById("forgotNewForm");
+  const forgotResend = document.getElementById("forgotResend");
+  const forgotCodeInput = document.getElementById("forgotCode");
+
+  if (forgotCodeInput) {
+    forgotCodeInput.addEventListener("input", () => {
+      const clean = forgotCodeInput.value.replace(/\D/g, "").slice(0, 6);
+      if (forgotCodeInput.value !== clean) forgotCodeInput.value = clean;
+    });
+  }
+
+  if (forgotLink) {
+    forgotLink.addEventListener("click", () => {
+      const loginEmail = loginForm && loginForm.email ? loginForm.email.value.trim() : "";
+      document.getElementById("forgotEmail").value = loginEmail;
+      setFormError(document.getElementById("forgotEmailError"), "");
+      pendingReset = null;
+      goToStep("forgot-email");
+    });
+  }
+
+  const forgotEmailBack = document.getElementById("forgotEmailBack");
+  if (forgotEmailBack) forgotEmailBack.addEventListener("click", () => goToStep("credentials"));
+
+  const forgotOtpBack = document.getElementById("forgotOtpBack");
+  if (forgotOtpBack) forgotOtpBack.addEventListener("click", () => {
+    pendingReset = null;
+    goToStep("forgot-email");
+  });
+
+  if (forgotEmailForm) {
+    forgotEmailForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("forgotEmailError");
+      setFormError(errorEl, "");
+      if (!window.SNAuth) {
+        setFormError(errorEl, t("reset_err_send"));
+        return;
+      }
+      const email = forgotEmailForm.email.value.trim();
+      setSubmitLoading(forgotEmailForm, true);
+      try {
+        // نتأكد إن الإيميل مسجّل *قبل* ما نبعت أي كود
+        const user = await window.SNAuth.findUserByEmail(email);
+        if (!user) {
+          setFormError(errorEl, t("reset_err_not_found"));
+          return;
+        }
+        if (user.role === "admin") {
+          setFormError(errorEl, t("reset_err_admin"));
+          return;
+        }
+        await window.SNAuth.requestOtp(user.email, user.fullName, "reset");
+        pendingReset = { email: user.email, name: user.fullName, code: null };
+        forgotOtpForm.reset();
+        setFormError(document.getElementById("forgotOtpError"), "");
+        goToStep("forgot-otp");
+      } catch (err) {
+        setFormError(errorEl, t("reset_err_send"));
+      } finally {
+        setSubmitLoading(forgotEmailForm, false);
+      }
+    });
+  }
+
+  if (forgotOtpForm) {
+    forgotOtpForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("forgotOtpError");
+      setFormError(errorEl, "");
+      if (!pendingReset || !window.SNAuth) {
+        goToStep("forgot-email");
+        return;
+      }
+      const code = (forgotCodeInput.value || "").replace(/\D/g, "");
+      if (code.length !== 6) {
+        setFormError(errorEl, t("reset_err_code_len"));
+        return;
+      }
+      setSubmitLoading(forgotOtpForm, true);
+      try {
+        await window.SNAuth.checkResetCode(pendingReset.email, code);
+        pendingReset.code = code;
+        forgotNewForm.reset();
+        setFormError(document.getElementById("forgotNewError"), "");
+        goToStep("forgot-new");
+      } catch (err) {
+        const m = err && err.message;
+        setFormError(
+          errorEl,
+          m === "EXPIRED" ? t("reset_err_expired")
+            : m === "WRONG_CODE" ? t("reset_err_wrong")
+            : m === "TOO_MANY_ATTEMPTS" ? t("reset_err_too_many")
+            : m === "NO_OTP" ? t("reset_err_no_otp")
+            : t("reset_err_generic")
+        );
+      } finally {
+        setSubmitLoading(forgotOtpForm, false);
+      }
+    });
+  }
+
+  if (forgotNewForm) {
+    forgotNewForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("forgotNewError");
+      setFormError(errorEl, "");
+      if (!pendingReset || !pendingReset.code || !window.SNAuth) {
+        goToStep("forgot-email");
+        return;
+      }
+      const pw = forgotNewForm.password.value;
+      const confirmPw = forgotNewForm.confirm.value;
+      if (pw.length < 6) {
+        setFormError(errorEl, t("reset_err_short"));
+        return;
+      }
+      if (pw !== confirmPw) {
+        setFormError(errorEl, t("reset_err_mismatch"));
+        return;
+      }
+      setSubmitLoading(forgotNewForm, true);
+      try {
+        const user = await window.SNAuth.resetPasswordWithOtp(pendingReset.email, pw);
+        pendingReset = null;
+        goToStep("success");
+        setTimeout(() => cacheUserAndRedirect(user), 900);
+      } catch (err) {
+        const m = err && err.message;
+        if (m === "EXPIRED" || m === "NO_OTP" || m === "WRONG_CODE" || m === "TOO_MANY_ATTEMPTS") {
+          // الكود اتلغى/انتهى قبل الحفظ: يرجع لخطوة الكود
+          setFormError(document.getElementById("forgotOtpError"), t(m === "EXPIRED" ? "reset_err_expired" : "reset_err_no_otp"));
+          pendingReset.code = null;
+          goToStep("forgot-otp");
+        } else {
+          setFormError(errorEl, m === "ADMIN_NOT_ALLOWED" ? t("reset_err_admin") : t("reset_err_generic"));
+        }
+      } finally {
+        setSubmitLoading(forgotNewForm, false);
+      }
+    });
+  }
+
+  if (forgotResend) {
+    forgotResend.addEventListener("click", async () => {
+      if (!pendingReset || !window.SNAuth) return;
+      forgotResend.disabled = true;
+      const errorEl = document.getElementById("forgotOtpError");
+      try {
+        await window.SNAuth.requestOtp(pendingReset.email, pendingReset.name, "reset");
+        setFormError(errorEl, "");
+        forgotResend.textContent = t("otp_resend_success");
+      } catch {
+        forgotResend.textContent = t("reset_err_generic");
+      } finally {
+        setTimeout(() => { forgotResend.textContent = t("btn_resend"); }, 2500);
+        setTimeout(() => { forgotResend.disabled = false; }, 30000); // مهلة 30 ثانية بين كل إرسال
+      }
+    });
+  }
+
+  if (otpBack) {
+    otpBack.addEventListener("click", () => {
+      pendingAuth = null;
+      goToStep("credentials");
+    });
+  }
+
+  if (otpResend) {
+    otpResend.addEventListener("click", async () => {
+      if (!pendingAuth || !window.SNAuth) return;
+      otpResend.disabled = true;
+      try {
+        await window.SNAuth.requestOtp(pendingAuth.email, pendingAuth.name, pendingAuth.flow);
+        otpResend.textContent = t("otp_resend_success");
+      } catch {
+        otpResend.textContent = "حصل خطأ، حاول تاني";
+      } finally {
+        setTimeout(() => {
+          otpResend.textContent = t("btn_resend");
+          otpResend.disabled = false;
+        }, 2500);
+      }
+    });
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100dvh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.6;
-  transition: background 0.4s var(--ease), color 0.4s var(--ease);
-  overflow-x: hidden;
+/* --- Mobile menu (hamburger + off-canvas panel) --- */
+function initMobileMenu() {
+  const toggle = document.getElementById("menuToggle");
+  const panel = document.getElementById("mobileMenu");
+  const overlay = document.getElementById("mobileMenuOverlay");
+  const closeBtn = document.getElementById("mobileMenuClose");
+  if (!toggle || !panel || !overlay) return;
+
+  function open() {
+    panel.classList.add("is-open");
+    overlay.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+  }
+  function close() {
+    panel.classList.remove("is-open");
+    overlay.classList.remove("is-open");
+    document.body.style.overflow = "";
+  }
+
+  toggle.addEventListener("click", open);
+  overlay.addEventListener("click", close);
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  panel.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 900) close();
+  });
 }
 
-img {
-  max-width: 100%;
-  display: block;
+/* --- Scroll progress bar (شريط تقدّم القراءة فوق الـ navbar) --- */
+function initScrollProgress() {
+  const bar = document.getElementById("navProgress");
+  if (!bar) return;
+
+  function update() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
+  }
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  font-family: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-h1,
-h2,
-h3 {
-  font-family: var(--font-display);
-  color: var(--brand-strong);
-  margin: 0;
-  line-height: 1.25;
-}
-
-/* Logical properties everywhere below handle RTL/LTR automatically via [dir] */
-
-/* --- Background atmosphere --- */
-/* تم إلغاء توهج الخلفية (blur/glow) بناءً على طلب عدم استخدام أي تدرج أو نيون */
-.atmosphere {
-  display: none;
-}
+const AuthUI = {
+  init() {
+    initTheme();
+    initLang();
+    initPasswordToggles();
+    initCustomSelects();
+    initOtpBoxes();
+    initAuthTabs();
+    initAuthSteps();
+    initScrollProgress();
+    initMobileMenu();
+  },
+};
 
 /* ==========================================================================
-   Navbar
+   Grade squares: sub-item carousel (index.html)
    ========================================================================== */
 
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  padding-inline: clamp(16px, 4vw, 40px);
+const SUBITEM_ICONS = [
+  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/>',
+  '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4Z"/>',
+  '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  '<path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  '<path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/>',
+  '<path d="M9 9a3 3 0 1 1 4 2.8c-.6.3-1 1-1 1.7V14"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/><circle cx="12" cy="12" r="10"/>',
+  '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/>',
+  '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/><path d="m9 11 2 2 3-3"/>',
+  '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4A9 9 0 1 1 21 11.5Z"/><path d="M9 9a3 3 0 1 1 4 2.8c-.6.3-1 1-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>',
+];
+
+const SUBITEM_LABELS = {
+  ar: [
+    "الدروس PDF",
+    "شرح فيديوهات مفصلة للدروس",
+    "امتحان على كل درس",
+    "شيت متابعة أسبوعية",
+    "تسميع كلمات",
+    "امتحانات تفاعلية على المنصة",
+    "شرح القصة PDF",
+    "امتحانات على القصة",
+    "أسئلة تفاعلية على المنصة",
+  ],
+  en: [
+    "PDF Lessons",
+    "Detailed video explanations for lessons",
+    "Exam for every lesson",
+    "Weekly tracking sheet",
+    "Vocabulary recitation",
+    "Interactive exams on the platform",
+    "Story explanation PDF",
+    "Story exams",
+    "Interactive questions on the platform",
+  ],
+};
+
+function getSubitems() {
+  const lang = document.documentElement.lang === "en" ? "en" : "ar";
+  return SUBITEM_ICONS.map((icon, i) => ({ icon, label: SUBITEM_LABELS[lang][i] }));
 }
 
-.navbar__inner {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  max-width: var(--container);
-  margin-inline: auto;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-inline: 10px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 8px 32px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.4);
+function renderSubitemCard(item) {
+  return `<a class="subitem-card" href="login.html">
+    <svg class="subitem-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>
+    <span class="subitem-card__label">${item.label}</span>
+  </a>`;
 }
 
-.nav-progress,
-.whatsapp-fab {
-  position: absolute;
-  inset-inline-start: 0;
-  bottom: 0;
-  height: 6px;
-  width: 0%;
-  background: #5b7fa8;
-  z-index: 5;
-  pointer-events: none;
+function populateCarousel(track) {
+  // Gli elementi vengono duplicati una volta per ottenere un loop orizzontale continuo (infinito).
+  const html = getSubitems().map(renderSubitemCard).join("");
+  track.innerHTML = html + html;
+  track.dataset.populated = "true";
 }
 
-/* Brand */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-inline-start: 8px;
-  min-width: 0;
+function initGradeCards() {
+  document.querySelectorAll("[data-grade-btn]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const stage = btn.dataset.stage;
+      const grade = btn.dataset.grade;
+      const key = `${stage}-${grade}`;
+      const grid = btn.closest(".grades-grid");
+      const carousel = grid.querySelector(`[data-carousel="${key}"]`);
+      const isOpen = btn.classList.contains("is-open");
+
+      // Chiude tutte le altre card/carousel dello stesso stage
+      grid.querySelectorAll("[data-grade-btn]").forEach((b) => b.classList.remove("is-open"));
+      grid.querySelectorAll(".grade-carousel").forEach((c) => (c.hidden = true));
+
+      if (!isOpen) {
+        btn.classList.add("is-open");
+        populateCarousel(carousel.querySelector(".grade-carousel__track"));
+        carousel.hidden = false;
+      }
+    });
+  });
 }
 
-.brand__mark {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  object-fit: contain;
-}
+/* --- Video player (hero/teacher promo) --- */
+function initVideoPlayer() {
+  const wrap = document.getElementById("videoPlayer");
+  const video = document.getElementById("promoVideo");
+  const playBtn = document.getElementById("videoPlayBtn");
+  if (!wrap || !video || !playBtn) return;
 
-/* --- شعار مختلف حسب المظهر: اللوجو الغامق يبان في المظهر الفاتح، واللوجو الفاتح يبان في المظهر الغامق --- */
-.brand__mark--light {
-  display: none;
-}
-:root[data-theme="dark"] .brand__mark--dark {
-  display: none;
-}
-:root[data-theme="dark"] .brand__mark--light {
-  display: block;
-}
+  playBtn.addEventListener("click", () => {
+    wrap.classList.add("is-playing");
+    video.setAttribute("controls", "");
+    video.play();
+  });
 
-.brand__text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-  white-space: nowrap;
-}
+  video.addEventListener("pause", () => wrap.classList.remove("is-playing"));
+  video.addEventListener("ended", () => wrap.classList.remove("is-playing"));
+};
 
-.brand__name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--brand-strong);
-  letter-spacing: 0.01em;
-}
+const GradesUI = {
+  init() {
+    initGradeCards();
+    initVideoPlayer();
+    initStatsCounter();
+  },
+};
 
-.brand__tagline {
-  font-size: 0.68rem;
-  color: var(--ink-soft);
-  font-weight: 500;
-}
+/* --- Stats: count-up animato, si ripete ogni volta che la sezione rientra in vista --- */
+function initStatsCounter() {
+  const statsSection = document.querySelector(".stats");
+  if (!statsSection) return;
 
-/* Center links */
-.nav-links {
-  display: none;
-  align-items: center;
-  gap: 4px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+  const DURATION = 3200; // ms — animazione volutamente lenta
 
-.nav-links a {
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-  transition: background 0.25s var(--ease), color 0.25s var(--ease);
-}
+  function animateValue(el) {
+    const target = parseInt(el.dataset.countTo, 10);
+    const prefix = el.dataset.prefix || "";
+    const suffix = el.dataset.suffix || "";
+    const start = performance.now();
 
-.nav-links a:hover,
-.nav-links a:focus-visible {
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-@media (min-width: 900px) {
-  .nav-links {
-    display: flex;
+    function tick(now) {
+      const progress = Math.min((now - start) / DURATION, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+      const value = Math.round(target * eased);
+      el.textContent = `${prefix}${value}${suffix}`;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }
-}
 
-/* Actions */
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--brand-strong);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.2s var(--ease);
-}
-
-.icon-btn:hover {
-  background: var(--surface-glass-border);
-}
-
-.icon-btn:active {
-  transform: scale(0.92);
-}
-
-.icon-btn svg {
-  width: 19px;
-  height: 19px;
-}
-
-.lang-btn {
-  width: auto;
-  padding-inline: 12px;
-  border-radius: var(--radius-pill);
-  font-weight: 700;
-  font-size: 0.8rem;
-  gap: 6px;
-}
-
-.theme-btn .icon-moon {
-  display: none;
-}
-:root[data-theme="dark"] .theme-btn .icon-sun {
-  display: none;
-}
-:root[data-theme="dark"] .theme-btn .icon-moon {
-  display: block;
-}
-
-.divider-v {
-  width: 1px;
-  height: 22px;
-  background: var(--surface-glass-border);
-  margin-inline: 4px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding-inline: 18px;
-  border-radius: var(--radius-pill);
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: transform 0.2s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease), opacity 0.25s var(--ease);
-  white-space: nowrap;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn--ghost {
-  background: transparent;
-  color: var(--brand-strong);
-  border-color: var(--surface-glass-border);
-  display: none;
-}
-
-@media (min-width: 620px) {
-  .btn--ghost {
-    display: inline-flex;
-  }
-}
-
-.btn--ghost:hover {
-  background: var(--surface-glass-border);
-}
-
-.btn--accent {
-  background: var(--accent);
-  color: var(--accent-ink);
-  box-shadow: 0 8px 20px var(--surface-glass-shadow);
-}
-
-.btn--accent:hover {
-  background: var(--sunset-600);
-  box-shadow: 0 10px 26px var(--surface-glass-shadow);
-}
-
-/* Mobile menu toggle (hamburger) shown under 900px, opens nav-links as sheet */
-.menu-toggle {
-  display: grid;
-  place-items: center;
-}
-
-@media (min-width: 900px) {
-  .menu-toggle {
-    display: none;
-  }
-}
-
-@media (max-width: 899px) {
-  .nav-actions > .lang-btn,
-  .nav-actions > .theme-btn,
-  .nav-actions > .divider-v,
-  .nav-actions > .btn--ghost,
-  .nav-actions > .btn--accent {
-    display: none;
-  }
-}
-
-/* Off-canvas mobile menu */
-.mobile-menu-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s var(--ease);
-  z-index: 90;
-}
-
-.mobile-menu-overlay.is-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.mobile-menu {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: min(78vw, 320px);
-  background: var(--bg, #f4eee0);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.2);
-  z-index: 95;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-  transform: translateX(100%);
-  transition: transform 0.3s var(--ease);
-  overflow-y: auto;
-}
-
-.mobile-menu.is-open {
-  transform: translateX(0);
-}
-
-.mobile-menu__head {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.mobile-menu__links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.mobile-menu__links a {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.mobile-menu__links a:hover {
-  background: var(--surface-glass-border);
-}
-
-.mobile-menu__utility {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--surface-glass-border);
-}
-
-.mobile-menu__utility-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--surface-glass-border);
-  background: var(--surface-glass);
-  color: var(--ink);
-  cursor: pointer;
-  text-align: start;
-}
-
-.mobile-menu__utility-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  flex: none;
-  display: grid;
-  place-items: center;
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-.mobile-menu__utility-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.mobile-menu__utility-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  line-height: 1.3;
-}
-
-.mobile-menu__utility-text strong {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.mobile-menu__utility-text small {
-  font-size: 0.76rem;
-  color: var(--ink-soft);
-}
-
-.mobile-menu__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: auto;
-}
-
-.mobile-menu__actions .btn {
-  width: 100%;
-}
-
-/* ==========================================================================
-   Hero (basic page shell so the navbar has real context)
-   ========================================================================== */
-
-.hero {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: clamp(48px, 9vw, 108px) clamp(16px, 4vw, 40px) clamp(60px, 8vw, 96px);
-  display: grid;
-  gap: 40px;
-  align-items: center;
-}
-
-@media (min-width: 960px) {
-  .hero {
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 24px;
-  }
-}
-
-.hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 0.85rem;
-  margin-bottom: 18px;
-}
-
-.hero__eyebrow::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.hero h1 {
-  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
-  font-weight: 800;
-  max-width: 16ch;
-}
-
-.hero h1 em {
-  font-style: normal;
-  color: var(--accent);
-}
-
-.hero p {
-  margin-top: 18px;
-  max-width: 46ch;
-  color: var(--ink-soft);
-  font-size: 1.05rem;
-}
-
-.hero__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 32px;
-}
-
-.hero__cta .btn {
-  height: 50px;
-  padding-inline: 26px;
-  font-size: 0.95rem;
-}
-
-.btn--ghost.btn--lg {
-  display: inline-flex;
-}
-
-/* Floating glass demo card */
-.hero__card {
-  position: relative;
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 20px 60px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.hero__card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 6px;
-}
-
-.hero__card p {
-  margin: 0 0 18px;
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-}
-
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-block: 12px;
-}
-
-.progress-row > span:first-child {
-  font-size: 0.85rem;
-  font-weight: 600;
-  min-width: 6ch;
-}
-
-.progress-track {
-  flex: 1;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-glass-border);
-  overflow: hidden;
-}
-
-.progress-fill {
-  display: block; /* كان inline فالـ width/height كانوا بيتتجاهلوا والخط مكانش بيظهر */
-  height: 100%;
-  min-width: 0;
-  border-radius: var(--radius-pill);
-  background: var(--sunset-500, #2c8097); /* لون المنصة اللي الأدمن مفعّله */
-  transition: width 0.6s var(--ease);
-}
-
-:root[data-theme="dark"] .progress-fill {
-  background: #ffffff; /* أبيض في الوضع المظلم */
-}
-
-/* ==========================================================================
-   Teacher + Video section
-   ========================================================================== */
-
-.teacher-section {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(60px, 8vw, 96px);
-}
-
-.teacher-section__inner {
-  display: grid;
-  gap: 36px;
-  align-items: center;
-}
-
-@media (min-width: 960px) {
-  .teacher-section__inner {
-    grid-template-columns: 0.95fr 1.05fr;
-    gap: 48px;
-  }
-}
-
-/* --- Video player --- */
-.video-player {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 20px 60px var(--surface-glass-shadow);
-}
-
-.video-player__poster {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: var(--berry-700);
-}
-
-.video-player__initials {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(3rem, 8vw, 4.5rem);
-  color: var(--vanilla);
-  opacity: 0.9;
-}
-
-.video-player__play {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  border: none;
-  display: grid;
-  place-items: center;
-  background: rgba(244, 238, 224, 0.92);
-  color: var(--berry-950);
-  cursor: pointer;
-  transition: transform 0.25s var(--ease), background 0.25s var(--ease);
-}
-
-.video-player__play svg {
-  width: 26px;
-  height: 26px;
-  margin-inline-start: 3px;
-}
-
-.video-player:hover .video-player__play {
-  transform: scale(1.08);
-  background: var(--vanilla);
-}
-
-.video-player.is-playing .video-player__play {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.video-player.is-playing .video-player__poster,
-.video-player.is-playing .video-player__badge {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.video-player video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.video-player__badge {
-  position: absolute;
-  inset-inline-start: 16px;
-  bottom: 16px;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--vanilla);
-  background: rgba(11, 33, 40, 0.55);
-  backdrop-filter: blur(8px);
-}
-
-/* --- Teacher info --- */
-.teacher-info h2 {
-  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
-  font-weight: 800;
-  margin-top: 4px;
-}
-
-.teacher-role {
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin: 6px 0 0;
-}
-
-.teacher-bio {
-  margin-top: 16px;
-  color: var(--ink-soft);
-  max-width: 52ch;
-  font-size: 1rem;
-}
-
-.teacher-badges {
-  list-style: none;
-  margin: 24px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 12px;
-}
-
-.teacher-badges li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 0.92rem;
-}
-
-.teacher-badges svg {
-  width: 20px;
-  height: 20px;
-  flex: none;
-  color: var(--accent);
-}
-
-.teacher-info .btn {
-  margin-top: 28px;
-}
-
-/* ==========================================================================
-   Live stats
-   ========================================================================== */
-
-.stats {
-  margin-top: clamp(56px, 9vw, 96px);
-}
-
-.stats__heading {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.stats__heading .hero__eyebrow {
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.stats__heading h2 {
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
-  font-weight: 800;
-}
-
-.stats-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 720px) {
-  .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.stat-card {
-  text-align: center;
-  padding: 26px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 12px 36px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.stat-card__icon {
-  width: 26px;
-  height: 26px;
-  color: var(--accent);
-  margin-bottom: 12px;
-}
-
-.stat-card__value {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
-  color: var(--brand-strong);
-}
-
-.stat-card__label {
-  display: block;
-  margin-top: 4px;
-  color: var(--ink-soft);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-/* ==========================================================================
-   School grades section
-   ========================================================================== */
-
-.grades-section {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(64px, 9vw, 104px);
-}
-
-.grades__heading {
-  text-align: center;
-  max-width: 56ch;
-  margin: 0 auto 36px;
-}
-
-.grades__heading .hero__eyebrow {
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.grades__heading h2 {
-  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
-  font-weight: 800;
-}
-
-.grades__heading p {
-  margin-top: 12px;
-  color: var(--ink-soft);
-}
-
-.grades-grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 720px) {
-  .grades-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.grade-card {
-  position: relative;
-  text-align: start;
-  padding: 30px 26px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 14px 40px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  cursor: pointer;
-  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
-  color: inherit;
-}
-
-.grade-card:hover,
-.grade-card:focus-visible {
-  transform: translateY(-6px);
-  border-color: var(--accent);
-  box-shadow: 0 20px 50px var(--surface-glass-shadow);
-}
-
-.grade-card:active {
-  transform: translateY(-2px) scale(0.99);
-}
-
-.grade-card__badge {
-  position: absolute;
-  inset-inline-end: 22px;
-  top: 22px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.6rem;
-  color: var(--surface-glass-border);
-}
-
-.grade-card__icon {
-  width: 30px;
-  height: 30px;
-  color: var(--accent);
-  margin-bottom: 18px;
-}
-
-.grade-card h3 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.grade-card p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-  max-width: 32ch;
-}
-
-.grade-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 20px;
-  font-weight: 700;
-  font-size: 0.86rem;
-  color: var(--accent);
-}
-
-.grade-card__lock {
-  position: absolute;
-  inset-inline-start: 22px;
-  top: 22px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--surface-glass-border);
-  color: var(--ink-soft);
-}
-
-.grade-card__lock svg {
-  width: 15px;
-  height: 15px;
-}
-
-/* ==========================================================================
-   Auth required modal
-   ========================================================================== */
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: var(--overlay);
-  backdrop-filter: blur(6px);
-  opacity: 0;
-  transition: opacity 0.25s var(--ease);
-}
-
-.modal-overlay[hidden] {
-  display: none;
-}
-
-.modal-overlay.is-open {
-  opacity: 1;
-}
-
-.modal {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  padding: 34px 28px 28px;
-  border-radius: var(--radius-lg);
-  text-align: center;
-  background: var(--bg);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
-  transform: translateY(14px) scale(0.97);
-  transition: transform 0.25s var(--ease);
-}
-
-.modal-overlay.is-open .modal {
-  transform: translateY(0) scale(1);
-}
-
-.modal__close {
-  position: absolute;
-  inset-inline-end: 14px;
-  top: 14px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--ink-soft);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.2s var(--ease);
-}
-
-.modal__close:hover {
-  background: var(--surface-glass-border);
-}
-
-.modal__close svg {
-  width: 18px;
-  height: 18px;
-}
-
-.modal__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  margin-bottom: 18px;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.modal__icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.modal h3 {
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-.modal p {
-  margin: 12px 0 0;
-  color: var(--ink-soft);
-  font-size: 0.92rem;
-}
-
-.modal__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 26px;
-}
-
-.modal__actions .btn {
-  width: 100%;
-}
-
-.modal__actions .btn--ghost {
-  display: inline-flex;
-  border: none;
-}
-
-/* ==========================================================================
-   Auth forms (sign up / login / OTP)
-   ========================================================================== */
-
-.modal--form {
-  max-width: 420px;
-  text-align: start;
-}
-
-.modal--form h3 {
-  font-size: 1.25rem;
-}
-
-.modal__subtitle {
-  margin: 8px 0 0;
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-}
-
-.auth-form {
-  margin-top: 22px;
-  display: grid;
-  gap: 16px;
-}
-
-.auth-form[hidden] {
-  display: none;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.form-field {
-  display: grid;
-  gap: 6px;
-}
-
-.form-field label,
-.form-field__label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-
-.form-field input[type="text"],
-.form-field input[type="email"],
-.form-field input[type="password"],
-.form-field input[type="number"],
-.form-field select {
-  height: 44px;
-  padding-inline: 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-
-.form-field input:focus-visible,
-.form-field select:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.form-field input:disabled,
-.form-field select:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-.gender-option:has(input:disabled) {
-  cursor: not-allowed;
-  opacity: 0.75;
-}
-
-.form-hint {
-  font-size: 0.75rem;
-  color: var(--ink-soft);
-  opacity: 0.8;
-}
-
-/* --- Custom select (قايمة الصف الدراسي بستايل الموقع بدل قايمة المتصفح الافتراضية) --- */
-.custom-select {
-  position: relative;
-}
-
-.custom-select__native {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.custom-select__trigger {
-  width: 100%;
-  height: 44px;
-  padding-inline: 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-
-.custom-select__value {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.custom-select__value.is-placeholder {
-  color: var(--ink-soft);
-}
-
-.custom-select__chevron {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  color: var(--ink-soft);
-  transition: transform 0.2s var(--ease);
-}
-
-.custom-select.is-open .custom-select__chevron {
-  transform: rotate(180deg);
-}
-
-.custom-select.is-open .custom-select__trigger,
-.custom-select:focus-within .custom-select__trigger {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(44, 128, 151, 0.15);
-}
-
-.custom-select__panel {
-  position: absolute;
-  inset-inline: 0;
-  top: calc(100% + 8px);
-  z-index: 20;
-  margin: 0;
-  padding: 8px;
-  list-style: none;
-  max-height: 280px;
-  overflow-y: auto;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--surface-glass);
-  box-shadow: 0 16px 40px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.4);
-}
-
-.custom-select__group {
-  padding: 10px 10px 6px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--accent);
-}
-
-.custom-select__group:not(:first-child) {
-  margin-top: 4px;
-  border-top: 1px solid var(--surface-glass-border);
-  padding-top: 12px;
-}
-
-.custom-select__option {
-  padding: 10px 12px;
-  margin: 2px 0;
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
-}
-
-.custom-select__option:hover {
-  background: var(--surface-glass-border);
-}
-
-.custom-select__option.is-selected {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.password-field {
-  position: relative;
-}
-
-.password-field input {
-  width: 100%;
-  padding-inline-end: 44px;
-}
-
-.password-toggle {
-  position: absolute;
-  inset-inline-end: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--ink-soft);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.password-toggle:hover {
-  background: var(--surface-glass-border);
-}
-
-.password-toggle svg {
-  width: 18px;
-  height: 18px;
-}
-
-.password-toggle .icon-eye-off {
-  display: none;
-}
-
-.password-toggle.is-visible .icon-eye {
-  display: none;
-}
-
-.password-toggle.is-visible .icon-eye-off {
-  display: block;
-}
-
-.gender-options {
-  display: flex;
-  gap: 10px;
-}
-
-.gender-option {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-}
-
-.gender-option:has(input:checked) {
-  border-color: var(--accent);
-  background: rgba(44, 128, 151, 0.1);
-}
-
-.gender-option input {
-  accent-color: var(--accent);
-}
-
-.form-error {
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(180, 68, 63, 0.12);
-  color: #b4443f;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.auth-form button[type="submit"] {
-  height: 46px;
-  width: 100%;
-}
-
-.modal__switch {
-  margin: 18px 0 0;
-  text-align: center;
-  font-size: 0.88rem;
-  color: var(--ink-soft);
-}
-
-.link-btn {
-  border: none;
-  background: none;
-  color: var(--accent);
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-  font-size: inherit;
-}
-
-.otp-input {
-  height: 60px;
-  width: 60px;
-  box-sizing: border-box;
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  padding: 0;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-/* --- Logged-in user chip (navbar) --- */
-.user-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-inline: 6px;
-}
-
-.user-chip__avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--accent);
-  background-size: cover;
-  background-position: center;
-  flex: none;
-  display: grid;
-  place-items: center;
-  color: var(--accent-ink);
-  font-weight: 800;
-  font-size: 0.72rem;
-  line-height: 1;
-}
-
-.user-chip__name {
-  font-weight: 700;
-  font-size: 0.88rem;
-  max-width: 12ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-chip__logout {
-  border: none;
-  background: none;
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
-/* ==========================================================================
-   Utility / a11y
-   ========================================================================== */
-
-.skip-link {
-  position: absolute;
-  inset-inline-start: 12px;
-  top: -60px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  z-index: 100;
-  transition: top 0.2s var(--ease);
-}
-
-.skip-link:focus {
-  top: 12px;
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-@media (hover: none) {
-  button:focus:not(:focus-visible),
-  a:focus:not(:focus-visible) {
-    outline: none;
-  }
-}
-
-/* Touch feedback: نفس موجة سبلاش الافتتاح (نفس اللون وبدون شفافية) بتطلع من تحت لفوق وتملا عرض أي عنصر بتضغط عليه،
-   والكلام اللي جواه بيبقى أبيض أول ما الموجة توصله. العنصر .touch-wave بيتضاف من shared.js وقت الضغط. */
-.is-waving {
-  isolation: isolate;
-}
-
-.touch-wave {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-  animation: touch-wave-fade 0.62s linear forwards;
-}
-
-.touch-wave::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(100% + 14px);
-  background: var(--sunset-500, #2c8097); /* لون المنصة اللي الأدمن مفعّله */
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14' preserveAspectRatio='none'%3E%3Cpath d='M0,7 Q10,0 20,7 T40,7 V14 H0 Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14' preserveAspectRatio='none'%3E%3Cpath d='M0,7 Q10,0 20,7 T40,7 V14 H0 Z'/%3E%3C/svg%3E"), linear-gradient(#000, #000);
-  -webkit-mask-repeat: repeat-x, no-repeat;
-  mask-repeat: repeat-x, no-repeat;
-  -webkit-mask-size: 40px 14px, 100% calc(100% - 13px);
-  mask-size: 40px 14px, 100% calc(100% - 13px);
-  -webkit-mask-position: 0 0, 0 13px;
-  mask-position: 0 0, 0 13px;
-  transform: translateY(100%);
-  animation:
-    touch-wave-rise 0.34s cubic-bezier(0.55, 0, 0.35, 1) forwards,
-    touch-wave-drift 0.3s linear infinite;
-}
-
-.is-waving,
-.is-waving *:not(.touch-wave) {
-  animation: touch-wave-text 0.62s linear;
-}
-
-@keyframes touch-wave-rise {
-  to { transform: translateY(0); }
-}
-
-@keyframes touch-wave-drift {
-  to { -webkit-mask-position: -40px 0, 0 13px; mask-position: -40px 0, 0 13px; }
-}
-
-@keyframes touch-wave-fade {
-  0%, 70% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-@keyframes touch-wave-text {
-  0%, 100% { }
-  28%, 80% { color: #fff; }
-}
-
-/* السبلاش يشتغل حتى لو "تقليل الحركة" مفعّل (زي موجة الافتتاح) */
-@media (prefers-reduced-motion: reduce) {
-  .touch-wave { animation-duration: 0.62s !important; }
-  .touch-wave::before { animation-duration: 0.34s, 0.3s !important; }
-  .is-waving,
-  .is-waving *:not(.touch-wave) { animation-duration: 0.62s !important; }
-}
-
-/* ==========================================================================
-   Grade squares + infinite sub-item carousel
-   ========================================================================== */
-
-.grade-card.is-open {
-  border-color: var(--accent);
-}
-
-.grade-card__toggle-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 20px;
-  font-weight: 700;
-  font-size: 0.86rem;
-  color: var(--accent);
-}
-
-.grade-card__toggle-hint svg {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.25s var(--ease);
-}
-
-.grade-card.is-open .grade-card__toggle-hint svg {
-  transform: rotate(180deg);
-}
-
-.grade-carousel {
-  grid-column: 1 / -1;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  margin-top: -4px;
-}
-
-.grade-carousel[hidden] {
-  display: none;
-}
-
-.grade-carousel__track {
-  display: flex;
-  gap: 16px;
-  width: max-content;
-  padding: 4px 4px 12px;
-  animation: carousel-scroll 26s linear infinite;
-}
-
-.grade-carousel:hover .grade-carousel__track {
-  animation-play-state: paused;
-}
-
-@keyframes carousel-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-:root[dir="rtl"] .grade-carousel__track {
-  animation-name: carousel-scroll-rtl;
-}
-
-@keyframes carousel-scroll-rtl {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(50%);
-  }
-}
-
-.subitem-card {
-  flex: none;
-  width: 168px;
-  padding: 20px 16px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  color: inherit;
-  text-align: start;
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
-}
-
-.subitem-card:hover,
-.subitem-card:focus-visible {
-  transform: translateY(-4px);
-  border-color: var(--accent);
-}
-
-.subitem-card__icon {
-  width: 30px;
-  height: 30px;
-  color: var(--accent);
-  margin-bottom: 14px;
-}
-
-.subitem-card__label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.stage-heading {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: clamp(48px, 8vw, 80px) clamp(16px, 4vw, 40px) 0;
-  text-align: center;
-}
-
-.stage-heading h2 {
-  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
-  font-weight: 800;
-}
-
-.stage-heading p {
-  margin-top: 10px;
-  color: var(--ink-soft);
-}
-
-/* Footer */
-.site-footer {
-  border-top: 1px solid var(--surface-glass-border);
-  padding: clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px) 24px;
-  color: var(--ink-soft);
-}
-
-.footer__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
-  gap: clamp(24px, 4vw, 48px);
-  text-align: start;
-}
-
-.footer__brand {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.footer__brand-mark {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.footer__brand-mark img {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  flex: none;
-}
-
-.footer__brand-name {
-  font-weight: 800;
-  color: var(--ink);
-  line-height: 1.3;
-}
-
-.footer__brand-name small {
-  font-weight: 500;
-  color: var(--ink-soft);
-  font-size: 0.75rem;
-}
-
-.footer__desc {
-  font-size: 0.88rem;
-  line-height: 1.8;
-  max-width: 36ch;
-}
-
-.footer__col h4 {
-  color: var(--ink);
-  font-size: 0.95rem;
-  margin: 0 0 16px;
-}
-
-.footer__col ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 12px;
-}
-
-.footer__col a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-  transition: color 0.2s ease;
-}
-
-.footer__col a:hover {
-  color: var(--accent);
-}
-
-.social-links {
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: start;
-  align-items: center;
-  column-gap: 8px;
-}
-
-.social-links li a {
-  display: contents;
-}
-
-.social-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-
-.social-icon--outline {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-}
-
-.social-icon--outline svg {
-  width: 18px;
-  height: 18px;
-}
-
-.social-icon svg {
-  width: 15px;
-  height: 15px;
-}
-
-.footer__bottom {
-  max-width: var(--container);
-  margin: 32px auto 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--surface-glass-border);
-  text-align: center;
-  font-size: 0.82rem;
-}
-
-@media (max-width: 760px) {
-  .footer__inner {
-    grid-template-columns: 1fr 1fr;
-    text-align: center;
-  }
-  .footer__brand {
-    grid-column: 1 / -1;
-  }
-  .footer__col h4 {
-    text-align: center;
-  }
-  .footer__brand-mark,
-  .footer__col a {
-    justify-content: center;
-  }
-  .footer__desc {
-    max-width: none;
-    margin-inline: auto;
-  }
-}
-
-/* WhatsApp floating button */
-.whatsapp-fab {
-  position: fixed;
-  left: 20px;
-  bottom: 20px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #25d366;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  z-index: 40;
-  transition: transform 0.2s ease;
-}
-
-.whatsapp-fab:hover {
-  transform: scale(1.08);
-}
-
-.whatsapp-fab svg {
-  width: 28px;
-  height: 28px;
-  color: #fff;
-}
-
-/* ==========================================================================
-   Standalone auth page (login.html)
-   ========================================================================== */
-
-.auth-page {
-  min-height: 100dvh;
-  position: relative;
-}
-
-.auth-topbar {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px clamp(16px, 4vw, 40px);
-}
-
-.auth-topbar .brand {
-  padding-inline-start: 0;
-}
-
-.auth-topbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.auth-wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  place-items: center;
-  min-height: 100dvh;
-  box-sizing: border-box;
-  /* نفس الحشوة فوق وتحت (بتساوي ارتفاع الهيدر) عشان الكارت يبقى في نص الصفحة بالظبط */
-  padding: 96px max(20px, env(safe-area-inset-right)) 96px max(20px, env(safe-area-inset-left));
-}
-
-.auth-card {
-  position: relative;
-  box-sizing: border-box;
-  min-width: 0;
-  width: 100%;
-  max-width: 420px;
-  padding: 34px 28px 28px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 24px 70px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.auth-card__head {
-  text-align: center;
-}
-
-.auth-card__head h1 {
-  font-size: 1.4rem;
-  font-weight: 800;
-}
-
-/* Tabs: login / register */
-.auth-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: 22px 0 6px;
-  padding: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-glass-border);
-}
-
-.auth-tab {
-  height: 40px;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink-soft);
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.25s var(--ease), color 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.auth-tab.is-active {
-  background: var(--bg);
-  color: var(--brand-strong);
-  box-shadow: 0 4px 14px var(--surface-glass-shadow);
-}
-
-/* Step panels (login form / register form / otp step) */
-.auth-step {
-  display: none;
-}
-
-.auth-step.is-active {
-  display: block;
-  animation: auth-step-in 0.3s var(--ease);
-}
-
-@keyframes auth-step-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.auth-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: none;
-  color: var(--ink-soft);
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 14px;
-}
-
-.auth-back svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* خانة كود التحقق الواحدة */
-.form-field .otp-code {
-  width: 100%;
-  box-sizing: border-box;
-  height: 56px;
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: 0.5em;
-  padding-inline: 14px 0.5em; /* يعوّض مسافة آخر حرف عشان الأرقام تبقى في النص */
-  direction: ltr;
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-.form-field .otp-code::placeholder {
-  letter-spacing: 0.3em;
-  opacity: 0.5;
-}
-
-.otp-spam-hint {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--bg-soft);
-  border: 1px solid var(--surface-glass-border);
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-  line-height: 1.6;
-  text-align: start;
-}
-
-.otp-boxes {
-  display: flex;
-  justify-content: center;
-  gap: clamp(6px, 2vw, 10px);
-  direction: ltr;
-}
-
-.otp-boxes input {
-  flex: 0 1 clamp(42px, 13vw, 60px);
-  width: clamp(42px, 13vw, 60px);
-  height: clamp(52px, 15vw, 60px);
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-  padding-inline: 0;
-  border-radius: 10px;
-}
-
-.otp-resend {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          statsSection.querySelectorAll("[data-count-to]").forEach(animateValue);
+        }
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  observer.observe(statsSection);
 }
 /* ==========================================================================
-   Site views (home / schedule / contact) — swapped in place, no reload
+   Page views: schedule + contact "pages" that swap in place on index.html
+   (no popups, no extra files — the navbar and footer stay put)
    ========================================================================== */
 
-.site-view[hidden] {
-  display: none;
-}
+const VIEW_HASHES = ["schedule", "contact"];
 
-.site-view.is-active {
-  animation: view-fade-in 0.35s var(--ease);
-}
+function showView(name, opts) {
+  opts = opts || {};
+  const views = document.querySelectorAll(".site-view");
+  if (!views.length) return;
 
-@keyframes view-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+  views.forEach((view) => {
+    const match = view.dataset.view === name;
+    view.hidden = !match;
+    view.classList.toggle("is-active", match);
+  });
 
-/* --- Promo banner: schedule + inquiry CTA (home page) --- */
-.promo-banner-wrap {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(64px, 9vw, 104px);
-}
-
-.promo-banner {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  padding: clamp(32px, 5vw, 48px) clamp(24px, 5vw, 56px);
-  border-radius: var(--radius-lg);
-  background: var(--berry-950);
-  box-shadow: 0 24px 60px var(--surface-glass-shadow);
-}
-
-.promo-banner::before {
-  content: none;
-}
-
-.promo-banner__text {
-  position: relative;
-  max-width: 46ch;
-}
-
-.promo-banner__text .hero__eyebrow {
-  color: var(--sunset-300);
-}
-
-.promo-banner__text .hero__eyebrow::before {
-  background: var(--sunset-300);
-}
-
-.promo-banner__text h2 {
-  color: var(--vanilla);
-  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.promo-banner__text p {
-  margin: 10px 0 0;
-  color: rgba(244, 238, 224, 0.75);
-  font-size: 0.95rem;
-}
-
-.promo-banner__actions {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  flex: none;
-}
-
-.promo-banner__actions .btn {
-  height: 48px;
-  padding-inline: 24px;
-}
-
-.promo-banner__ghost {
-  display: inline-flex;
-  background: rgba(244, 238, 224, 0.08);
-  color: var(--vanilla);
-  border-color: rgba(244, 238, 224, 0.28);
-}
-
-.promo-banner__ghost:hover {
-  background: rgba(244, 238, 224, 0.16);
-}
-
-/* --- Shared "sub-page" chrome (back button) --- */
-.page-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: transparent;
-  color: var(--ink-soft);
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  padding: 10px 6px;
-  margin: 4px 0 0;
-  transition: color 0.2s var(--ease);
-}
-
-.page-back:hover {
-  color: var(--accent);
-}
-
-.page-back svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* --- Schedule page --- */
-.page-view-section {
-  max-width: 760px;
-  margin-inline: auto;
-  padding: clamp(12px, 3vw, 24px) clamp(16px, 4vw, 40px) clamp(72px, 10vw, 112px);
-  text-align: center;
-}
-
-.page-view-heading {
-  margin: clamp(24px, 5vw, 40px) 0 clamp(32px, 5vw, 48px);
-}
-
-.page-view-heading .hero__eyebrow {
-  margin-bottom: 14px;
-}
-
-.page-view-heading h1 {
-  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
-  font-weight: 800;
-}
-
-.page-view-heading p {
-  margin: 12px auto 0;
-  max-width: 44ch;
-  color: var(--ink-soft);
-}
-
-.schedule-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  padding: 18px 18px 18px 14px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 0.98rem;
-  cursor: pointer;
-  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
-}
-
-.schedule-row:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-}
-
-.schedule-row__thumb {
-  width: 40px;
-  height: 40px;
-  flex: none;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--surface-glass-border);
-}
-
-.schedule-download {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 24px;
-  height: 52px;
-  padding-inline: 28px;
-}
-
-.schedule-download svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* --- Per-center schedule cards, shown inline on the schedule page --- */
-.centers-schedule-heading {
-  margin: clamp(48px, 8vw, 72px) 0 clamp(24px, 5vw, 32px);
-  text-align: center;
-}
-
-.centers-schedule-heading h2 {
-  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
-  font-weight: 800;
-  color: var(--ink);
-  margin: 0 0 8px;
-}
-
-.centers-schedule-heading p {
-  color: var(--ink-soft);
-  margin: 0;
-}
-
-.centers-schedule-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-  text-align: start;
-}
-
-.center-card {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  overflow: hidden;
-  box-shadow: 0 10px 30px var(--surface-glass-shadow);
-}
-
-.center-card__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  background: var(--brand);
-  color: var(--vanilla);
-  font-weight: 800;
-  font-size: 1.02rem;
-}
-
-.center-card__head svg {
-  width: 18px;
-  height: 18px;
-  flex: none;
-}
-
-.center-card table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.center-card thead th {
-  background: rgba(44, 128, 151, 0.14);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 0.82rem;
-  padding: 10px 14px;
-  text-align: start;
-}
-
-.center-card tbody td {
-  padding: 10px 14px;
-  font-size: 0.9rem;
-  color: var(--ink);
-  border-top: 1px solid var(--surface-glass-border);
-}
-
-.center-card tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* إصلاح: قاعدة الموبايل العامة (table { display:block }) كانت بتقلّص الجدول على قد محتواه وتبوّظ المحاذاة.
-   هنا بنرجّع جداول السناتر لجدول حقيقي بعرض الكارت كله وأعمدة ثابتة ومتساوية في كل الكروت. */
-.center-card table {
-  display: table;
-  width: 100%;
-  max-width: none;
-  overflow: visible;
-  table-layout: fixed;
-}
-
-.center-card th,
-.center-card td {
-  vertical-align: middle;
-  overflow-wrap: anywhere;
-}
-
-.center-card th:nth-child(1),
-.center-card td:nth-child(1) { width: 38%; }
-.center-card th:nth-child(2),
-.center-card td:nth-child(2) { width: 38%; }
-.center-card th:nth-child(3),
-.center-card td:nth-child(3) {
-  width: 24%;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.center-card tbody td:nth-child(3) {
-  font-weight: 800;
-  color: var(--brand);
-}
-
-@media (max-width: 600px) {
-  .center-card thead th,
-  .center-card tbody td {
-    padding: 11px 10px;
-    font-size: 0.84rem;
-    line-height: 1.5;
-  }
-  .center-card thead th { font-size: 0.78rem; }
-}
-
-/* --- Schedule image lightbox --- */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(16px, 5vw, 56px);
-  background: rgba(6, 20, 25, 0.82);
-  backdrop-filter: blur(6px);
-  opacity: 0;
-  transition: opacity 0.25s var(--ease);
-}
-
-.lightbox[hidden] {
-  display: none;
-}
-
-.lightbox.is-open {
-  opacity: 1;
-}
-
-.lightbox img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  border-radius: var(--radius-md);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
-  transform: scale(0.96);
-  transition: transform 0.25s var(--ease);
-}
-
-.lightbox.is-open img {
-  transform: scale(1);
-}
-
-.lightbox__close {
-  position: fixed;
-  top: clamp(14px, 3vw, 28px);
-  inset-inline-end: clamp(14px, 3vw, 28px);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--vanilla);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.2s var(--ease);
-}
-
-.lightbox__close:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.lightbox__close svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* --- Contact / inquiry page --- */
-.contact-page {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: clamp(12px, 3vw, 24px) clamp(16px, 4vw, 40px) clamp(72px, 10vw, 112px);
-}
-
-.contact-page__inner {
-  margin-top: clamp(20px, 4vw, 36px);
-  display: grid;
-  gap: 36px;
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .contact-page__inner {
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
+  if (opts.scrollTop !== false) {
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 }
 
-.contact-page__text h1 {
-  font-size: clamp(1.9rem, 3.8vw, 2.7rem);
-  font-weight: 800;
-  line-height: 1.3;
+function scrollToSectionId(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const navEl = document.querySelector(".navbar");
+  const navH = navEl ? navEl.offsetHeight : 0;
+  const y = el.getBoundingClientRect().top + window.scrollY - navH - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
 }
 
-.contact-page__text p {
-  margin-top: 16px;
-  max-width: 46ch;
-  color: var(--ink-soft);
-  font-size: 1rem;
+function currentHash() {
+  return window.location.hash.replace("#", "");
 }
 
-.contact-card {
-  display: grid;
-  gap: 18px;
-  padding: clamp(24px, 4vw, 32px);
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 24px 70px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
+/* Bottoni "جدول المواعيد" / "حجز واستفسار" / أزرار الرجوع — يبدّلوا الـ view من غير ريلود */
+function initViewLinks() {
+  document.querySelectorAll("[data-view-link]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = el.dataset.viewLink;
+      showView(target);
+      if (target === "home") {
+        history.pushState({ view: "home" }, "", window.location.pathname + window.location.search);
+      } else {
+        history.pushState({ view: target }, "", "#" + target);
+      }
+    });
+  });
 }
 
-.contact-card textarea {
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  resize: vertical;
-  min-height: 110px;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+/* روابط الأنكور العادية (الرئيسية، الإعدادية، الثانوية، الأستاذ...) لازم ترجّع صفحة الرئيسية الأول لو المستخدم في صفحة الجدول/الاستفسار */
+function initAnchorLinks() {
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[href]");
+    if (!a || a.hasAttribute("data-view-link")) return;
+
+    const href = a.getAttribute("href");
+    const hashIdx = href.indexOf("#");
+    if (hashIdx === -1) return;
+
+    const hash = href.slice(hashIdx + 1);
+    if (!hash || VIEW_HASHES.includes(hash)) return;
+
+    const targetEl = document.getElementById(hash);
+    const homeView = document.getElementById("view-home");
+    if (!targetEl || !homeView || !homeView.contains(targetEl)) return;
+
+    e.preventDefault();
+    showView("home", { scrollTop: false });
+    history.pushState({ view: "home" }, "", "#" + hash);
+    requestAnimationFrame(() => scrollToSectionId(hash));
+  });
 }
 
-.contact-card textarea:focus-visible {
-  outline: none;
-  border-color: var(--accent);
+function initViewHistory() {
+  window.addEventListener("popstate", () => {
+    const hash = currentHash();
+    if (VIEW_HASHES.includes(hash)) {
+      showView(hash);
+    } else {
+      showView("home", { scrollTop: false });
+      if (hash) requestAnimationFrame(() => scrollToSectionId(hash));
+    }
+  });
 }
 
-.contact-submit {
-  height: 52px;
-  width: 100%;
-  margin-top: 4px;
+function initViewRouter() {
+  if (!document.querySelector(".site-view")) return;
+
+  const initial = currentHash();
+  showView(VIEW_HASHES.includes(initial) ? initial : "home", { scrollTop: false });
+
+  initViewLinks();
+  initAnchorLinks();
+  initViewHistory();
 }
 
-.contact-submit-hint {
-  text-align: center;
-  margin-top: -6px;
-}
-/* ==========================================================================
-   Student Dashboard (studenti.html) — reuses the tokens/components above,
-   no new gradients/neon introduced.
-   ========================================================================== */
-/* ==========================================================================
-   Bloom English — Student Dashboard
-   Built on top of the shared design tokens in style.css (colors, --blur,
-   radii, glass surfaces). No new tokens are introduced here.
-   ========================================================================== */
+/* --- Lightbox: تكبير صورة جدول المواعيد --- */
+function initScheduleLightbox() {
+  const openBtn = document.getElementById("scheduleOpenBtn");
+  const lightbox = document.getElementById("scheduleLightbox");
+  const closeBtn = document.getElementById("scheduleLightboxClose");
+  if (!openBtn || !lightbox || !closeBtn) return;
 
-.dash-body {
-  overflow-x: hidden;
-  background: var(--vanilla);
-}
-
-:root[data-theme="dark"] .dash-body {
-  background: var(--bg);
-}
-
-.student-splash {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  background: var(--vanilla);
-  opacity: 1;
-  transition: opacity 0.45s var(--ease), visibility 0.45s var(--ease);
-}
-
-:root[data-theme="dark"] .student-splash {
-  background: var(--bg);
-}
-
-.student-splash.is-done {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.student-splash__mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: min(42vw, 190px);
-  aspect-ratio: 1;
-}
-
-.student-splash__mark img {
-  position: relative;
-  z-index: 2;
-  width: 62%;
-  height: 62%;
-  object-fit: contain;
-  opacity: 0;
-  clip-path: inset(0 100% 0 0);
-  animation: splash-logo-draw 1.15s var(--ease) 0.25s forwards;
-}
-
-.student-splash__ring {
-  position: absolute;
-  inset: 0;
-  border: 2px solid transparent;
-  border-top-color: var(--sunset-500);
-  border-right-color: var(--sunset-500);
-  border-radius: 50%;
-  animation: splash-ring-spin 1.35s linear infinite;
-}
-
-.student-splash__line {
-  position: absolute;
-  z-index: 3;
-  width: 46%;
-  height: 2px;
-  background: var(--sunset-500);
-  transform: scaleX(0);
-  animation: splash-line-draw 0.55s var(--ease) forwards;
-}
-
-.student-splash__line--top { top: 18%; animation-delay: 0.05s; }
-.student-splash__line--bottom { bottom: 18%; animation-delay: 1.05s; }
-
-@keyframes splash-logo-draw {
-  0% { opacity: 0; clip-path: inset(0 100% 0 0); transform: scale(0.86); }
-  100% { opacity: 1; clip-path: inset(0 0 0 0); transform: scale(1); }
-}
-
-@keyframes splash-ring-spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes splash-line-draw {
-  to { transform: scaleX(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .student-splash__ring,
-  .student-splash__line,
-  .student-splash__mark img {
-    animation: none;
-    opacity: 1;
-    transform: none;
-    clip-path: none;
+  function open() {
+    lightbox.hidden = false;
+    requestAnimationFrame(() => lightbox.classList.add("is-open"));
+    document.body.style.overflow = "hidden";
   }
-}
-
-.dash-shell {
-  display: flex;
-  min-height: 100dvh;
-}
-
-/* --- Sidebar --- */
-.dash-sidebar {
-  width: 272px;
-  flex: none;
-  min-height: 100dvh;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  background: var(--surface-glass);
-  border-inline-end: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  transition: transform 0.3s var(--ease);
-}
-
-.dash-brand {
-  padding-inline: 6px;
-}
-
-.dash-nav__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-
-.dash-nav__link {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--ink-soft);
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: start;
-  transition: background 0.2s var(--ease), color 0.2s var(--ease);
-}
-
-.dash-nav__link svg {
-  width: 20px;
-  height: 20px;
-  flex: none;
-}
-
-.dash-nav__link:hover {
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-.dash-nav__link.is-active {
-  background: var(--sunset-500, var(--sunset-600));
-  color: var(--accent-ink);
-  box-shadow: 0 8px 20px var(--surface-glass-shadow);
-}
-
-.dash-logout {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--ink-soft);
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-}
-
-.dash-logout:hover {
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-.dash-logout svg {
-  width: 18px;
-  height: 18px;
-}
-
-.dash-sidebar-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 35;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* --- Top bar --- */
-.dash-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.dash-topbar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px clamp(16px, 3vw, 32px);
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: var(--surface-glass);
-  border-bottom: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.dash-menu-btn {
-  display: grid;
-}
-
-@media (min-width: 980px) {
-  .dash-menu-btn {
-    display: none;
-  }
-}
-
-.dash-topbar__title {
-  font-size: 1.1rem;
-  font-weight: 800;
-  flex: 1;
-}
-
-.dash-topbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dash-user-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 6px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.dash-user-chip__text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.2;
-}
-
-.dash-user-chip__role {
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
-
-/* --- Main / panels --- */
-.dash-main {
-  max-width: 1180px;
-  margin-inline: auto;
-  padding: clamp(20px, 3vw, 36px);
-}
-
-.dash-panel {
-  display: none;
-}
-
-.dash-panel.is-active {
-  display: block;
-  animation: dash-fade-in 0.35s var(--ease);
-}
-
-@keyframes dash-fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.dash-panel__intro {
-  color: var(--ink-soft);
-  margin: 0 0 22px;
-  max-width: 62ch;
-}
-
-.dash-leaderboard__grade {
-  margin: 0 0 14px;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--brand-strong);
-}
-
-.dash-card {
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 14px 40px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.dash-card h3 {
-  font-size: 1.02rem;
-  font-weight: 800;
-  margin: 0 0 14px;
-}
-
-.dash-stats-grid {
-  margin-bottom: 22px;
-}
-
-.dash-skills-card .progress-row:first-of-type {
-  margin-top: 4px;
-}
-
-/* --- Academic progress: donut + bar chart --- */
-.dash-analytics-card {
-  margin-bottom: 20px;
-}
-
-.dash-analytics-grid {
-  display: grid;
-  gap: 28px;
-  grid-template-columns: 1fr;
-  align-items: center;
-}
-
-@media (min-width: 700px) {
-  .dash-analytics-grid {
-    grid-template-columns: auto 1fr;
-  }
-}
-
-.dash-donut-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.dash-donut {
-  width: 168px;
-  height: 168px;
-}
-
-.dash-donut__track {
-  fill: none;
-  stroke: var(--surface-glass-border);
-  stroke-width: 12;
-}
-
-.dash-donut__value {
-  fill: none;
-  stroke: var(--sunset-500);
-  stroke-width: 12;
-  stroke-linecap: round;
-  transform: rotate(-90deg);
-  transform-origin: 70px 70px;
-  transition: stroke-dasharray 0.6s var(--ease);
-}
-
-.dash-donut__percent {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 800;
-  fill: var(--brand-strong);
-}
-
-.dash-donut__caption {
-  font-size: 0.6rem;
-  font-weight: 700;
-  fill: var(--ink-soft);
-}
-
-.dash-donut__legend {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-  text-align: center;
-}
-
-.dash-bars {
-  width: 100%;
-}
-
-.dash-bars__title {
-  margin: 0 0 16px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-
-.dash-bars__chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 22px;
-  height: 160px;
-  padding-inline: 6px;
-}
-
-.dash-bar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  height: 100%;
-}
-
-.dash-bar__value {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--brand-strong);
-}
-
-.dash-bar__col {
-  width: 100%;
-  max-width: 46px;
-  border-radius: var(--radius-md) var(--radius-md) 4px 4px;
-  background: var(--sunset-500, var(--berry-500));
-  transition: height 0.6s var(--ease);
-}
-
-.dash-bar__label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--ink-soft);
-  text-align: center;
-  line-height: 1.3;
-}
-
-/* --- Grades tabs --- */
-.dash-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.dash-tab {
-  padding: 9px 16px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--surface-glass-border);
-  background: transparent;
-  color: var(--ink-soft);
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s var(--ease), color 0.2s var(--ease);
-}
-
-.dash-tab:hover {
-  background: var(--surface-glass-border);
-}
-
-.dash-tab.is-active {
-  background: var(--sunset-500, var(--sunset-600));
-  color: var(--accent-ink);
-  border-color: transparent;
-}
-
-@media (max-width: 600px) {
-  #storyTabs {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+  function close() {
+    lightbox.classList.remove("is-open");
+    document.body.style.overflow = "";
+    setTimeout(() => {
+      lightbox.hidden = true;
+    }, 250);
   }
 
-  #storyTabs .dash-tab {
-    width: 100%;
-    min-height: 46px;
-    padding: 11px 14px;
-    font-size: 0.9rem;
-  }
-}
-
-.dash-log__average {
-  margin-bottom: 14px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-
-.dash-log__average strong {
-  color: var(--sunset-600);
-  font-family: var(--font-display);
-}
-
-/* --- Courses --- */
-.dash-courses-grid .grade-card.is-current {
-  border-color: var(--accent);
-}
-
-/* --- Grades log --- */
-.dash-log {
-  display: grid;
-  gap: 12px;
-}
-
-.dash-log__row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-}
-
-.dash-log__main {
-  flex: 1;
-  min-width: 0;
-}
-
-.dash-log__title {
-  font-weight: 700;
-  margin: 0 0 2px;
-}
-
-.dash-log__date {
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.dash-log__score {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.05rem;
-  white-space: nowrap;
-}
-
-.dash-log__grade {
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  font-size: 0.78rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.dash-log__grade--excellent { background: rgba(76, 175, 80, 0.18); color: #2e7d32; }
-.dash-log__grade--verygood { background: rgba(44, 128, 151, 0.18); color: var(--sunset-600); }
-.dash-log__grade--good { background: rgba(79, 154, 148, 0.16); color: var(--berry-500); }
-
-:root[data-theme="dark"] .dash-log__grade--excellent { color: #81c784; }
-:root[data-theme="dark"] .dash-log__grade--verygood { color: var(--sunset-300); }
-:root[data-theme="dark"] .dash-log__grade--good { color: #8cd0b8; }
-
-/* --- Productivity tools --- */
-.dash-tools-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 780px) {
-  .dash-tools-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .dash-tool-card--wide {
-    grid-column: 1 / -1;
-  }
-}
-
-.dash-tool-card__hint {
-  margin: -6px 0 14px;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-}
-
-.dash-todo-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.dash-todo-form input {
-  flex: 1;
-  height: 42px;
-  padding-inline: 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: inherit;
-}
-
-.dash-todo-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-  max-height: 230px;
-  overflow-y: auto;
-}
-
-.dash-todo-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass-border);
-}
-
-.dash-todo-list li span {
-  flex: 1;
-  font-size: 0.9rem;
-}
-
-.dash-todo-list li.is-done span {
-  text-decoration: line-through;
-  color: var(--ink-soft);
-}
-
-.dash-todo-list__remove {
-  border: none;
-  background: none;
-  color: var(--ink-soft);
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 2px 6px;
-}
-
-.dash-todo-empty {
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 10px 0;
-}
-
-.dash-pomodoro__display {
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  font-weight: 800;
-  text-align: center;
-  margin: 10px 0 18px;
-  color: var(--brand-strong);
-  font-variant-numeric: tabular-nums;
-}
-
-.dash-pomodoro__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-#notesArea {
-  width: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 0.92rem;
-  padding: 12px 14px;
-  resize: vertical;
-}
-
-.dash-notes__saved {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  font-size: 0.78rem;
-  color: var(--sunset-600);
-  font-weight: 700;
-}
-
-.dash-notes__saved svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* --- Leaderboard --- */
-.dash-leaderboard {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.dash-leaderboard__row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-}
-
-.dash-leaderboard__row.is-you {
-  border-color: var(--accent);
-}
-
-.dash-leaderboard__rank {
-  width: 30px;
-  text-align: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  color: var(--ink-soft);
-}
-
-.dash-leaderboard__row:nth-child(-n+3) .dash-leaderboard__rank {
-  color: var(--sunset-500);
-}
-
-.dash-leaderboard__avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  flex: none;
-  background: var(--sunset-500, var(--berry-500));
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.78rem;
-}
-
-.dash-leaderboard__name {
-  flex: 1;
-  font-weight: 700;
-  font-size: 0.92rem;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dash-leaderboard__meta {
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-  white-space: nowrap;
-  display: none;
-}
-
-@media (min-width: 560px) {
-  .dash-leaderboard__meta {
-    display: inline;
-  }
-}
-
-.dash-leaderboard__points {
-  font-family: var(--font-display);
-  font-weight: 800;
-  color: var(--sunset-600);
-  white-space: nowrap;
-  font-size: 0.9rem;
-}
-
-/* --- Profile --- */
-.dash-profile-grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 960px) {
-  .dash-profile-grid {
-    grid-template-columns: 1.3fr 1fr;
-    align-items: start;
-  }
-}
-
-.dash-profile-main {
-  display: grid;
-  gap: 20px;
-}
-
-.dash-profile-side {
-  display: grid;
-  gap: 20px;
-}
-
-/* --- Profile picture upload --- */
-.dash-avatar-upload {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.dash-avatar-preview {
-  width: 84px;
-  height: 84px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--accent);
-  background-size: cover;
-  background-position: center;
-  display: grid;
-  place-items: center;
-  color: var(--accent-ink);
-  font-weight: 800;
-  font-size: 1.6rem;
-  border: 1px solid var(--surface-glass-border);
-}
-
-.dash-avatar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.dash-avatar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dash-avatar-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.dash-avatar-status {
-  margin: 10px 0 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #2e7d32;
-  min-height: 1.2em;
-}
-
-.dash-avatar-status.is-error {
-  color: #b4443f;
-}
-
-.dash-profile-saved {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #2e7d32;
-}
-
-.dash-blur-control {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.dash-blur-control svg {
-  width: 20px;
-  height: 20px;
-  color: var(--accent);
-  flex: none;
-}
-
-.dash-blur-control input[type="range"] {
-  flex: 1;
-  accent-color: var(--sunset-500);
-}
-
-.dash-blur-control__value {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.85rem;
-  min-width: 4ch;
-  text-align: end;
-}
-
-.dash-points-total {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.dash-points-total__value {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--brand-strong);
-}
-
-.dash-points-total__label {
-  color: var(--ink-soft);
-  font-weight: 700;
-}
-
-.dash-badges-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.dash-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass-border);
-  border: 1px solid transparent;
-  font-family: inherit;
-  text-align: start;
-  cursor: pointer;
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
-}
-
-.dash-badge:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-.dash-badge:disabled {
-  cursor: not-allowed;
-}
-
-.dash-badge__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  flex: none;
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-
-.dash-badge__icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.dash-badge__info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.dash-badge__label {
-  font-size: 0.82rem;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dash-badge__tier {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-
-.dash-badge__download {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  color: var(--ink-soft);
-}
-
-.dash-badge--bronze .dash-badge__icon { background: #cd7f32; }
-.dash-badge--bronze { border-color: rgba(205, 127, 50, 0.4); }
-.dash-badge--silver .dash-badge__icon { background: #dfe6ee; }
-.dash-badge--silver { border-color: rgba(154, 165, 177, 0.4); }
-.dash-badge--gold .dash-badge__icon { background: #e0c071; }
-.dash-badge--gold { border-color: rgba(224, 165, 58, 0.5); }
-.dash-badge--diamond .dash-badge__icon { background: #a7c9e0; }
-.dash-badge--diamond { border-color: rgba(61, 111, 158, 0.5); }
-
-.dash-badge.is-locked {
-  opacity: 0.5;
-  border-color: transparent !important;
-}
-
-.dash-badge.is-locked .dash-badge__icon {
-  background: var(--surface-glass-border);
-  color: var(--ink-soft);
-}
-
-/* --- Responsive sidebar (mobile) --- */
-@media (max-width: 979px) {
-  .dash-sidebar {
-    position: fixed;
-    inset-inline-start: 0;
-    top: 0;
-    height: 100dvh;
-    transform: translateX(-105%);
+  openBtn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lightbox.hidden) close();
+  });
+}
+
+/* --- فورم الاستفسار: يبني رسالة واتساب جاهزة من بيانات الفورم --- */
+function initContactForm() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = form.name.value.trim();
+    const gradeSelect = form.grade;
+    const gradeOption = gradeSelect.options[gradeSelect.selectedIndex];
+    const gradeText = gradeOption && gradeOption.value ? gradeOption.textContent.trim() : "";
+    const message = form.message.value.trim();
+
+    const lines = [
+      `${t("contact_wa_greeting")} ${name || "—"}`,
+      gradeText ? `${t("contact_wa_grade")}: ${gradeText}` : null,
+      message ? `${t("contact_wa_inquiry")}: ${message}` : null,
+    ].filter(Boolean);
+
+    const url = "https://wa.me/201097221867?text=" + encodeURIComponent(lines.join("\n"));
+    window.open(url, "_blank", "noopener");
+  });
+}
+
+/* --- تحميل صورة الجدول فعليًا على الجهاز (أندرويد + آيفون + كمبيوتر) --- */
+function initScheduleDownload() {
+  const link = document.getElementById("scheduleDownloadBtn");
+  if (!link) return;
+
+  const url = link.getAttribute("href");
+  const filename = link.getAttribute("download") || "schedule.jpg";
+  const isHttp = location.protocol === "http:" || location.protocol === "https:";
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  // متصفحات داخل التطبيقات (فيسبوك/إنستجرام/واتساب...) بتمنع التحميل المباشر
+  const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|Snapchat|TikTok|MicroMessenger/i.test(ua);
+
+  // بنجهّز الصورة (blob) من أول ما الصفحة تفتح عشان الضغطة تشتغل فورًا
+  // (آيفون بيشترط إن الـ share يتنفّذ مباشرة من ضغطة المستخدم)
+  let blobPromise = null;
+  const getBlob = () => {
+    if (!blobPromise) {
+      blobPromise = fetch(url).then((r) => {
+        if (!r.ok) throw new Error("fetch failed");
+        return r.blob();
+      });
+      blobPromise.catch(() => { blobPromise = null; });
+    }
+    return blobPromise;
+  };
+  let blobReady = null;
+  if (isHttp) getBlob().then((b) => { blobReady = b; }).catch(() => {});
+
+  function toast(msg) {
+    if (window.snDialog && window.snDialog.toast) window.snDialog.toast(msg);
   }
 
-  [dir="rtl"] .dash-sidebar {
-    transform: translateX(105%);
+  // لو مفيش طريقة تحميل مباشرة: نفتح الصورة كبيرة ونقول للطالب يحفظها بالضغط المطوّل
+  function manualSave() {
+    const openBtn = document.getElementById("scheduleOpenBtn");
+    if (openBtn) openBtn.click();
+    toast("اضغط ضغطة مطوّلة على الصورة واختار «حفظ الصورة»");
   }
 
-  .dash-sidebar.is-open {
-    transform: translateX(0);
-  }
-}
-
-@media (min-width: 980px) {
-  .dash-sidebar-backdrop {
-    display: none !important;
-  }
-}
-
-/* ==========================================================================
-   القصة — عرض فصول القصة الخاصة بكل صف دراسي + نافذة خيارات الفصل
-   ========================================================================== */
-
-.story-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 14px 40px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-}
-
-.story-head__icon {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--sunset-500, var(--berry-500));
-  color: var(--vanilla);
-}
-
-.story-head__icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.story-head__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.story-head__title {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.story-head__subtitle {
-  font-size: 0.84rem;
-  color: var(--ink-soft);
-}
-
-/* --- قائمة الفصول --- */
-.story-chapters {
-  display: grid;
-  gap: 12px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.chapter-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-  color: inherit;
-  font-family: inherit;
-  text-align: start;
-  cursor: pointer;
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-
-.chapter-card:hover,
-.chapter-card:focus-visible {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-  box-shadow: 0 16px 40px var(--surface-glass-shadow);
-}
-
-.chapter-card:active {
-  transform: translateY(-1px) scale(0.995);
-}
-
-.chapter-card__number {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.95rem;
-  background: var(--surface-glass-border);
-  color: var(--brand);
-}
-
-.inline-status-icon {
-  display: inline-flex;
-  width: 1em;
-  height: 1em;
-  vertical-align: -0.14em;
-  flex: none;
-}
-
-.inline-status-icon svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.inline-status-icon--star svg {
-  fill: currentColor;
-  stroke: currentColor;
-}
-
-.chapter-card__number .inline-status-icon {
-  width: 21px;
-  height: 21px;
-}
-
-.chapter-card__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.chapter-card__title {
-  font-weight: 800;
-  margin: 0 0 3px;
-  font-size: 0.98rem;
-}
-
-.chapter-card__desc {
-  margin: 0;
-  font-size: 0.84rem;
-  color: var(--ink-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chapter-card__status {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 0.72rem;
-  font-weight: 800;
-  white-space: nowrap;
-  background: rgba(76, 175, 80, 0.18);
-  color: #2e7d32;
-}
-
-:root[data-theme="dark"] .chapter-card__status {
-  color: #81c784;
-}
-
-.chapter-card__arrow {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  color: var(--ink-soft);
-}
-
-[dir="rtl"] .chapter-card__arrow {
-  transform: scaleX(-1);
-}
-
-@media (max-width: 600px) {
-  .dash-panel[data-panel="story"] {
-    padding-inline: 10px;
+  function triggerDownload(blob) {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   }
 
-  .dash-panel[data-panel="story"] .dash-panel__intro,
-  .dash-panel[data-panel="story"] #storyTabs,
-  .dash-panel[data-panel="story"] .story-head,
-  .dash-panel[data-panel="story"] .story-chapters {
-    width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-/* --- نافذة خيارات الفصل --- */
-.modal--chapter {
-  max-width: 460px;
-  text-align: start;
-}
-
-.modal--chapter #chapterOptionsView h3,
-.modal--chapter #chapterContentTitle {
-  text-align: center;
-}
-
-.modal--chapter #chapterModalSubtitle {
-  text-align: center;
-}
-
-.chapter-options {
-  display: grid;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.chapter-option {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass-border);
-  border: 1px solid transparent;
-  font-family: inherit;
-  text-align: start;
-  cursor: pointer;
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
-}
-
-.chapter-option:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-}
-
-.chapter-option__icon {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-
-.chapter-option__icon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.chapter-option--video .chapter-option__icon { background: #3c90a8; }
-.chapter-option--story .chapter-option__icon { background: #4f9a94; }
-.chapter-option--exam .chapter-option__icon { background: #3d6f9e; }
-
-.chapter-option__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.chapter-option__title {
-  display: block;
-  font-weight: 800;
-  font-size: 0.92rem;
-  margin-bottom: 2px;
-}
-
-.chapter-option__desc {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-}
-
-.chapter-option__chevron {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--ink-soft);
-}
-
-[dir="rtl"] .chapter-option__chevron {
-  transform: scaleX(-1);
-}
-
-/* --- عرض المحتوى داخل النافذة (فيديو / نص / امتحان) --- */
-.chapter-content__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--accent);
-  cursor: pointer;
-}
-
-.chapter-content__back svg {
-  width: 15px;
-  height: 15px;
-}
-
-[dir="rtl"] .chapter-content__back svg {
-  transform: scaleX(-1);
-}
-
-.chapter-content__body {
-  margin-top: 14px;
-}
-
-.lesson-pdf-viewer {
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.lesson-pdf-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 42px;
-  color: var(--ink);
-  font-weight: 800;
-}
-
-.lesson-pdf-nav {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: 50%;
-  background: var(--surface-glass);
-  color: var(--brand-strong);
-  cursor: pointer;
-}
-
-.lesson-pdf-nav:hover,
-.lesson-pdf-nav:focus-visible {
-  background: var(--surface-glass-border);
-}
-
-.lesson-pdf-nav svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.lesson-pdf-open {
-  margin-inline-start: 12px;
-  color: var(--brand-strong);
-  font-size: 0.78rem;
-  text-decoration: underline;
-}
-
-.lesson-pdf-viewer canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-md);
-  background: #fff;
-  box-shadow: 0 10px 24px var(--surface-glass-shadow);
-}
-
-.chapter-video {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--berry-950);
-}
-
-.chapter-video iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.chapter-story-text {
-  max-height: 48vh;
-  overflow-y: auto;
-  padding-inline-end: 6px;
-  line-height: 1.85;
-}
-
-.chapter-story-text p {
-  margin: 0 0 14px;
-  color: var(--ink);
-  font-size: 0.95rem;
-}
-
-.chapter-story-text p:last-child {
-  margin-bottom: 0;
-}
-
-.chapter-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 30px 10px;
-  text-align: center;
-}
-
-.chapter-placeholder__icon {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--surface-glass-border);
-  color: var(--ink-soft);
-}
-
-.chapter-placeholder__icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.chapter-placeholder p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-  max-width: 34ch;
-}
-
-/* ==========================================================================
-   محرك عرض الدروس والامتحانات — قائمة الدروس / صفحة الدرس / محرك الامتحان
-   ========================================================================== */
-
-/* --- عناصر صفحة الدرس (فيديو / نص / امتحانات / شيت) --- */
-.lesson-items {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .lesson-items {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.lesson-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 18px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: 0 14px 40px var(--surface-glass-shadow);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  color: inherit;
-  font-family: inherit;
-  text-align: start;
-  cursor: pointer;
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
-}
-
-.lesson-item:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-}
-
-.lesson-item__icon {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-
-.lesson-item__icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.lesson-item--video .lesson-item__icon { background: #3c90a8; }
-.lesson-item--text .lesson-item__icon { background: #4f9a94; }
-.lesson-item--exam .lesson-item__icon { background: #3d6f9e; }
-.lesson-item--vocab .lesson-item__icon { background: #c9a66b; }
-.lesson-item--sheet .lesson-item__icon { background: #1d5260; }
-
-.lesson-item__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.lesson-item__title {
-  display: block;
-  font-weight: 800;
-  font-size: 0.95rem;
-  margin-bottom: 3px;
-}
-
-.lesson-item__desc {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.lesson-item__status {
-  flex: none;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 0.72rem;
-  font-weight: 800;
-  white-space: nowrap;
-  background: rgba(76, 175, 80, 0.18);
-  color: #2e7d32;
-}
-
-:root[data-theme="dark"] .lesson-item__status {
-  color: #81c784;
-}
-
-.lesson-item__status--pending {
-  background: rgba(61, 111, 158, 0.18);
-  color: #2f6bb3;
-}
-
-:root[data-theme="dark"] .lesson-item__status--pending {
-  color: #a7c9e0;
-}
-
-/* --- محرك الامتحان --- */
-.exam-form {
-  display: grid;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.exam-question {
-  padding: 18px 20px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-}
-
-.exam-question__prompt {
-  display: flex;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 0.95rem;
-  margin: 0 0 14px;
-}
-
-.exam-question__number {
-  flex: none;
-  color: var(--accent);
-}
-
-.exam-question__type {
-  display: inline-block;
-  margin-inline-start: 8px;
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 0.68rem;
-  font-weight: 700;
-  background: var(--surface-glass-border);
-  color: var(--ink-soft);
-  vertical-align: middle;
-}
-
-.exam-options {
-  display: grid;
-  gap: 8px;
-}
-
-.exam-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass-border);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.2s var(--ease);
-}
-
-.exam-option:hover {
-  border-color: var(--accent);
-}
-
-.exam-option input {
-  accent-color: var(--accent);
-  flex: none;
-}
-
-.exam-option span {
-  font-size: 0.9rem;
-}
-
-.exam-question textarea {
-  width: 100%;
-  min-height: 110px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.exam-question__hint {
-  margin: 8px 0 0;
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-}
-
-/* --- حالة الإجابة بعد التسليم --- */
-.exam-question.is-correct { border-color: rgba(76, 175, 80, 0.5); }
-.exam-question.is-incorrect { border-color: rgba(180, 68, 63, 0.5); }
-
-.exam-question__verdict {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.exam-question.is-correct .exam-question__verdict { background: rgba(76, 175, 80, 0.18); color: #2e7d32; }
-.exam-question.is-incorrect .exam-question__verdict { background: rgba(180, 68, 63, 0.18); color: #b4443f; }
-.exam-question.is-pending .exam-question__verdict { background: rgba(61, 111, 158, 0.18); color: #2f6bb3; }
-
-.exam-actions {
-  margin-top: 22px;
-}
-
-.exam-actions .btn {
-  width: 100%;
-}
-
-.exam-actions[hidden] {
-  display: none;
-}
-
-.exam-result {
-  margin-top: 22px;
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  text-align: center;
-  background: var(--sunset-500, var(--berry-500));
-  color: var(--vanilla);
-}
-
-.exam-result__score {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 2rem;
-}
-
-.exam-result__label {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.exam-result__note {
-  margin: 12px 0 0;
-  font-size: 0.8rem;
-  opacity: 0.85;
-}
-
-.sheet-section-title {
-  margin: 22px 0 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--surface-glass-border);
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--brand-strong);
-}
-
-.sheet-vocabulary-grid {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.sheet-vocabulary-row {
-  display: grid;
-  grid-template-columns: 28px minmax(110px, 0.7fr) minmax(140px, 1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 7px 10px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-md);
-  background: var(--surface-glass);
-}
-
-.sheet-vocabulary-number {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-  font-weight: 800;
-  font-size: 0.78rem;
-}
-
-.sheet-vocabulary-prompt {
-  min-width: 0;
-  color: var(--ink);
-  font-weight: 700;
-}
-
-.sheet-vocabulary-row input {
-  min-width: 0;
-  width: 100%;
-  padding: 9px 10px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: 8px;
-  background: var(--surface-glass);
-  color: var(--ink);
-  font: inherit;
-  direction: ltr;
-}
-
-@media (max-width: 560px) {
-  .sheet-vocabulary-row {
-    grid-template-columns: 26px minmax(0, 1fr);
-  }
-
-  .sheet-vocabulary-row input {
-    grid-column: 2;
-  }
-}
-
-/* ==========================================================================
-   الرئيسية (Home) + أزرار المظهر/اللغة في الشريط الجانبي + صورة الملف الشخصي
-   ========================================================================== */
-
-/* --- الشريط الجانبي: أزرار المظهر واللغة وتسجيل الخروج في الأسفل --- */
-.dash-sidebar {
-  overflow-y: auto;
-}
-
-.dash-side-utility {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.dash-side-utility .dash-logout {
-  margin-top: 0;
-  width: 100%;
-}
-
-.dash-side-utility .mobile-menu__utility-btn {
-  font-family: inherit;
-}
-
-.dash-side-utility .mobile-menu__utility-btn:hover {
-  background: var(--surface-glass-border);
-}
-
-/* أيقونة الشمس/القمر داخل زرار الشريط الجانبي (نفس منطق .theme-btn) */
-.dash-side-utility .theme-btn .icon-moon {
-  display: none;
-}
-
-:root[data-theme="dark"] .dash-side-utility .theme-btn .icon-sun {
-  display: none;
-}
-
-:root[data-theme="dark"] .dash-side-utility .theme-btn .icon-moon {
-  display: block;
-}
-
-/* --- صورة شخصية (تظهر في الشريط العلوي، الملف الشخصي، ولوحة الصدارة) --- */
-[data-has-photo] {
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  color: transparent !important;
-  font-size: 0 !important;
-}
-
-/* --- صفحة الرئيسية --- */
-.home-hello {
-  margin-bottom: 20px;
-}
-
-.home-hello__title {
-  margin: 0 0 6px;
-  font-family: "Cairo", sans-serif;
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.home-identity-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-top: 16px;
-  padding: 15px 18px;
-  border-radius: var(--radius-md);
-  background: var(--sunset-500);
-  color: var(--accent-ink);
-  box-shadow: 0 10px 24px rgba(44, 128, 151, 0.22);
-}
-
-.home-identity-strip strong {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.home-identity-strip span {
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: end;
-}
-
-.home-quote {
-  margin-top: 18px;
-  padding: 18px 20px;
-  border: 1px solid rgba(44, 128, 151, 0.38);
-  border-radius: var(--radius-md);
-  background: var(--sunset-500);
-  color: var(--accent-ink);
-  box-shadow: 0 10px 24px rgba(44, 128, 151, 0.18);
-}
-
-.home-quote__label,
-.home-quote__source {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.home-quote__label {
-  margin-bottom: 8px;
-  opacity: 0.78;
-}
-
-.home-quote__text {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(0.92rem, 2vw, 1.08rem);
-  font-weight: 800;
-  line-height: 1.8;
-}
-
-.home-quote__source {
-  margin-top: 8px;
-  opacity: 0.72;
-}
-
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.home-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-height: 210px;
-  padding: 20px;
-  text-align: start;
-  font-family: inherit;
-  color: var(--ink);
-  cursor: pointer;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--blur)) saturate(1.3);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.3);
-  box-shadow: 0 10px 28px var(--surface-glass-shadow);
-  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-
-.home-tile:hover,
-.home-tile:focus-visible {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 34px var(--surface-glass-shadow);
-}
-
-.home-tile__head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.home-tile__icon {
-  width: 40px;
-  height: 40px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-.home-tile__icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.home-tile__title {
-  font-family: "Cairo", sans-serif;
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
-.home-tile__body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.home-tile__empty {
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.home-tile__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--brand-strong);
-}
-
-.home-tile__cta svg {
-  width: 16px;
-  height: 16px;
-}
-
-[dir="ltr"] .home-tile__cta svg {
-  transform: scaleX(-1);
-}
-
-.home-lesson__label {
-  font-family: "Cairo", sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
-  line-height: 1.4;
-}
-
-.home-lesson__sub {
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-}
-
-.home-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--surface-glass-border);
-}
-
-.home-row:last-child {
-  border-bottom: none;
-}
-
-.home-row__rank {
-  width: 22px;
-  flex: none;
-  text-align: center;
-  font-weight: 800;
-  color: var(--sunset-500, var(--brand-strong));
-}
-
-.home-row__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.home-row__value {
-  flex: none;
-  font-weight: 800;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
-
-.home-mini-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.home-mini-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-glass-border);
-}
-
-.home-mini-stat strong {
-  font-family: "Cairo", sans-serif;
-  font-size: 1.3rem;
-  font-weight: 800;
-}
-
-.home-mini-stat span {
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-}
-
-@media (max-width: 720px) {
-  .home-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-identity-strip {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .home-identity-strip span {
-    text-align: start;
-  }
-}
-
-/* --- الشريط العلوي: صورة الطالب فقط (دائرة كبيرة، بدون اسم أو شكل بيضاوي) --- */
-.dash-user-chip {
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  gap: 0;
-}
-
-.dash-user-chip__text {
-  display: none;
-}
-
-.dash-user-chip .user-chip__avatar {
-  width: 48px;
-  height: 48px;
-  font-size: 1.2rem;
-  border: 2px solid var(--surface-glass-border);
-  box-shadow: 0 6px 16px var(--surface-glass-shadow);
-  transition: transform 0.2s var(--ease);
-}
-
-.dash-user-chip:hover .user-chip__avatar {
-  transform: scale(1.06);
-}
-
-/* أيقونات المربعات: حجم ثابت */
-.home-tile__icon svg {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-.home-tile__cta svg {
-  width: 16px !important;
-  height: 16px !important;
-}
+  link.addEventListener("click", (e) => {
+    // صفحة محلية (file://) أو متصفح داخل تطبيق: التحميل المباشر مش مضمون
+    if (!isHttp) {
+      if (isIOS || isInApp) { e.preventDefault(); manualSave(); }
+      return; // غير كده بنسيب <a download> الطبيعي
+    }
+    e.preventDefault();
+
+    const blob = blobReady;
+    if (!blob) {
+      // الصورة لسه بتتحمّل أو فشلت: نحاول تاني
+      getBlob().then(triggerDownload).catch(() => { isIOS || isInApp ? manualSave() : (location.href = url); });
+      return;
+    }
+
+    // آيفون: الـ share sheet هو الطريق الوحيد لحفظ الصورة في الصور/الملفات
+    if (isIOS && navigator.canShare && navigator.share) {
+      const file = new File([blob], "schedule.jpg", { type: blob.type || "image/jpeg" });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: filename }).catch((err) => {
+          if (err && err.name !== "AbortError") manualSave(); // AbortError = الطالب قفل القائمة بنفسه
+        });
+        return;
+      }
+    }
+    if (isIOS || isInApp) return manualSave();
+
+    // أندرويد + كمبيوتر: تحميل مباشر
+    triggerDownload(blob);
+  });
+}
+
+/* --- بيانات جدول المواعيد مقسّمة على كل سنتر (متحدّثة من صورة الجدول الجديدة) --- */
+const CENTERS_SCHEDULE = {
+  ar: [
+    {
+      center: "سنتر توتال ستارز",
+      rows: [
+        { grade: "الصف الأول الإعدادي", day: "الإثنين والخميس", time: "6:00" },
+        { grade: "الصف الثاني الإعدادي", day: "الإثنين والخميس", time: "7:00" },
+        { grade: "الصف الثالث الإعدادي", day: "الأحد والأربعاء", time: "10:00" },
+        { grade: "الصف الأول الثانوي", day: "الإثنين والخميس", time: "5:00" },
+      ],
+    },
+    {
+      center: "سنتر الحرية",
+      rows: [
+        { grade: "الصف الأول الإعدادي", day: "الأحد والأربعاء", time: "5:00" },
+        { grade: "الصف الثاني الإعدادي", day: "الأحد والأربعاء", time: "6:30" },
+        { grade: "الصف الثالث الإعدادي", day: "السبت والثلاثاء", time: "12:00" },
+        { grade: "الصف الثاني الثانوي", day: "السبت والثلاثاء", time: "6:00" },
+      ],
+    },
+    {
+      center: "سنتر وان",
+      rows: [
+        { grade: "الصف الأول الإعدادي", day: "الإثنين والخميس", time: "4:00" },
+        { grade: "الصف الثاني الإعدادي", day: "الإثنين والخميس", time: "3:00" },
+        { grade: "الصف الثالث الإعدادي", day: "السبت والثلاثاء", time: "11:00" },
+        { grade: "الصف الأول الثانوي", day: "الإثنين والخميس", time: "1:30" },
+        { grade: "الصف الثاني الثانوي", day: "الإثنين والخميس", time: "12:30" },
+        { grade: "الصف الثالث الثانوي", day: "الإثنين والخميس", time: "10:00" },
+      ],
+    },
+    {
+      center: "سنتر برافو",
+      rows: [
+        { grade: "الصف الأول الإعدادي", day: "السبت والثلاثاء", time: "4:00" },
+        { grade: "الصف الثاني الإعدادي", day: "السبت والثلاثاء", time: "5:00" },
+        { grade: "الصف الثالث الإعدادي", day: "السبت والثلاثاء", time: "2:00" },
+        { grade: "الصف الأول الثانوي", day: "السبت والثلاثاء", time: "3:00" },
+      ],
+    },
+  ],
+  en: [
+    {
+      center: "Total Stars Center",
+      rows: [
+        { grade: "1st Prep", day: "Monday & Thursday", time: "6:00" },
+        { grade: "2nd Prep", day: "Monday & Thursday", time: "7:00" },
+        { grade: "3rd Prep", day: "Sunday & Wednesday", time: "10:00" },
+        { grade: "1st Secondary", day: "Monday & Thursday", time: "5:00" },
+      ],
+    },
+    {
+      center: "Al-Horreya Center",
+      rows: [
+        { grade: "1st Prep", day: "Sunday & Wednesday", time: "5:00" },
+        { grade: "2nd Prep", day: "Sunday & Wednesday", time: "6:30" },
+        { grade: "3rd Prep", day: "Saturday & Tuesday", time: "12:00" },
+        { grade: "2nd Secondary", day: "Saturday & Tuesday", time: "6:00" },
+      ],
+    },
+    {
+      center: "One Center",
+      rows: [
+        { grade: "1st Prep", day: "Monday & Thursday", time: "4:00" },
+        { grade: "2nd Prep", day: "Monday & Thursday", time: "3:00" },
+        { grade: "3rd Prep", day: "Saturday & Tuesday", time: "11:00" },
+        { grade: "1st Secondary", day: "Monday & Thursday", time: "1:30" },
+        { grade: "2nd Secondary", day: "Monday & Thursday", time: "12:30" },
+        { grade: "3rd Secondary", day: "Monday & Thursday", time: "10:00" },
+      ],
+    },
+    {
+      center: "Bravo Center",
+      rows: [
+        { grade: "1st Prep", day: "Saturday & Tuesday", time: "4:00" },
+        { grade: "2nd Prep", day: "Saturday & Tuesday", time: "5:00" },
+        { grade: "3rd Prep", day: "Saturday & Tuesday", time: "2:00" },
+        { grade: "1st Secondary", day: "Saturday & Tuesday", time: "3:00" },
+      ],
+    },
+  ],
+};
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* --- يرسم جدول كل سنتر مباشرة جوه صفحة المواعيد (بدل ما يتحمّل كملف) --- */
+function renderCentersSchedule() {
+  const grid = document.getElementById("centersScheduleGrid");
+  if (!grid) return;
+
+  const isAr = document.documentElement.lang !== "en";
+  const centers = CENTERS_SCHEDULE[isAr ? "ar" : "en"];
+  const colGrade = isAr ? "الصف الدراسي" : "Grade";
+  const colDay = isAr ? "الأيام" : "Days";
+  const colTime = isAr ? "الوقت" : "Time";
+  const pinIcon =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+
+  grid.innerHTML = centers
+    .map(
+      (c) => `
+    <article class="center-card">
+      <div class="center-card__head">${pinIcon}<span>${escapeHtml(c.center)}</span></div>
+      <table>
+        <thead>
+          <tr><th>${colGrade}</th><th>${colDay}</th><th>${colTime}</th></tr>
+        </thead>
+        <tbody>
+          ${c.rows
+            .map(
+              (r) => `<tr><td>${escapeHtml(r.grade)}</td><td>${escapeHtml(r.day)}</td><td>${escapeHtml(r.time)}</td></tr>`
+            )
+            .join("\n          ")}
+        </tbody>
+      </table>
+    </article>`
+    )
+    .join("\n");
+}
+
+const PagesUI = {
+  init() {
+    initViewRouter();
+    initScheduleLightbox();
+    initScheduleDownload();
+    renderCentersSchedule();
+    initContactForm();
+  },
+};
 
 
 /* ==========================================================================
-   الرئيسية: مربعين في كل صف + مربعات حقيقية (مش مستطيلة) — حتى على الموبايل
+   سبلاش الافتتاح: شعار ← موجة بلون المنصة ← اسم المنصة ← دايرة التحميل ← المنصة
+   بيظهر مرة واحدة في كل جلسة (sessionStorage). window.snLaunch.done = Promise بيخلص
+   لما سبلاش الافتتاح يخلص (home.js بيستناه قبل ما يشغّل دايرة التحميل بتاعت الطالب).
    ========================================================================== */
-.home-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px;
-}
+(() => {
+  const LAUNCH_MS = 3000; // مدة سبلاش الافتتاح قبل ما يختفي ونبدأ الدايرة
+  const RING_MS = 1700; // مدة الدايرة في الصفحة الرئيسية (صفحة الطالب بيتحكم فيها home.js)
 
-.home-tile {
-  aspect-ratio: 1 / 1;
-  min-height: 0 !important;
-  padding: 14px;
-  gap: 8px;
-  overflow: hidden;
-}
+  const launch = document.getElementById("launchSplash");
+  const siteSplash = document.getElementById("siteSplash"); // دايرة الصفحة الرئيسية
+  const studentSplash = document.getElementById("studentSplash"); // دايرة صفحة الطالب
 
-.home-tile__head { gap: 8px; }
+  let resolveDone;
+  window.snLaunch = { done: new Promise((r) => (resolveDone = r)) };
 
-.home-tile__icon { width: 32px; height: 32px; }
+  const releaseRings = () => {
+    [siteSplash, studentSplash].forEach((el) => el && el.classList.remove("is-held"));
+  };
 
-.home-tile__title {
-  font-size: 0.9rem;
-  line-height: 1.25;
-}
+  let seen = false;
+  try {
+    seen = !!sessionStorage.getItem("sn_launch_seen");
+  } catch {}
 
-.home-tile__body {
-  overflow: hidden;
-  gap: 4px;
-  min-height: 0;
-}
-
-.home-tile__empty { font-size: 0.78rem; line-height: 1.5; }
-.home-tile__cta { font-size: 0.75rem; }
-.home-lesson__label { font-size: 0.95rem; }
-.home-lesson__sub { font-size: 0.75rem; }
-
-.home-row { gap: 6px; padding: 3px 0; }
-.home-row__name { font-size: 0.78rem; }
-.home-row__value { font-size: 0.72rem; }
-.home-row__rank { width: 16px; font-size: 0.75rem; }
-.home-row .dash-leaderboard__avatar { display: none; }
-
-.home-mini-stats { gap: 6px; }
-.home-mini-stat { padding: 6px 8px; }
-.home-mini-stat strong { font-size: 1rem; }
-.home-mini-stat span { font-size: 0.65rem; }
-
-@media (min-width: 721px) {
-  .home-grid { gap: 18px; }
-  .home-tile { padding: 20px; gap: 12px; }
-  .home-tile__icon { width: 40px; height: 40px; }
-  .home-tile__title { font-size: 1.05rem; }
-  .home-tile__empty { font-size: 0.9rem; }
-  .home-tile__cta { font-size: 0.85rem; }
-  .home-lesson__label { font-size: 1.15rem; }
-  .home-row { gap: 10px; padding: 6px 0; }
-  .home-row__name { font-size: 0.9rem; }
-  .home-row__value { font-size: 0.85rem; }
-  .home-row .dash-leaderboard__avatar { display: grid; }
-  .home-mini-stat strong { font-size: 1.3rem; }
-  .home-mini-stat span { font-size: 0.78rem; }
-}
-
-@media (max-width: 720px) {
-  /* بنلغي قاعدة العمود الواحد القديمة */
-  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-}
-
-/* الرئيسية: أحجام البلاطات تتبع كمية المحتوى، بدل إجبارها كلها على مربع واحد. */
-.home-grid {
-  grid-template-areas:
-    "lesson leaderboard"
-    "grades leaderboard"
-    "grades progress";
-  grid-template-rows: repeat(3, minmax(150px, 1fr));
-  align-items: stretch;
-}
-
-.home-tile {
-  aspect-ratio: auto;
-  min-height: 0 !important;
-}
-
-.home-tile--lesson { grid-area: lesson; }
-.home-tile--leaderboard { grid-area: leaderboard; }
-.home-tile--grades { grid-area: grades; }
-.home-tile--progress { grid-area: progress; }
-
-@media (max-width: 480px) {
-  .home-grid {
-    grid-template-rows: repeat(3, minmax(132px, 1fr));
-    gap: 10px;
+  // تخطّي: اتفتح قبل كده في الجلسة، أو الصفحة مالهاش سبلاش.
+  // (مبنتخطاش لو الجهاز مفعّل "تقليل الحركة"، عشان السبلاش يظهر على التليفون والكمبيوتر الاتنين.)
+  if (!launch || seen) {
+    if (launch) launch.remove();
+    if (siteSplash) siteSplash.remove();
+    releaseRings();
+    resolveDone();
+    return;
   }
-}
+
+  try {
+    sessionStorage.setItem("sn_launch_seen", "1");
+  } catch {}
+
+  window.setTimeout(() => {
+    launch.classList.add("is-leaving");
+    releaseRings(); // الدايرة تبدأ تتحرك مع اختفاء السبلاش
+    resolveDone();
+    window.setTimeout(() => launch.remove(), 500);
+
+    if (siteSplash) {
+      window.setTimeout(() => {
+        siteSplash.classList.add("is-done");
+        window.setTimeout(() => siteSplash.remove(), 500);
+      }, RING_MS);
+    }
+  }, LAUNCH_MS);
+})();
+
+
+/* موجة الضغط: بتشتغل على أي زرار/لينك/كارت قابل للضغط في كل الصفحات اللي فيها shared.js.
+   وظيفة الزرار (الضغطة الفعلية) بتتأجّل لحد ما الموجة تملا الزرار كله، وبعدها تتنفّذ. */
+(function () {
+  var RISE_MS = 340;   // وقت طلوع الموجة (لازم يساوي touch-wave-rise في shared.css)
+  var TOTAL_MS = 700;  // وقت تنضيف عناصر الموجة
+  var WAVE_SELECTOR = [
+    "button", "a[href]", "summary", "[role=button]", "[role=tab]", "[onclick]", "[data-tab]",
+    ".btn", ".icon-btn", ".dash-nav__link", ".dash-tab", ".grade-card", ".chapter-card",
+    ".home-tile", ".lesson-item", ".chapter-option", ".subitem-card", ".lesson-pdf-nav",
+    ".auth-tab", ".gender-option"
+  ].join(",");
+  var NO_DELAY = ".gender-option, [data-no-wave-delay]"; // عناصر اختيار: موجة بس من غير تأخير للوظيفة
+
+  // أزرار/مربعات الصفحة الرئيسية في لوحة الطالب: من غير موجة ومن غير تأخير (بتشتغل فورًا)
+  var NO_WAVE_AREA = '.dash-panel[data-panel="home"], #homeGrid, .home-grid, .home-tile';
+
+  function findTarget(e) {
+    var t = e.target;
+    var el = t && t.closest ? t.closest(WAVE_SELECTOR) : null;
+    if (el && el.closest(NO_WAVE_AREA)) return null;
+    return el;
+  }
+
+  function isDisabled(el) {
+    return el.disabled || el.getAttribute("aria-disabled") === "true";
+  }
+
+  function startWave(el) {
+    if (isDisabled(el)) return false;
+    var rect = el.getBoundingClientRect();
+    if (rect.width < 8 || rect.height < 8 || rect.height > window.innerHeight * 0.8) return false;
+
+    var old = el.querySelector(":scope > .touch-wave");
+    if (old) old.remove();
+    el.classList.remove("is-waving");
+    void el.offsetWidth; // إعادة تشغيل الأنيميشن لو اتضغط تاني بسرعة
+
+    var madeRelative = false;
+    if (window.getComputedStyle(el).position === "static") {
+      el.style.position = "relative";
+      madeRelative = true;
+    }
+    var wave = document.createElement("span");
+    wave.className = "touch-wave";
+    wave.setAttribute("aria-hidden", "true");
+    el.appendChild(wave);
+    el.classList.add("is-waving");
+    el.__waveStart = performance.now();
+
+    window.setTimeout(function () {
+      wave.remove();
+      el.classList.remove("is-waving");
+      if (madeRelative) el.style.position = "";
+      el.__waveStart = 0;
+    }, TOTAL_MS);
+    return true;
+  }
+
+  // الموجة تبدأ لحظة الضغط بالماوس. على اللمس بنستنى لحظة صغيرة وبنلغيها لو الصباع بدأ يسحب (سكرول)،
+  // عشان الموجة والتأثيرات ما تتدخلش في تمرير الصفحة على الموبايل.
+  var touchTimer = null;
+  var touchStart = null;
+  function cancelTouchWave() {
+    if (touchTimer) { window.clearTimeout(touchTimer); touchTimer = null; }
+  }
+  function clearRunningWaves() {
+    document.querySelectorAll(".touch-wave").forEach(function (w) {
+      var host = w.parentElement;
+      w.remove();
+      if (host) { host.classList.remove("is-waving"); host.__waveStart = 0; }
+    });
+  }
+  document.addEventListener("pointerdown", function (e) {
+    var el = findTarget(e);
+    if (!el) return;
+    if (e.pointerType === "touch") {
+      cancelTouchWave();
+      touchStart = { x: e.clientX, y: e.clientY };
+      touchTimer = window.setTimeout(function () { touchTimer = null; startWave(el); }, 90);
+    } else {
+      startWave(el);
+    }
+  }, { capture: true, passive: true });
+  document.addEventListener("pointermove", function (e) {
+    if (touchTimer && touchStart && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 8) cancelTouchWave();
+  }, { capture: true, passive: true });
+  document.addEventListener("pointercancel", function () { cancelTouchWave(); clearRunningWaves(); }, { capture: true, passive: true });
+  document.addEventListener("scroll", cancelTouchWave, { capture: true, passive: true });
+
+  // الوظيفة الفعلية: بتستنى لحد ما الموجة تخلص
+  document.addEventListener("click", function (e) {
+    cancelTouchWave();
+    var el = findTarget(e);
+    if (!el || isDisabled(el)) return;
+    if (el.__waveRelease) return; // الضغطة اللي بنعيدها بعد الموجة: سيبها تعدّي
+
+    var started = el.__waveStart ? true : startWave(el); // كيبورد (Enter/Space) من غير pointerdown
+    if (!started || el.matches(NO_DELAY)) return;
+
+    var remaining = RISE_MS - (performance.now() - el.__waveStart);
+    if (remaining <= 0) return; // الموجة خلصت أصلًا (ضغطة طويلة): نفّذ فورًا
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (el.__wavePending) return; // تجاهل الضغطات المكررة أثناء الموجة
+    el.__wavePending = true;
+
+    window.setTimeout(function () {
+      el.__wavePending = false;
+      if (!el.isConnected || isDisabled(el)) return;
+      el.__waveRelease = true;
+      try { el.click(); } finally { el.__waveRelease = false; }
+    }, remaining);
+  }, true);
+})();
+
+/* ==========================================================================
+   PWA: تسجيل الـ service worker + زرار "حمّل التطبيق"
+   (أي عنصر عليه data-install-app بيظهر لما التثبيت يبقى متاح، ويختفي لو المنصة مفتوحة كتطبيق)
+   ========================================================================== */
+(function () {
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+
+  /* ----- تذكير التثبيت: أول ما الطالب يدخل المنصة، وبعدها كل 5 دقايق طول ما التطبيق مش متثبّت ----- */
+  var EVERY_MS = 5 * 60 * 1000;   // الفاصل بين كل ظهور وظهور
+  var CHECK_MS = 15 * 1000;       // كل قد إيه نفحص هل جه الميعاد
+  var LAST_KEY = "sn_install_last";
+  var INSTALLED_KEY = "sn_app_installed";
+  var TAG = "install";
+
+  var ua = navigator.userAgent || "";
+  var deferred = null;            // حدث التثبيت التلقائي (أندرويد/كروم/كمبيوتر)
+  var capable = false;            // اتأكدنا إن المتصفح بيدعم التثبيت (حتى لو الحدث اتستهلك)
+  var ready = false;              // السبلاش خلص
+  var showing = false;
+  var timer = null;
+
+  var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // متصفحات أندرويد اللي مبتبعتش حدث التثبيت (زي فايرفوكس): بنشرح الخطوات يدوي.
+  // كروم/سامسونج/إيدج بيبعتوه، فلو مجاش يبقى التطبيق متثبّت بالفعل.
+  var manualOnly = isIOS || (/android/i.test(ua) && !/chrome|crios|samsungbrowser|edga|opr\//i.test(ua));
+
+  function isStandalone() {
+    try {
+      return ["standalone", "minimal-ui", "window-controls-overlay"].some(function (m) {
+        return window.matchMedia("(display-mode: " + m + ")").matches;
+      }) || navigator.standalone === true;
+    } catch (e) { return false; }
+  }
+  function getKey(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function setKey(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function delKey(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  function installed() { return isStandalone() || getKey(INSTALLED_KEY) === "1"; }
+  function canInstall() { return !installed() && (!!deferred || capable || manualOnly); }
+  function isAr() { return document.documentElement.lang !== "en"; }
+
+  function setHidden(v) {
+    document.querySelectorAll("[data-install-app]").forEach(function (b) { b.hidden = v; });
+  }
+  function markInstalled() {
+    setKey(INSTALLED_KEY, "1");
+    deferred = null;
+    setHidden(true);
+    if (window.snDialog && window.snDialog.closeByTag) window.snDialog.closeByTag(TAG);
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  // أول ظهور في كل جلسة (لكل منطقة: الموقع / لوحة الطالب) بيبقى فورًا، وبعدها كل 5 دقايق
+  var AREA_KEY = "sn_install_first:" + (/studenti/i.test(location.pathname) ? "dash" : "site");
+  function dueNow() {
+    var first = true;
+    try { first = !sessionStorage.getItem(AREA_KEY); } catch (e) {}
+    if (first) return true;
+    return Date.now() - (Number(getKey(LAST_KEY)) || 0) >= EVERY_MS;
+  }
+  function stamp() { setKey(LAST_KEY, String(Date.now())); }
+
+  /* خطوات التثبيت اليدوي (آيفون / أي متصفح مبيدّيش زرار تثبيت تلقائي) */
+  function showHowTo() {
+    var ar = isAr();
+    var dlg = {
+      tag: TAG,
+      icon: "download",
+      title: ar ? "تثبيت التطبيق" : "Install the app",
+      message: isIOS
+        ? (ar
+            ? "عشان تثبّت التطبيق: اضغط زرار المشاركة في Safari، وبعدها اختار «إضافة إلى الشاشة الرئيسية»."
+            : "To install the app: tap the Share button in Safari, then choose “Add to Home Screen”.")
+        : (ar
+            ? "عشان تثبّت التطبيق: افتح قائمة المتصفح (⋮) واختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»."
+            : "To install the app: open the browser menu (⋮) and choose “Install app” or “Add to Home screen”."),
+      confirmText: ar ? "تمام" : "OK"
+    };
+    if (window.snDialog) return window.snDialog.alert(dlg);
+    window.alert(dlg.message);
+    return Promise.resolve();
+  }
+
+  function install() {
+    if (deferred) {
+      var p = deferred;
+      deferred = null;
+      p.prompt();
+      return p.userChoice.then(function (c) {
+        if (c && c.outcome === "accepted") markInstalled();
+      }).catch(function () {});
+    }
+    return showHowTo();
+  }
+
+  /* نافذة "حمّل التطبيق" بتصميم المنصة */
+  function show() {
+    showing = true;
+    try { sessionStorage.setItem(AREA_KEY, "1"); } catch (e) {}
+    stamp();
+    function done() { showing = false; stamp(); }
+    var ar = isAr();
+    if (!deferred) {
+      // آيفون / متصفح من غير تثبيت تلقائي: نعرض الخطوات مباشرة
+      showHowTo().then(done, done);
+      return;
+    }
+    window.snDialog.confirm({
+      tag: TAG,
+      icon: "download",
+      title: ar ? "حمّل التطبيق" : "Install the app",
+      message: ar
+        ? "ثبّت منصة " + ((window.snBrand && window.snBrand.name()) || "Shady Nasr") + " على شاشتك الرئيسية عشان تفتحها بضغطة واحدة وتتابع دروسك وإعلانات الأستاذ بسهولة."
+        : "Add the " + ((window.snBrand && window.snBrand.name()) || "Shady Nasr") + " platform to your home screen to open it in one tap and follow your lessons and announcements easily.",
+      confirmText: ar ? "تحميل التطبيق" : "Install app",
+      cancelText: ar ? "مش دلوقتي" : "Not now"
+    }).then(function (yes) {
+      done();
+      if (yes) install();
+    }, done);
+  }
+
+  function tick() {
+    if (!ready || showing) return;
+    if (!canInstall() || !window.snDialog) return;
+    if (document.visibilityState !== "visible") return;
+    // ما نقاطعش الطالب لو في نافذة تانية مفتوحة (امتحان، فيديو، تأكيد...)
+    if (document.querySelector(".modal-overlay:not([hidden])")) return;
+    if (!dueNow()) return;
+    show();
+  }
+
+  /* نستنى سبلاش الافتتاح ودايرة التحميل يخلصوا، وبعدها نبدأ التذكير */
+  function whenSplashesDone(cb) {
+    var launchDone = window.snLaunch && window.snLaunch.done ? window.snLaunch.done : Promise.resolve();
+    launchDone.then(function () {
+      var tries = 0;
+      (function wait() {
+        var ring = document.getElementById("studentSplash") || document.getElementById("siteSplash");
+        if (ring && document.body.contains(ring) && tries++ < 60) { setTimeout(wait, 300); return; }
+        setTimeout(cb, 700);
+      })();
+    });
+  }
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferred = e;
+    capable = true;
+    delKey(INSTALLED_KEY); // الحدث ده معناه إن التطبيق مش متثبّت دلوقتي (مثلًا اتشال بعد التثبيت)
+    if (!isStandalone()) setHidden(false);
+    tick();
+  });
+  window.addEventListener("appinstalled", markInstalled);
+  try {
+    var mq = window.matchMedia("(display-mode: standalone)");
+    var onMode = function (ev) { if (ev.matches) markInstalled(); };
+    if (mq.addEventListener) mq.addEventListener("change", onMode); else if (mq.addListener) mq.addListener(onMode);
+  } catch (e) {}
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (isStandalone()) setKey(INSTALLED_KEY, "1");
+    // كروم على أندرويد بيقدر يقول لو التطبيق متثبّت (محتاج related_applications في الـ manifest)
+    if (navigator.getInstalledRelatedApps) {
+      navigator.getInstalledRelatedApps().then(function (apps) {
+        if (apps && apps.length) markInstalled();
+      }).catch(function () {});
+    }
+    // زرار "حمّل التطبيق" ظاهر طول ما المنصة مش متثبّتة (لو التثبيت التلقائي مش متاح بيشرح الخطوات)
+    setHidden(installed());
+    document.querySelectorAll("[data-install-app]").forEach(function (btn) {
+      btn.addEventListener("click", function () { install(); });
+    });
+
+    // لوحة الأدمن وصفحات الدخول/التحقق مش للتذكير
+    if (/admin|login/i.test(location.pathname)) return;
+    whenSplashesDone(function () {
+      ready = true;
+      tick();
+      timer = setInterval(tick, CHECK_MS);
+      document.addEventListener("visibilitychange", tick);
+    });
+  });
+})();
 
 
 /* ==========================================================================
-   الصورة الشخصية: الصورة تملا الإطار الدائري بالكامل (من غير حواف أو لون الخلفية)
+   شبكة أمان للتمرير على الموبايل: لو أي قايمة/نافذة قفلت التمرير (overflow:hidden على body أو
+   html.dash-sidebar-open) وبعدين اتقفلت من غير ما تفك القفل، بنفكّه تلقائيًا أول ما الطالب يلمس الشاشة.
    ========================================================================== */
-.user-chip__avatar[data-has-photo],
-.dash-avatar-preview[data-has-photo],
-.dash-leaderboard__avatar[data-has-photo] {
-  background-color: #fff;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-origin: border-box;
-  border-radius: 50%;
-  overflow: hidden;
-  aspect-ratio: 1 / 1;
-}
+(function () {
+  function unlockStuckScroll() {
+    var de = document.documentElement;
+    var body = document.body;
+    if (!body) return;
 
-.dash-avatar-preview[data-has-photo],
-.dash-user-chip .user-chip__avatar[data-has-photo] {
-  border-color: var(--surface-glass-border);
-}
+    var sidebar = document.getElementById("dashSidebar");
+    if (de.classList.contains("dash-sidebar-open") && !(sidebar && sidebar.classList.contains("is-open"))) {
+      de.classList.remove("dash-sidebar-open");
+    }
+
+    if (body.style.overflow === "hidden" || de.style.overflow === "hidden") {
+      var lightbox = document.getElementById("scheduleLightbox");
+      var busy =
+        document.querySelector("#mobileMenu.is-open") ||
+        (lightbox && !lightbox.hidden) ||
+        document.querySelector(".modal-overlay:not([hidden]), #viewerModal:not([hidden])");
+      if (!busy) {
+        body.style.overflow = "";
+        de.style.overflow = "";
+      }
+    }
+  }
+  ["pointerdown", "touchstart"].forEach(function (ev) {
+    document.addEventListener(ev, unlockStuckScroll, { capture: true, passive: true });
+  });
+  ["pageshow", "popstate", "hashchange"].forEach(function (ev) {
+    window.addEventListener(ev, unlockStuckScroll);
+  });
+  document.addEventListener("visibilitychange", unlockStuckScroll);
+})();
 
 
 /* ==========================================================================
-   تحسين شكل الامتحان: الأسئلة والاختيارات من الشمال لليمين (LTR) حتى في الواجهة العربية
+   ألوان المنصة المتغيّرة (الأدمن بيحددها من لوحة التحكم وبتتخزن في Firebase: siteTheme)
+   - بتتطبق فورًا من الكاش المحلي (من غير ومضة)، وبعدين بتتحدّث من Firebase.
+   - 6 ألوان: ink / brand / accent / accentSoft / bg / bgSoft
    ========================================================================== */
-.exam-question {
-  direction: ltr;
-  text-align: left;
-}
+(function () {
+  "use strict";
+  var KEY = "shadynasr-site-theme";
+  var HEX = /^#[0-9a-f]{6}$/i;
 
-.exam-question__head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 12px;
-}
+  function rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function hex(a) { return "#" + a.map(function (v) { return Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0"); }).join(""); }
+  function mix(a, b, t) { var x = rgb(a), y = rgb(b); return hex(x.map(function (v, i) { return v + (y[i] - v) * t; })); }
+  // نص مقروء فوق لون معيّن (غامق فوق الألوان الفاتحة، وأبيض فوق الغامقة)
+  function lum(h) {
+    var c = rgb(h).map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function onColor(bg, dark, light) { return lum(bg) > 0.45 ? dark : light; }
 
-.exam-question__number {
-  display: inline-grid;
-  place-items: center;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
+  function css(t) {
+    var ink = t.ink, brand = t.brand, acc = t.accent, accSoft = t.accentSoft, bg = t.bg, bgSoft = t.bgSoft;
+    var accDark = mix(acc, "#000000", 0.18);
+    var accLight = mix(acc, "#ffffff", 0.35);
+    var light =
+      ":root{--berry-950:" + ink + ";--berry-900:" + mix(ink, brand, 0.4) + ";--berry-800:" + brand +
+      ";--berry-700:" + mix(brand, acc, 0.5) + ";--berry-500:" + mix(acc, "#ffffff", 0.12) +
+      ";--vanilla:" + bg + ";--vanilla-dim:" + bgSoft +
+      ";--sunset-500:" + acc + ";--sunset-600:" + accDark + ";--sunset-300:" + accSoft +
+      ";--ink:" + ink + ";--ink-soft:" + mix(ink, bg, 0.35) + ";--surface-glass:" + mix(bg, "#ffffff", 0.55) +
+      ";--accent-ink:" + onColor(acc, ink, "#ffffff") + ";--overlay:rgba(" + rgb(mix(ink, "#000000", 0.3)).join(",") + ",0.55);}";
+    var dark =
+      ':root[data-theme="dark"]{--bg:' + mix(ink, "#000000", 0.04) + ";--bg-soft:" + mix(ink, "#000000", 0.25) +
+      ";--ink:" + bg + ";--ink-soft:" + mix(bg, ink, 0.35) + ";--surface-glass:" + mix(ink, brand, 0.3) +
+      ";--brand:" + bg + ";--sunset-500:" + accLight + ";--sunset-600:" + mix(accLight, "#000000", 0.12) +
+      ";--accent:" + accLight + ";--accent-ink:" + onColor(accLight, mix(ink, "#000000", 0.3), "#ffffff") + ";--overlay:rgba(0,0,0,0.62);--blob-a:" + mix(brand, acc, 0.5) + ";--blob-b:" + brand + ";}";
+    return light + dark;
+  }
 
-/* شارة نوع السؤال (صحّح الخطأ / مقالي): صغيرة وواضحة */
-.exam-question__type {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  direction: rtl;
-  background: rgba(61, 111, 158, 0.14);
-  color: #2f6bb3;
-  border: 1px solid rgba(61, 111, 158, 0.35);
-  vertical-align: baseline;
-}
+  function valid(t) {
+    return t && ["ink", "brand", "accent", "accentSoft", "bg", "bgSoft"].every(function (k) { return HEX.test(t[k] || ""); });
+  }
 
-:root[data-theme="dark"] .exam-question__type {
-  color: #a7c9e0;
-}
+  function apply(t) {
+    var el = document.getElementById("sn-site-theme");
+    if (!valid(t)) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "sn-site-theme";
+      (document.head || document.documentElement).appendChild(el);
+    }
+    el.textContent = css(t);
+  }
 
-.exam-question__prompt {
-  display: block;
-  direction: ltr;
-  text-align: left;
-  margin: 0 0 16px;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  unicode-bidi: isolate;
-}
+  window.applySiteTheme = apply;
 
-.exam-option,
-.exam-option span {
-  direction: ltr;
-  text-align: left;
-}
+  /* ألوان الطالب الشخصية: بتتخزن لكل طالب لوحده (على جهازه + Firebase) وبتغلب على ألوان الأدمن.
+     لو الطالب مسحها، بيرجع لألوان المنصة اللي الأدمن حاططها. الأدمن نفسه مش بيتأثر بيها. */
+  var UKEY = "shadynasr-user-theme:";
+  function me() {
+    try {
+      var u = JSON.parse(localStorage.getItem("shadynasr-current-user"));
+      return u && u.id && u.role !== "admin" && localStorage.getItem("shadynasr-auth") ? u : null;
+    } catch (e) { return null; }
+  }
+  function readUser() {
+    var u = me();
+    if (!u) return null;
+    try { var t = JSON.parse(localStorage.getItem(UKEY + u.id)); return valid(t) ? t : null; } catch (e) { return null; }
+  }
+  function readSite() {
+    try { var t = JSON.parse(localStorage.getItem(KEY)); return valid(t) ? t : null; } catch (e) { return null; }
+  }
+  function pick() { return readUser() || readSite(); }
+  function pickShape(t) { var o = {}; ["ink", "brand", "accent", "accentSoft", "bg", "bgSoft"].forEach(function (k) { o[k] = t[k]; }); return o; }
 
-.exam-question__input,
-.exam-question textarea {
-  direction: ltr;
-  text-align: left;
-}
+  window.snUserTheme = {
+    get: readUser,
+    site: readSite,
+    // معاينة فورية من غير حفظ
+    preview: function (t) { if (valid(t)) apply(t); },
+    // الرجوع للألوان المحفوظة (بتلغي المعاينة)
+    revert: function () { apply(pick()); },
+    save: function (t) {
+      var u = me();
+      if (!u || !valid(t)) return Promise.reject(new Error("NO_USER"));
+      t = pickShape(t);
+      try { localStorage.setItem(UKEY + u.id, JSON.stringify(t)); } catch (e) {}
+      apply(t);
+      if (window.SNAuth && window.SNAuth.saveUserFields) {
+        return window.SNAuth.saveUserFields(u.id, { themeColors: t });
+      }
+      return Promise.resolve();
+    },
+    clear: function () {
+      var u = me();
+      if (!u) return Promise.resolve();
+      try { localStorage.removeItem(UKEY + u.id); } catch (e) {}
+      apply(readSite());
+      if (window.SNAuth && window.SNAuth.saveUserFields) {
+        return window.SNAuth.saveUserFields(u.id, { themeColors: null });
+      }
+      return Promise.resolve();
+    },
+    // مزامنة من Firebase لو الطالب فتح من جهاز تاني
+    syncFromServer: function () {
+      var u = me();
+      if (!u || !u.email || !window.SNAuth || !window.SNAuth.findUserByEmail) return Promise.resolve();
+      return window.SNAuth.findUserByEmail(u.email).then(function (rec) {
+        var t = rec && rec.themeColors;
+        try {
+          if (valid(t)) { localStorage.setItem(UKEY + u.id, JSON.stringify(pickShape(t))); apply(pickShape(t)); }
+          else if (readUser()) { localStorage.removeItem(UKEY + u.id); apply(readSite()); }
+        } catch (e) {}
+      }).catch(function () {});
+    }
+  };
 
-.exam-question__input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.95rem;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
+  try { apply(pick()); } catch (e) {}
 
-.exam-question__input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(44, 128, 151, 0.15);
-}
-
-/* التلميح والحكم بالعربي يفضلوا RTL */
-.exam-question__hint {
-  direction: rtl;
-  text-align: right;
-}
-
-.exam-question__verdict {
-  display: block;
-  width: fit-content;
-  direction: rtl;
-}
+  function refresh() {
+    if (!window.SNAuth || !window.SNAuth.fetchSiteTheme) return;
+    window.SNAuth.fetchSiteTheme().then(function (t) {
+      if (valid(t)) localStorage.setItem(KEY, JSON.stringify(t)); else localStorage.removeItem(KEY);
+      apply(pick()); // ألوان الطالب (لو عنده) بتفضل أقوى من ألوان الأدمن
+    }).catch(function () {});
+  }
+  window.addEventListener("load", function () { setTimeout(refresh, 50); });
+})();
 
 
 /* ==========================================================================
-   إصلاحات الموبايل (Mobile hardening)
-   --------------------------------------------------------------------------
-   الأسباب اللي كانت بتخلي الصفحة تتوسّع برا الشاشة (فالكروم يصغّرها):
-   1) الـ grid الافتراضي (عمود auto) كان بيتمدّد على أطول نص nowrap في الكروت.
-      الحل: minmax(0, 1fr) + min-width: 0 على العناصر الأبناء.
-   2) الشريط الجانبي المقفول كان متزاح برا الشاشة بـ transform، وده بيزوّد
-      عرض الصفحة القابل للتمرير على الموبايل. الحل: display:none وهو مقفول.
+   هوية المنصة (اسم + لوجو): الأدمن بيحددهم من إعدادات المنصة وبيتخزنوا في Firebase (siteBranding)
+   - بتتطبق فورًا من الكاش المحلي (من غير ومضة)، وبعدين بنقارن رقم الإصدار بتاع Firebase.
+   - لو في إصدار أحدث: بيتحمّل وبيتطبّق تلقائيًا من غير شريط (showBanner لسه موجودة بس مش بتتنده).
+   - بتتغير في: الهيدر، لوجو صفحة الدخول/اللوحات، أيقونة التبويب، عنوان الصفحة، النصوص المترجمة.
    ========================================================================== */
+(function () {
+  "use strict";
+  var KEY = "shadynasr-site-branding";
+  var DEF_FULL = "Shady Nasr English Platform";
+  var LOGO_RE = /shady-nasr-logo/;
+  var isAdminPage = /admin/i.test(window.location.pathname.split("/").pop() || "");
+  var orig = { ar: {}, en: {} };
 
-html,
-body {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-@supports (overflow-x: clip) {
-  html,
-  body {
-    overflow-x: clip;
+  function qsa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function read() {
+    try { var b = JSON.parse(localStorage.getItem(KEY)); return b && typeof b === "object" ? b : null; } catch (e) { return null; }
   }
-}
-
-[hidden] {
-  display: none !important;
-}
-
-img,
-video,
-iframe,
-canvas,
-svg {
-  max-width: 100%;
-}
-
-.dash-shell,
-.dash-content,
-.dash-main,
-.dash-panel {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* أي عنصر grid/flex جوه اللوحة لازم يقدر يضيق */
-.dash-panel > *,
-.story-chapters > li,
-.lesson-items > *,
-.dash-card,
-.chapter-card,
-.lesson-item {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* --- قائمة الفصول: عمود واحد مرن بدل auto --- */
-.story-chapters {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.lesson-items {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 640px) {
-  .lesson-items {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.chapter-card__title,
-.lesson-item__title {
-  overflow-wrap: anywhere;
-}
-
-/* --- الشريط العلوي --- */
-.dash-topbar {
-  padding-top: max(14px, env(safe-area-inset-top, 0px));
-  padding-inline: max(clamp(12px, 3vw, 32px), env(safe-area-inset-left, 0px));
-}
-
-.dash-topbar__title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* --- موبايل: الشريط الجانبي كـ drawer حقيقي --- */
-@media (max-width: 979px) {
-  .dash-sidebar {
-    display: none;
-    transform: none;
-    width: min(300px, 86vw);
-    height: 100dvh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    z-index: 60;
-    background: var(--vanilla);
-    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  function store(b) {
+    try { localStorage.setItem(KEY, JSON.stringify(b)); }
+    catch (e) { try { localStorage.setItem(KEY, JSON.stringify({ name: b.name, tagline: b.tagline, version: b.version, logo: "" })); } catch (e2) {} }
   }
 
-  :root[data-theme="dark"] .dash-sidebar {
-    background: var(--bg);
+  /* النصوص المترجمة اللي فيها اسم المنصة */
+  function patchI18N(name) {
+    if (typeof I18N === "undefined") return;
+    ["ar", "en"].forEach(function (l) {
+      var d = I18N[l];
+      if (!d) return;
+      Object.keys(d).forEach(function (k) {
+        var v = d[k];
+        if (typeof v !== "string") return;
+        var base = orig[l][k] != null ? orig[l][k] : v;
+        if (base.indexOf(DEF_FULL) === -1) return;
+        orig[l][k] = base;
+        d[k] = name ? base.split(DEF_FULL).join(name) : base;
+      });
+    });
+    try { applyTranslations(document.documentElement.lang === "en" ? "en" : "ar"); } catch (e) {}
   }
 
-  .dash-sidebar.is-open {
-    display: flex;
-    animation: dash-drawer-in 0.28s var(--ease);
+  function mimeOf(src) { var m = /^data:([^;,]+)/.exec(src || ""); return m ? m[1] : ""; }
+
+  function setLogos(src) {
+    qsa("img").forEach(function (i) {
+      var s = i.getAttribute("src") || "";
+      if ((i.classList.contains("brand__mark") || LOGO_RE.test(s)) && s !== src) i.setAttribute("src", src);
+    });
+    var mime = mimeOf(src);
+    qsa('link[rel~="icon"], link[rel="apple-touch-icon"]').forEach(function (l) {
+      if (l.getAttribute("href") !== src) l.setAttribute("href", src);
+      if (mime && l.getAttribute("rel") !== "apple-touch-icon") l.setAttribute("type", mime);
+    });
   }
 
-  [dir="rtl"] .dash-sidebar.is-open {
-    animation-name: dash-drawer-in-rtl;
+  function applyDom(b) {
+    if (!b) return;
+    var name = String(b.name || "").trim();
+    var tag = String(b.tagline || "").trim();
+    if (name) {
+      qsa(".brand__name").forEach(function (el) { if (el.textContent !== name) el.textContent = name; });
+      qsa("img.brand__mark").forEach(function (i) { if (i.alt !== name) i.alt = name; });
+      qsa('meta[name="apple-mobile-web-app-title"]').forEach(function (m) { m.setAttribute("content", name); });
+      if (document.title.indexOf(DEF_FULL) !== -1) document.title = document.title.split(DEF_FULL).join(name);
+    }
+    if (tag && !isAdminPage) qsa(".brand__tagline").forEach(function (el) { if (el.textContent !== tag) el.textContent = tag; });
+    if (b.logo) setLogos(b.logo);
   }
 
-  .dash-sidebar-backdrop {
-    z-index: 55;
-    animation: dash-fade-in-plain 0.2s var(--ease);
+  function apply(b) {
+    if (!b) return;
+    patchI18N(String(b.name || "").trim());
+    applyDom(b);
   }
 
-  html.dash-sidebar-open,
-  html.dash-sidebar-open body {
-    overflow: hidden;
-  }
-}
-
-@keyframes dash-drawer-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes dash-drawer-in-rtl {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes dash-fade-in-plain {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* --- شاشات صغيرة --- */
-@media (max-width: 600px) {
-  .dash-main {
-    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+  /* عناصر بتتضاف بعد التحميل (لوحة الطالب بتترسم بالجافاسكريبت): نطبّق عليها برضه */
+  function watch() {
+    var queued = false;
+    try {
+      new MutationObserver(function () {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(function () { queued = false; applyDom(read()); });
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e) {}
   }
 
-  /* القاعدة القديمة كانت بتضيف padding تاني على لوحة القصة فقط */
-  .dash-panel[data-panel="story"] {
-    padding-inline: 0;
+  function pull(meta) {
+    var base = { name: meta.name || "", tagline: meta.tagline || "", version: Number(meta.version) || 0, logo: "" };
+    if (!meta.hasLogo || !window.SNAuth || !window.SNAuth.fetchSiteBrandingLogo) return Promise.resolve(base);
+    return window.SNAuth.fetchSiteBrandingLogo().then(function (data) { base.logo = data || ""; return base; });
   }
 
-  .chapter-card {
-    padding: 14px;
-    gap: 12px;
+  function tr(k, fallback) { try { return t(k); } catch (e) { return fallback; } }
+
+  function clearCaches() {
+    var jobs = [];
+    try { if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })); } catch (e) {}
+    try { if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistration().then(function (r) { return r && r.update(); })); } catch (e) {}
+    return Promise.race([Promise.all(jobs), new Promise(function (r) { setTimeout(r, 1500); })]);
   }
 
-  /* الوصف يلف على سطرين بدل ما يتقص بنقط (نصوص عربي طويلة) */
-  .chapter-card__desc {
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+  function showBanner(meta) {
+    if (document.getElementById("sn-upd")) return;
+    if (!document.getElementById("sn-upd-css")) {
+      var st = document.createElement("style");
+      st.id = "sn-upd-css";
+      st.textContent =
+        "#sn-upd{position:fixed;top:0;left:0;right:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;gap:12px;" +
+        "padding:calc(env(safe-area-inset-top,0px) + 8px) 14px 8px;background:var(--accent,#2c8097);color:var(--accent-ink,#fff);" +
+        "font-weight:700;font-size:.85rem;line-height:1.4;box-shadow:0 2px 12px rgba(0,0,0,.22)}" +
+        "#sn-upd button{border:0;border-radius:999px;padding:7px 18px;font:inherit;font-weight:800;cursor:pointer;" +
+        "background:var(--accent-ink,#fff);color:var(--accent,#2c8097);flex:none}" +
+        "#sn-upd button:disabled{opacity:.6;cursor:default}" +
+        "html.sn-has-upd{padding-top:var(--sn-upd-h,48px)}" +
+        "html.sn-has-upd .navbar,html.sn-has-upd .dash-topbar,html.sn-has-upd .auth-topbar{top:var(--sn-upd-h,48px)!important}";
+      document.head.appendChild(st);
+    }
+    var bar = document.createElement("div");
+    bar.id = "sn-upd";
+    bar.setAttribute("role", "status");
+    var msg = document.createElement("span");
+    msg.textContent = tr("brand_update_msg", "فيه تحديث جديد للمنصة");
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = tr("brand_update_btn", "تحديث");
+    bar.appendChild(msg);
+    bar.appendChild(btn);
+    document.body.appendChild(bar);
+    document.documentElement.style.setProperty("--sn-upd-h", bar.offsetHeight + "px");
+    document.documentElement.classList.add("sn-has-upd");
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      pull(meta).then(function (b) {
+        store(b);
+        return clearCaches();
+      }).then(function () {
+        window.location.reload();
+      }).catch(function () { btn.disabled = false; });
+    });
   }
 
-  .dash-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+  function refresh() {
+    if (!window.SNAuth || !window.SNAuth.fetchSiteBranding) return;
+    window.SNAuth.fetchSiteBranding().then(function (meta) {
+      var cached = read();
+      if (!meta) return;
+      var ver = Number(meta.version) || 0;
+      if (cached && (Number(cached.version) || 0) === ver) return;
+      // أي تحديث للاسم/اللوجو بيتطبّق تلقائيًا ومن غير شريط ولا ريلود
+      pull(meta).then(function (b) { store(b); apply(b); }).catch(function () {});
+    }).catch(function () {});
   }
 
-  .dash-tabs::-webkit-scrollbar {
-    display: none;
+  window.snBrand = {
+    read: read,
+    store: store,
+    apply: apply,
+    name: function () { var b = read(); return (b && b.name) || "Shady Nasr"; },
+  };
+
+  var cached0 = read();
+  if (cached0) {
+    patchI18N(String(cached0.name || "").trim());
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { applyDom(read()); });
+    else applyDom(cached0);
   }
-
-  .dash-tab {
-    flex: none;
-  }
-
-  /* 16px على الأقل في الحقول عشان iOS ميعملش zoom تلقائي وقت الكتابة */
-  input,
-  select,
-  textarea {
-    font-size: 16px;
-  }
-
-  /* أي جدول يتمرّر جوه نفسه بدل ما يوسّع الصفحة */
-  table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-  }
-}
-
-/* أهداف لمس مريحة */
-@media (hover: none) and (pointer: coarse) {
-  .icon-btn,
-  .dash-menu-btn,
-  .dash-nav__link,
-  .dash-logout,
-  .mobile-menu__utility-btn {
-    min-height: 44px;
-  }
-
-  .icon-btn,
-  .dash-menu-btn {
-    min-width: 44px;
-  }
-}
-
-/* --- تكملة إصلاحات الموبايل: أعمدة مرنة في الملف الشخصي والفورم + بانر الصفحة الرئيسية --- */
-.dash-profile-grid,
-.dash-profile-main,
-.dash-profile-side {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 960px) {
-  .dash-profile-grid {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  }
-}
-
-.form-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.form-field,
-.form-field > * {
-  min-width: 0;
-}
-
-input,
-select,
-textarea {
-  max-width: 100%;
-  min-width: 0;
-}
-
-@media (max-width: 359px) {
-  .form-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .promo-banner__actions {
-    flex: 0 1 auto;
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .promo-banner__actions .btn {
-    flex: 1 1 140px;
-    min-width: 0;
-    padding-inline: 16px;
-    justify-content: center;
-  }
-}
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch);
+  else watch();
+  window.addEventListener("load", function () { setTimeout(refresh, 80); });
+})();
 
 
 /* ==========================================================================
-   ستايل مسطّح: من غير توهج (glow) ولا نيون
-   --------------------------------------------------------------------------
-   - الأسطح بقت ألوان مصمتة (مش شفافة + بلور) والظلال الناعمة الكبيرة اتشالت.
-   - الفصل بين العناصر بالحدود (border) بس.
-   - اللون الأساسي (البرتقالي) اتهدّى وبقى أهدى من النيون.
+   نوافذ التأكيد والتنبيه بتصميم المنصة (بديل confirm / alert بتوع المتصفح)
+   الاستخدام:
+     const ok = await snDialog.confirm({ title, message, confirmText, cancelText, tone: "danger", icon: "logout" });
+     await snDialog.alert({ title, message, confirmText, icon: "info" });
+   الألوان كلها من متغيّرات المنصة (var(--accent) / var(--bg) ...) فبتتغيّر مع ألوان الأدمن والدارك مود.
    ========================================================================== */
+(function () {
+  "use strict";
+  var SV = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  var ICONS = {
+    info: '<svg ' + SV + '><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg>',
+    warn: '<svg ' + SV + '><path d="M12 3 2.5 20h19Z"/><path d="M12 10v4M12 17.2v.01"/></svg>',
+    logout: '<svg ' + SV + '><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
+    download: '<svg ' + SV + '><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+    trash: '<svg ' + SV + '><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+  };
+  var uid = 0;
+  var open = [];            // النوافذ المفتوحة حاليًا (عشان نقدر نقفلها من برّه ونعرف لو في نافذة مفتوحة)
+  var prevOverflow = "";
 
-*,
-*::before,
-*::after {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  text-shadow: none !important;
-}
+  function show(o, withCancel) {
+    o = o || {};
+    var ar = document.documentElement.lang !== "en";
+    var danger = o.tone === "danger";
+    return new Promise(function (resolve) {
+      var prev = document.activeElement;
+      var id = "snDlg" + (++uid);
 
-.navbar__inner,
-.dash-card,
-.dash-sidebar,
-.dash-topbar,
-.story-head,
-.chapter-card,
-.lesson-item,
-.home-tile,
-.home-quote,
-.home-identity-strip,
-.modal,
-.lightbox img,
-.mobile-menu,
-.auth-card,
-.nav-progress,
-.whatsapp-fab {
-  box-shadow: none !important;
-}
+      var ov = document.createElement("div");
+      ov.className = "modal-overlay sn-dialog";
 
-/* الدرور (القائمة الجانبية على الموبايل): حد واضح بدل ظل */
-@media (max-width: 979px) {
-  .dash-sidebar {
-    box-shadow: none !important;
-    border-inline-end: 1px solid var(--surface-glass-border);
-  }
-}
+      var box = document.createElement("div");
+      box.className = "modal";
+      box.setAttribute("role", withCancel ? "alertdialog" : "dialog");
+      box.setAttribute("aria-modal", "true");
+      box.setAttribute("aria-labelledby", id + "t");
+      box.setAttribute("aria-describedby", id + "m");
 
-/* حلقة التركيز: خط صلب واضح بدل هالة شفافة */
-.form-field input:focus,
-.form-field select:focus,
-.form-field textarea:focus,
-.exam-question__input:focus,
-.custom-select__trigger:focus-visible,
-.custom-select.is-open .custom-select__trigger {
-  box-shadow: none !important;
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
+      var icon = document.createElement("span");
+      icon.className = "modal__icon" + (danger ? " modal__icon--danger" : "");
+      icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML = ICONS[o.icon] || ICONS[danger ? "warn" : "info"];
 
-/* ضوء الخلفية القديم: مش مستخدم */
-.atmosphere,
-.atmosphere span {
-  display: none !important;
-}
+      var h = document.createElement("h3");
+      h.id = id + "t";
+      h.textContent = o.title || "";
 
+      var p = document.createElement("p");
+      p.id = id + "m";
+      p.textContent = o.message || "";
 
-/* ==========================================================================
-   سبلاش الافتتاح (شعار ← موجة ← اسم المنصة) — بنفس ألوان المنصة
-   الخط الزمني: الشعار 0–0.7s، الموجة 0.8–2.1s، الاسم 1.95–2.55s، وبعدها يختفي ويظهر دايرة التحميل
-   ========================================================================== */
-.launch-splash {
-  --launch-fill: var(--sunset-500, #2c8097); /* لون المنصة اللي الأدمن مفعّله */
-  --launch-ink: var(--accent-ink, #ffffff); /* لون الاسم فوق الموجة */
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  direction: ltr;
-  background: var(--bg);
-  opacity: 1;
-  transition: opacity 0.45s var(--ease), visibility 0.45s var(--ease);
-}
+      var actions = document.createElement("div");
+      actions.className = "modal__actions";
 
-.launch-splash.is-leaving {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
+      var ok = document.createElement("button");
+      ok.type = "button";
+      ok.className = "btn " + (danger ? "btn--sn-danger" : "btn--accent");
+      ok.textContent = o.confirmText || (ar ? "تأكيد" : "Confirm");
+      actions.appendChild(ok);
 
-.no-launch .launch-splash {
-  display: none;
-}
+      var cancel = null;
+      if (withCancel) {
+        cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "btn btn--ghost";
+        cancel.textContent = o.cancelText || (ar ? "إلغاء" : "Cancel");
+        actions.appendChild(cancel);
+      }
 
-.launch-splash__logo {
-  grid-area: 1 / 1;
-  position: relative;
-  z-index: 2;
-  width: min(34vw, 150px);
-  height: auto;
-  opacity: 0;
-  transform: scale(0.6);
-  animation: launch-logo 2.2s var(--ease) 0.1s forwards;
-}
+      box.appendChild(icon);
+      box.appendChild(h);
+      if (o.message) box.appendChild(p);
+      box.appendChild(actions);
+      ov.appendChild(box);
 
-.launch-splash__wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  height: calc(100% + 80px);
-  display: flex;
-  flex-direction: column;
-  transform: translateY(100%);
-  animation: launch-wave-rise 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.8s forwards;
-}
+      var done = false;
+      function close(v) {
+        if (done) return;
+        done = true;
+        open = open.filter(function (x) { return x.close !== close; });
+        if (!open.length) document.body.style.overflow = prevOverflow;
+        document.removeEventListener("keydown", onKey, true);
+        ov.classList.remove("is-open");
+        setTimeout(function () { ov.remove(); }, 220);
+        if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+        resolve(v);
+      }
+      function onKey(e) {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(withCancel ? false : true); return; }
+        if (e.key === "Tab") {
+          var items = cancel ? [ok, cancel] : [ok];
+          var i = items.indexOf(document.activeElement);
+          e.preventDefault();
+          items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
+        }
+      }
 
-.launch-splash__crest {
-  flex: none;
-  height: 80px;
-  overflow: hidden;
-}
+      ok.addEventListener("click", function () { close(true); });
+      if (cancel) cancel.addEventListener("click", function () { close(false); });
+      ov.addEventListener("click", function (e) { if (e.target === ov) close(withCancel ? false : true); });
+      document.addEventListener("keydown", onKey, true);
 
-.launch-splash__crest svg {
-  display: block;
-  max-width: none;
-  width: 200%;
-  height: 80px;
-  fill: var(--launch-fill);
-  animation: launch-wave-drift 1.8s linear infinite;
-}
-
-.launch-splash__fill {
-  flex: 1;
-  margin-top: -1px;
-  background: var(--launch-fill);
-}
-
-.launch-splash__brand {
-  grid-area: 1 / 1;
-  position: relative;
-  z-index: 3;
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  text-align: center;
-  color: var(--launch-ink);
-  opacity: 0;
-  transform: translateY(10px);
-  animation: launch-brand-in 0.6s var(--ease) 1.95s forwards;
-}
-
-.launch-splash__name {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(2rem, 10vw, 3rem);
-  line-height: 1.1;
-}
-
-.launch-splash__tag {
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.8rem;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  opacity: 0.85;
-}
-
-@keyframes launch-logo {
-  0% { opacity: 0; transform: scale(0.6); }
-  25% { opacity: 1; transform: scale(1); }
-  60% { opacity: 1; transform: scale(1); }
-  78% { opacity: 0; transform: scale(0.85); }
-  100% { opacity: 0; transform: scale(0.85); }
-}
-
-@keyframes launch-wave-rise {
-  to { transform: translateY(0); }
-}
-
-@keyframes launch-wave-drift {
-  to { transform: translateX(-50%); }
-}
-
-@keyframes launch-brand-in {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* دايرة التحميل بتستنى (متجمّدة) لحد ما سبلاش الافتتاح يخلص */
-.student-splash.is-held * {
-  animation-play-state: paused;
-}
-
-/* السبلاش يشتغل على كل الأجهزة حتى لو "تقليل الحركة" مفعّل (بيغلب القاعدة العامة اللي بتوقف الحركة) */
-@media (prefers-reduced-motion: reduce) {
-  .launch-splash {
-    transition-duration: 0.45s !important;
-  }
-  .launch-splash__logo {
-    animation-duration: 2.2s !important;
-  }
-  .launch-splash__wave {
-    animation-duration: 1.3s !important;
-  }
-  .launch-splash__crest svg {
-    animation-duration: 1.8s !important;
-  }
-  .launch-splash__brand {
-    animation-duration: 0.6s !important;
-  }
-  .student-splash__ring {
-    animation: splash-ring-spin 1.35s linear infinite !important;
-  }
-}
-
-/* شاشات الكمبيوتر: شعار واسم أكبر شوية */
-@media (min-width: 900px) {
-  .launch-splash__logo {
-    width: 180px;
-  }
-  .launch-splash__name {
-    font-size: 4rem;
-  }
-  .launch-splash__tag {
-    font-size: 1rem;
-  }
-}
-
-
-/* ==========================================================================
-   زرار واتساب العائم في صفحة الطالب (studenti.html)
-   متوسط الحجم، في ركن الشاشة، تحت السايدبار والمودالات (z-index أقل منهم)
-   ========================================================================== */
-.dash-wa {
-  position: fixed;
-  left: max(16px, env(safe-area-inset-left));
-  bottom: max(16px, env(safe-area-inset-bottom));
-  z-index: 30;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #25d366;
-  color: #fff;
-  border: 2px solid var(--bg, #f4eee0);
-  transition: transform 0.2s var(--ease);
-}
-
-.dash-wa svg {
-  width: 26px;
-  height: 26px;
-}
-
-.dash-wa:hover {
-  transform: scale(1.08);
-}
-
-.dash-wa:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-@media (min-width: 980px) {
-  .dash-wa {
-    width: 52px;
-    height: 52px;
-  }
-}
-
-
-/* ==========================================================================
-   الشريط الجانبي ثابت على الكمبيوتر: بينزل المحتوى بس والقايمة مكانها.
-   السبب القديم: الـ flex كان بيمدّ القايمة لطول الصفحة كلها فالـ sticky مكانش بيشتغل.
-   ========================================================================== */
-@media (min-width: 980px) {
-  .dash-sidebar {
-    position: sticky;
-    top: 0;
-    align-self: flex-start; /* ما تتمددش لطول الصفحة */
-    height: 100dvh; /* بطول الشاشة بالظبط */
-    min-height: 0;
-    overflow-y: auto; /* لو القايمة أطول من الشاشة تسكرول جواها هي بس */
-  }
-}
-
-/* overflow-x: hidden على الـ body بيخلّيه "scroll container" فبيكسر الـ sticky (الشريط الجانبي والشريط العلوي).
-   clip بيمنع التمرير الأفقي من غير ما يعمل scroll container. */
-@supports (overflow-x: clip) {
-  .dash-body,
-  :root[data-theme="dark"] .dash-body {
-    overflow-x: clip;
-  }
-}
-
-/* ==========================================================================
-   إزالة المربع الأزرق الشفاف (tap highlight) من كل حاجة في المنصة:
-   الامتحانات والشيتات وأي عنصر بيتضغط عليه. وإلغاء حلقة التركيز عند اللمس.
-   ========================================================================== */
-*,
-*::before,
-*::after {
-  -webkit-tap-highlight-color: transparent;
-}
-
-html {
-  touch-action: manipulation; /* يشيل تأخير الضغطتين ويمنع الـ zoom الغلط */
-}
-
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-img,
-svg,
-canvas,
-iframe,
-embed,
-object,
-label,
-.exam-option,
-.exam-option span {
-  -webkit-touch-callout: none;
-}
-
-[data-install-app][hidden] {
-  display: none !important;
-}
-
-
-/* شيت الدرس مقفول لحد ما الفيديو يتشاف كامل */
-.lesson-item.is-locked {
-  opacity: 0.6;
-}
-
-.lesson-item__status--lock {
-  background: rgba(61, 111, 158, 0.18);
-  color: #2f6bb3;
-}
-
-:root[data-theme="dark"] .lesson-item__status--lock {
-  color: #a7c9e0;
-}
-
-.lesson-item__status--lock .inline-status-icon svg {
-  width: 12px;
-  height: 12px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2.2;
-  vertical-align: -1px;
-}
-
-/* ==========================================================================
-   شريط التنقّل السفلي العائم (شكل كبسولة): الرئيسية / الدروس / القصة / المزيد
-   + القايمة الجانبية بقت drawer على كل الشاشات (فيها المظهر واللغة وتسجيل الخروج بس)
-   ========================================================================== */
-.dash-tabbar {
-  position: fixed;
-  left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  z-index: 50;
-  width: min(560px, calc(100% - 24px));
-  box-sizing: border-box;
-  display: flex;
-  align-items: stretch;
-  gap: 4px;
-  padding: 7px;
-  border-radius: 999px;
-  background: var(--surface-glass);
-  border: 1px solid var(--surface-glass-border);
-  direction: inherit;
-}
-
-.dash-tabbar .dash-tabbar__btn {
-  position: relative;
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  min-height: 62px;
-  padding: 8px 6px;
-  border-radius: 999px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  text-align: center;
-  font-size: 0.74rem;
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--ink-soft);
-  background: transparent;
-  box-shadow: none;
-}
-
-.dash-tabbar .dash-tabbar__btn svg {
-  width: 24px;
-  height: 24px;
-}
-
-.dash-tabbar .dash-tabbar__btn span {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dash-tabbar .dash-tabbar__btn:hover {
-  background: var(--surface-glass-border);
-  color: var(--brand-strong);
-}
-
-.dash-tabbar .dash-tabbar__btn.is-active {
-  background: var(--sunset-500, #2c8097);
-  color: var(--accent-ink, #fff);
-  box-shadow: none;
-}
-
-/* مساحة تحت المحتوى عشان الشريط ما يغطّيش حاجة */
-.dash-main {
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-/* زرار واتساب يطلع فوق الشريط */
-.dash-wa {
-  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-}
-
-/* --- صفحة "المزيد" --- */
-.more-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-}
-
-.more-list .more-item {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 16px 18px;
-  gap: 14px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  color: var(--brand-strong);
-  font-size: 1rem;
-}
-
-.more-list .more-item:hover,
-.more-list .more-item.is-active {
-  background: var(--surface-glass);
-  border-color: var(--accent);
-  color: var(--brand-strong);
-  box-shadow: none;
-}
-
-.more-list .more-item > svg:first-child {
-  width: 24px;
-  height: 24px;
-  color: var(--accent);
-}
-
-.more-item__chev {
-  margin-inline-start: auto;
-  width: 18px !important;
-  height: 18px !important;
-  color: var(--ink-soft);
-}
-
-html[dir="ltr"] .more-item__chev {
-  transform: scaleX(-1);
-}
-
-/* --- القايمة الجانبية: drawer على الكمبيوتر كمان + زرار فتحها ظاهر دايمًا --- */
-@media (min-width: 980px) {
-  .dash-menu-btn {
-    display: grid;
+      if (!open.length) { prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
+      open.push({ tag: o.tag || "", close: close, withCancel: withCancel });
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () {
+        ov.classList.add("is-open");
+        // في الإجراءات الخطرة التركيز يبدأ على "إلغاء" عشان الضغطة بالغلط ما تنفّذش حاجة
+        (danger && cancel ? cancel : ok).focus();
+      });
+    });
   }
 
-  .dash-sidebar {
-    display: none;
-    position: fixed;
-    inset-inline-start: 0;
-    top: 0;
-    align-self: auto;
-    width: min(300px, 86vw);
-    height: 100dvh;
-    min-height: 0;
-    overflow-y: auto;
-    transform: none;
-    z-index: 60;
-    background: var(--vanilla);
+  /* ---------- قايمة اختيار بتصميم المنصة (بديل قايمة الموبايل الافتراضية) ---------- */
+  function pick(o) {
+    o = o || {};
+    var ar = document.documentElement.lang !== "en";
+    return new Promise(function (resolve) {
+      var prev = document.activeElement;
+      var ov = document.createElement("div");
+      ov.className = "modal-overlay sn-dialog sn-pick";
+      var box = document.createElement("div");
+      box.className = "modal";
+      box.setAttribute("role", "dialog");
+      box.setAttribute("aria-modal", "true");
+      if (o.title) {
+        var h = document.createElement("h3");
+        h.textContent = o.title;
+        box.appendChild(h);
+      }
+      var ul = document.createElement("ul");
+      ul.className = "sn-pick__list";
+      ul.setAttribute("role", "listbox");
+      (o.options || []).forEach(function (it) {
+        var li = document.createElement("li");
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "sn-pick__item" + (String(it.value) === String(o.value) ? " is-selected" : "");
+        b.setAttribute("role", "option");
+        b.setAttribute("aria-selected", String(it.value) === String(o.value));
+        var dot = document.createElement("span");
+        dot.className = "sn-pick__dot";
+        dot.setAttribute("aria-hidden", "true");
+        var tx = document.createElement("span");
+        tx.className = "sn-pick__text";
+        tx.textContent = it.label;
+        b.appendChild(tx);
+        b.appendChild(dot);
+        b.addEventListener("click", function () { close(it.value); });
+        li.appendChild(b);
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+      var cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "btn btn--ghost sn-pick__cancel";
+      cancel.textContent = o.cancelText || (ar ? "إلغاء" : "Cancel");
+      cancel.addEventListener("click", function () { close(null); });
+      box.appendChild(cancel);
+      ov.appendChild(box);
+
+      var done = false;
+      function close(v) {
+        if (done) return;
+        done = true;
+        open = open.filter(function (x) { return x.close !== close; });
+        if (!open.length) document.body.style.overflow = prevOverflow;
+        document.removeEventListener("keydown", onKey, true);
+        ov.classList.remove("is-open");
+        setTimeout(function () { ov.remove(); }, 220);
+        if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+        resolve(v);
+      }
+      function onKey(e) { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(null); } }
+      ov.addEventListener("click", function (e) { if (e.target === ov) close(null); });
+      document.addEventListener("keydown", onKey, true);
+
+      if (!open.length) { prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
+      open.push({ tag: "pick", close: close, withCancel: true });
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () {
+        ov.classList.add("is-open");
+        var sel = ul.querySelector(".is-selected") || ul.querySelector("button");
+        if (sel) { try { sel.scrollIntoView({ block: "center" }); sel.focus({ preventScroll: true }); } catch (e) {} }
+      });
+    });
   }
 
-  :root[data-theme="dark"] .dash-sidebar {
-    background: var(--bg);
+  /* ---------- منتقي الألوان بتصميم المنصة (بديل نافذة الألوان بتاعة النظام) ---------- */
+  function hsv2rgb(h, s, v) {
+    var f = function (n) { var k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+    return [f(5), f(3), f(1)].map(function (x) { return Math.round(x * 255); });
+  }
+  function rgb2hsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+    if (d) {
+      if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    return [h, mx ? d / mx : 0, mx];
+  }
+  function toHex(rgb) { return "#" + rgb.map(function (x) { return x.toString(16).padStart(2, "0"); }).join(""); }
+  function fromHex(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  var QUICK = ["#c0392b", "#d35400", "#e1a21b", "#2f8a5b", "#1f8f86", "#2c8097", "#2f6bc4", "#6a45a8", "#b03a5b", "#4f6a8a", "#1a1f26", "#ffffff"];
+
+  function color(o) {
+    o = o || {};
+    var ar = document.documentElement.lang !== "en";
+    var start = /^#[0-9a-f]{6}$/i.test(o.value || "") ? o.value.toLowerCase() : "#2c8097";
+    return new Promise(function (resolve) {
+      var prev = document.activeElement;
+      var hsv = rgb2hsv.apply(null, fromHex(start));
+      var ov = document.createElement("div");
+      ov.className = "modal-overlay sn-dialog sn-color";
+      var box = document.createElement("div");
+      box.className = "modal";
+      box.setAttribute("role", "dialog");
+      box.setAttribute("aria-modal", "true");
+
+      var h3 = document.createElement("h3");
+      h3.textContent = o.title || (ar ? "اختار اللون" : "Pick a color");
+      box.appendChild(h3);
+
+      var sv = document.createElement("div");
+      sv.className = "sn-color__sv";
+      sv.setAttribute("aria-label", ar ? "الدرجة والسطوع" : "Saturation and brightness");
+      var svThumb = document.createElement("span");
+      svThumb.className = "sn-color__thumb";
+      sv.appendChild(svThumb);
+      box.appendChild(sv);
+
+      var hue = document.createElement("div");
+      hue.className = "sn-color__hue";
+      hue.setAttribute("aria-label", ar ? "درجة اللون" : "Hue");
+      var hueThumb = document.createElement("span");
+      hueThumb.className = "sn-color__thumb";
+      hue.appendChild(hueThumb);
+      box.appendChild(hue);
+
+      var row = document.createElement("div");
+      row.className = "sn-color__row";
+      var chip = document.createElement("span");
+      chip.className = "sn-color__chip";
+      var hexIn = document.createElement("input");
+      hexIn.type = "text";
+      hexIn.className = "sn-color__hex";
+      hexIn.maxLength = 7;
+      hexIn.dir = "ltr";
+      hexIn.spellcheck = false;
+      hexIn.autocapitalize = "off";
+      hexIn.setAttribute("aria-label", "HEX");
+      row.appendChild(chip);
+      row.appendChild(hexIn);
+      box.appendChild(row);
+
+      var sw = document.createElement("div");
+      sw.className = "sn-color__swatches";
+      QUICK.forEach(function (c) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.style.background = c;
+        b.setAttribute("aria-label", c);
+        b.addEventListener("click", function () { hsv = rgb2hsv.apply(null, fromHex(c)); paint(true); });
+        sw.appendChild(b);
+      });
+      box.appendChild(sw);
+
+      var actions = document.createElement("div");
+      actions.className = "modal__actions sn-color__actions";
+      var ok = document.createElement("button");
+      ok.type = "button"; ok.className = "btn btn--accent"; ok.textContent = o.confirmText || (ar ? "تطبيق" : "Apply");
+      var cancel = document.createElement("button");
+      cancel.type = "button"; cancel.className = "btn btn--ghost"; cancel.textContent = o.cancelText || (ar ? "إلغاء" : "Cancel");
+      actions.appendChild(ok); actions.appendChild(cancel);
+      box.appendChild(actions);
+      ov.appendChild(box);
+
+      function cur() { return toHex(hsv2rgb(hsv[0], hsv[1], hsv[2])); }
+      function paint(emit, skipHex) {
+        var hx = cur();
+        sv.style.background = "linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(" + hsv[0] + ",100%,50%))";
+        svThumb.style.insetInlineStart = "auto";
+        svThumb.style.left = (hsv[1] * 100) + "%";
+        svThumb.style.top = ((1 - hsv[2]) * 100) + "%";
+        svThumb.style.background = hx;
+        hueThumb.style.left = (hsv[0] / 360 * 100) + "%";
+        hueThumb.style.background = "hsl(" + hsv[0] + ",100%,50%)";
+        chip.style.background = hx;
+        if (!skipHex) hexIn.value = hx;
+        if (emit && o.onInput) { try { o.onInput(hx); } catch (e) {} }
+      }
+      // السحب بالإصبع/الماوس
+      function drag(el, fn) {
+        function move(e) { var r = el.getBoundingClientRect(); fn(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))); paint(true); }
+        el.addEventListener("pointerdown", function (e) {
+          e.preventDefault();
+          try { el.setPointerCapture(e.pointerId); } catch (x) {}
+          move(e);
+          var mv = function (ev) { move(ev); };
+          var up = function () { el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); };
+          el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+        });
+      }
+      drag(sv, function (x, y) { hsv[1] = x; hsv[2] = 1 - y; });
+      drag(hue, function (x) { hsv[0] = x * 359.99; });
+      hexIn.addEventListener("input", function () {
+        var v = hexIn.value.trim();
+        if (v && v.charAt(0) !== "#") v = "#" + v;
+        if (/^#[0-9a-f]{6}$/i.test(v)) { hsv = rgb2hsv.apply(null, fromHex(v.toLowerCase())); paint(true, true); }
+      });
+
+      var done = false;
+      function close(v) {
+        if (done) return;
+        done = true;
+        open = open.filter(function (x) { return x.close !== close; });
+        if (!open.length) document.body.style.overflow = prevOverflow;
+        document.removeEventListener("keydown", onKey, true);
+        ov.classList.remove("is-open");
+        setTimeout(function () { ov.remove(); }, 220);
+        if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+        resolve(v);
+      }
+      function onKey(e) {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(null); }
+        else if (e.key === "Enter" && document.activeElement === hexIn) { e.preventDefault(); close(cur()); }
+      }
+      ok.addEventListener("click", function () { close(cur()); });
+      cancel.addEventListener("click", function () { close(null); });
+      ov.addEventListener("click", function (e) { if (e.target === ov) close(null); });
+      document.addEventListener("keydown", onKey, true);
+
+      if (!open.length) { prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
+      open.push({ tag: "color", close: close, withCancel: true });
+      document.body.appendChild(ov);
+      paint(false);
+      requestAnimationFrame(function () { ov.classList.add("is-open"); ok.focus({ preventScroll: true }); });
+    });
   }
 
-  .dash-sidebar.is-open {
-    display: flex;
-    animation: dash-drawer-in 0.28s var(--ease);
+  var toastEl = null, toastTimer = null;
+  function toast(msg, o) {
+    o = o || {};
+    if (!toastEl) {
+      toastEl = document.createElement("div");
+      toastEl.className = "sn-toast";
+      toastEl.setAttribute("aria-live", "polite");
+      toastEl.appendChild(document.createElement("span"));
+      document.body.appendChild(toastEl);
+    }
+    toastEl.firstChild.textContent = msg;
+    toastEl.classList.toggle("is-error", !!o.error);
+    toastEl.classList.add("is-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("is-show"); }, o.ms || 4000);
   }
 
-  [dir="rtl"] .dash-sidebar.is-open {
-    animation-name: dash-drawer-in-rtl;
-  }
-
-  .dash-sidebar-backdrop:not([hidden]) {
-    display: block !important;
-    z-index: 55;
-  }
-
-  html.dash-sidebar-open,
-  html.dash-sidebar-open body {
-    overflow: hidden;
-  }
-}
-
-@media (max-width: 360px) {
-  .dash-tabbar .dash-tabbar__btn { font-size: 0.68rem; min-height: 58px; }
-}
-
-
-/* ==========================================================================
-   تخطيط الشاشات: موبايل = شريط سفلي كبسولة + drawer | كمبيوتر (980px+) = قايمة جانبية ثابتة
-   (الطالب والأدمن). الشريط السفلي والزرار بتاعه بيختفوا على الكمبيوتر.
-   ========================================================================== */
-.dash-side-nav { display: none; }
-
-@media (min-width: 980px) {
-  .dash-tabbar,
-  .dash-menu-btn,
-  .dash-sidebar-backdrop,
-  .dash-sidebar-backdrop:not([hidden]) {
-    display: none !important;
-  }
-
-  .dash-side-nav {
-    display: grid;
-  }
-
-  .dash-sidebar,
-  .dash-sidebar.is-open {
-    display: flex;
-    position: sticky;
-    top: 0;
-    inset-inline-start: auto;
-    align-self: flex-start;
-    width: 272px;
-    height: 100dvh;
-    min-height: 0;
-    overflow-y: auto;
-    transform: none;
-    z-index: 40;
-    background: var(--surface-glass);
-    animation: none;
-  }
-
-  :root[data-theme="dark"] .dash-sidebar {
-    background: var(--surface-glass);
-  }
-
-  .dash-main {
-    padding-bottom: clamp(20px, 3vw, 36px) !important;
-  }
-
-  .dash-wa {
-    bottom: max(16px, env(safe-area-inset-bottom));
-  }
-
-  html.dash-sidebar-open,
-  html.dash-sidebar-open body {
-    overflow: visible;
-  }
-}
-
-/* ==========================================================================
-   الإعلانات + الجرس + شبكة "المزيد" على الموبايل (مربعات زي تطبيق ClasseViva)
-   ========================================================================== */
-
-/* --- "المزيد": شبكة 3 مربعات في الصف، أيقونة فوق والاسم تحتها --- */
-.more-list {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.more-list > li { min-width: 0; }
-
-.more-list .more-item {
-  position: relative;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  min-height: 118px;
-  padding: 16px 6px;
-  text-align: center;
-  font-size: 0.86rem;
-  font-weight: 800;
-  line-height: 1.35;
-  border-radius: 18px;
-  box-shadow: 0 6px 16px var(--surface-glass-shadow);
-}
-
-.more-list .more-item > svg:first-child { width: 30px; height: 30px; }
-.more-list .more-item > span:not(.an-badge) { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
-.more-list .more-item .more-item__chev { display: none !important; }
-
-@media (min-width: 560px) {
-  .more-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-/* --- شارة العدّاد (جرس + مربع الإعلانات) --- */
-.an-badge {
-  position: absolute;
-  top: 8px;
-  inset-inline-end: 8px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  box-sizing: border-box;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #d93a3a;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 800;
-  line-height: 1;
-}
-.an-badge[hidden] { display: none; }
-
-/* --- الجرس جنب دايرة حساب الطالب --- */
-.dash-bell {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  flex: none;
-  border-radius: 50%;
-  border: 1px solid var(--surface-glass-border);
-  background: transparent;
-  color: var(--brand-strong);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-.dash-bell svg { width: 20px; height: 20px; }
-.dash-bell .an-badge { top: -5px; inset-inline-end: -5px; }
-.dash-bell.has-unread svg { animation: an-ring 2.4s ease-in-out 0.6s 2; transform-origin: 50% 10%; }
-
-@keyframes an-ring {
-  0%, 60%, 100% { transform: rotate(0); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-12deg); }
-  30% { transform: rotate(9deg); }
-  40% { transform: rotate(-6deg); }
-  50% { transform: rotate(3deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .dash-bell.has-unread svg { animation: none; }
-}
-
-/* --- كروت الإعلانات (الطالب + الأدمن) --- */
-.an-list { display: grid; gap: 12px; }
-
-.an-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px 18px;
-  border: 1px solid var(--surface-glass-border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  box-shadow: 0 8px 22px var(--surface-glass-shadow);
-  color: var(--ink);
-}
-.an-card.is-new { border-color: var(--accent); }
-
-.an-card__head { display: flex; align-items: center; gap: 12px; }
-
-.an-card__icon {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--bg-soft, rgba(44, 128, 151, 0.12));
-  color: var(--accent);
-}
-.an-card__icon svg { width: 22px; height: 22px; }
-
-.an-card__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.an-card__title { font-size: 1rem; font-weight: 800; color: var(--brand-strong); overflow-wrap: anywhere; }
-.an-card__sub { font-size: 0.78rem; color: var(--ink-soft); font-weight: 600; }
-.an-card__body { margin: 0; font-size: 0.93rem; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-
-.an-new {
-  flex: none;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: #d93a3a;
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.an-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.an-empty { padding: 28px 12px; text-align: center; color: var(--ink-soft); font-weight: 600; }
-
-/* أنواع الإعلان: لمسة لون خفيفة على الأيقونة */
-.an-card--exam .an-card__icon { color: #c0392b; background: rgba(192, 57, 43, 0.12); }
-.an-card--extra .an-card__icon { color: #b9770e; background: rgba(185, 119, 14, 0.14); }
-.an-card--motivation .an-card__icon { color: #1e8449; background: rgba(30, 132, 73, 0.13); }
-
-/* --- شريط آخر إعلان في الرئيسية --- */
-.home-ann {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  text-align: start;
-  font-family: inherit;
-  color: var(--ink);
-  cursor: pointer;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-lg);
-  background: var(--surface-glass);
-  box-shadow: 0 8px 22px var(--surface-glass-shadow);
-}
-.home-ann[hidden] { display: none; }
-.home-ann__icon { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: var(--accent); color: var(--accent-ink, #fff); }
-.home-ann__icon svg { width: 20px; height: 20px; }
-.home-ann__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.home-ann__label { font-size: 0.72rem; font-weight: 800; color: var(--accent); }
-.home-ann__title { font-size: 0.98rem; font-weight: 800; color: var(--brand-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.home-ann__snippet { font-size: 0.82rem; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.home-ann__chev { flex: none; width: 18px; height: 18px; color: var(--ink-soft); }
-html[dir="ltr"] .home-ann__chev { transform: scaleX(-1); }
-
-/* ==========================================================================
-   القائمة الجانبية: الأزرار فوق (تحت الشعار) + تسجيل الخروج أحمر + صفحة الإعدادات
-   + نوافذ التأكيد (snDialog) بنفس تصميم المنصة
-   ========================================================================== */
-.dash-side-utility {
-  margin-top: 0;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--surface-glass-border);
-}
-
-.dash-logout--danger,
-.dash-side-utility .dash-logout--danger {
-  justify-content: center;
-  background: #c0392b;
-  border-color: #c0392b;
-  color: #fff;
-}
-.dash-logout--danger:hover,
-.dash-side-utility .dash-logout--danger:hover {
-  background: #a93226;
-  border-color: #a93226;
-  color: #fff;
-}
-
-/* صفحة الإعدادات */
-.settings-actions { display: grid; gap: 10px; margin-top: 14px; }
-.settings-actions .mobile-menu__utility-btn { font-family: inherit; }
-.settings-actions .mobile-menu__utility-btn:hover { background: var(--surface-glass-border); }
-.settings-actions .mobile-menu__utility-btn[hidden] { display: none; }
-.settings-actions .theme-btn .icon-moon { display: none; }
-:root[data-theme="dark"] .settings-actions .theme-btn .icon-sun { display: none; }
-:root[data-theme="dark"] .settings-actions .theme-btn .icon-moon { display: block; }
-.dash-panel[data-panel="settings"] .dash-card + .dash-card { margin-top: 16px; }
-@media (min-width: 720px) {
-  .settings-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-/* نوافذ التأكيد والتنبيه */
-.sn-dialog .modal { max-width: 360px; }
-.sn-dialog .modal__icon--danger { background: #c0392b; color: #fff; }
-.sn-dialog .modal p { line-height: 1.7; }
-.btn--sn-danger {
-  background: #c0392b;
-  color: #fff;
-  border-color: #c0392b;
-}
-.btn--sn-danger:hover { background: #a93226; border-color: #a93226; }
-.sn-dialog .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-
-
-/* ==========================================================================
-   النوافذ المنبثقة: تجاوب كامل مع الموبايل + ألوان من متغيّرات المنصة
-   (الألوان كلها var(--...) فبتتبع ألوان الأدمن والدارك/لايت اللي الطالب مختاره)
-   ========================================================================== */
-.modal-overlay {
-  padding:
-    max(16px, env(safe-area-inset-top, 0px))
-    max(16px, env(safe-area-inset-right, 0px))
-    max(16px, env(safe-area-inset-bottom, 0px))
-    max(16px, env(safe-area-inset-left, 0px));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.modal {
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-.modal h3, .modal p { overflow-wrap: anywhere; }
-.modal__actions .btn { min-height: 46px; }
-.btn--danger { background: #c0392b; color: #fff; border-color: #c0392b; }
-.btn--danger:hover { background: #a93226; border-color: #a93226; }
-@media (max-width: 480px) {
-  .modal { padding: 28px 18px 22px; }
-  .sn-dialog .modal { max-width: 100%; }
-}
-@media (max-height: 520px) {
-  .modal { padding-top: 22px; padding-bottom: 18px; }
-  .modal__icon { width: 44px; height: 44px; margin-bottom: 10px; }
-  .modal__actions { margin-top: 16px; }
-}
-
-/* إشعار صغير (toast) بنفس ألوان المنصة */
-.sn-toast {
-  position: fixed;
-  inset-inline: 0;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  z-index: 400;
-  display: flex;
-  justify-content: center;
-  padding-inline: 16px;
-  pointer-events: none;
-}
-.sn-toast span {
-  max-width: 92vw;
-  padding: 11px 20px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-strong);
-  color: var(--bg);
-  font-weight: 700;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
-}
-.sn-toast.is-show span { opacity: 1; transform: translateY(0); }
-.sn-toast.is-error span { background: #b4443f; color: #fff; }
-
-
-/* مكان زرار "حمّل التطبيق" في القائمة الجانبية:
-   الموبايل (القائمة المنسدلة): فوق كل الأزرار — الكمبيوتر: تحت كل الأزرار (بعد تسجيل الخروج) */
-.dash-side-utility > [data-install-app] {
-  order: 1;
-  width: 100%;
-  justify-content: center;
-}
-@media (max-width: 979px) {
-  .dash-side-utility > [data-install-app] { order: -1; }
-}
-
-
-/* أزرار القائمة الجانبية (الإعدادات / المظهر / اللغة / تسجيل الخروج / حمّل التطبيق)
-   بقت في أسفل القائمة: موبايل (drawer) وكمبيوتر. الشعار فوق، وقايمة الأقسام (للكمبيوتر) في النص. */
-.dash-sidebar > .dash-brand { order: 0; }
-.dash-sidebar > .dash-side-nav { order: 1; }
-.dash-sidebar > .dash-side-utility {
-  order: 2;
-  margin-top: auto;
-  padding-top: 20px;
-  padding-bottom: 0;
-  border-bottom: 0;
-  border-top: 1px solid var(--surface-glass-border);
-}
-.dash-sidebar { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-
-
-/* ألوان المنصة في إعدادات الطالب (نفس خيارات صفحة الأدمن) */
-.st-presets { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0 18px; }
-@media (min-width: 720px) { .st-presets { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.st-preset { display: grid; gap: 8px; padding: 10px; border-radius: var(--radius-md); background: var(--bg-soft); border: 2px solid var(--surface-glass-border); cursor: pointer; text-align: start; font: inherit; color: inherit; transition: transform 0.2s var(--ease), border-color 0.2s var(--ease); }
-.st-preset:hover { transform: translateY(-2px); }
-.st-preset.is-active { border-color: var(--accent); }
-.st-preset__bar { display: flex; height: 36px; border-radius: 10px; overflow: hidden; border: 1px solid var(--surface-glass-border); }
-.st-preset__bar span { flex: 1; }
-.st-preset__name { font-weight: 800; font-size: 0.84rem; color: var(--brand-strong); }
-.st-colors { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 560px) { .st-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 900px) { .st-colors { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.st-color { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-soft); border: 1px solid var(--surface-glass-border); min-width: 0; }
-.st-color input[type="color"] { width: 46px; height: 46px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 12px; flex: none; }
-.st-color label { display: block; font-weight: 800; font-size: 0.86rem; color: var(--brand-strong); }
-.st-color small { color: var(--ink-soft); font-size: 0.72rem; direction: ltr; display: block; unicode-bidi: plaintext; }
-.st-theme-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.st-theme-actions .btn { flex: 1 1 180px; min-height: 46px; }
-.st-theme-state { margin: 10px 0 0; font-size: 0.84rem; color: var(--ink-soft); }
-
-
-/* ==========================================================================
-   حقول النص الطويل + قوائم الاختيار + منتقي الألوان: كلها بستايل المنصة
-   ========================================================================== */
-.form-field textarea,
-.ad-textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  line-height: 1.8;
-  resize: vertical;
-  transition: border-color 0.2s var(--ease);
-}
-.form-field textarea::placeholder,
-.form-field input::placeholder { color: var(--ink-soft); opacity: 0.75; }
-.form-field textarea:focus-visible { outline: none; border-color: var(--accent); }
-
-/* قوائم الاختيار الملفوفة تلقائيًا (لوحة الأدمن) */
-.custom-select--auto { min-width: 0; }
-.custom-select--auto .custom-select__trigger { text-align: start; }
-.ad-toolbar .custom-select { flex: 0 1 190px; min-width: 150px; }
-@media (max-width: 640px) { .ad-toolbar .custom-select { flex: 1 1 100%; width: 100%; } }
-.custom-select__option { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-
-/* نافذة اختيار من قايمة (موبايل) */
-.sn-pick .modal { max-width: 380px; text-align: start; padding: 24px 16px 16px; }
-.sn-pick .modal h3 { text-align: center; margin-bottom: 14px; font-size: 1.05rem; }
-.sn-pick__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.sn-pick__item {
-  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 48px; padding: 10px 14px; border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border); background: var(--bg-soft); color: var(--ink);
-  font: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; text-align: start;
-}
-.sn-pick__item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.sn-pick__dot {
-  flex: none; width: 20px; height: 20px; border-radius: 50%;
-  border: 2px solid var(--ink-soft); display: grid; place-items: center;
-}
-.sn-pick__item.is-selected { border-color: var(--accent); background: var(--surface-glass); }
-.sn-pick__item.is-selected .sn-pick__dot { border-color: var(--accent); }
-.sn-pick__item.is-selected .sn-pick__dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-.sn-pick__cancel { width: 100%; margin-top: 12px; min-height: 46px; }
-
-/* منتقي الألوان */
-.sn-color .modal { max-width: 340px; text-align: start; padding: 22px 18px 18px; }
-.sn-color .modal h3 { text-align: center; font-size: 1.05rem; margin-bottom: 14px; }
-.sn-color__sv, .sn-color__hue { position: relative; direction: ltr; touch-action: none; border-radius: 12px; border: 1px solid var(--surface-glass-border); cursor: crosshair; }
-.sn-color__sv { height: 170px; }
-.sn-color__hue { height: 20px; margin-top: 14px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
-.sn-color__thumb {
-  position: absolute; width: 22px; height: 22px; border-radius: 50%;
-  border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
-  transform: translate(-50%, -50%); pointer-events: none;
-}
-.sn-color__hue .sn-color__thumb { top: 50%; }
-.sn-color__row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
-.sn-color__chip { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--surface-glass-border); }
-.sn-color__hex {
-  flex: 1; min-width: 0; height: 44px; padding-inline: 14px; border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border); background: var(--bg-soft); color: var(--ink);
-  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 16px; text-align: start; direction: ltr;
-}
-.sn-color__hex:focus-visible { outline: none; border-color: var(--accent); }
-.sn-color__swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
-.sn-color__swatches button { height: 32px; border-radius: 10px; border: 1px solid var(--surface-glass-border); cursor: pointer; padding: 0; }
-.sn-color__swatches button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.sn-color__actions { flex-direction: column-reverse; margin-top: 18px; }
-
-/* زرار عينة اللون (بديل <input type=color>) */
-.color-swatch {
-  flex: none; width: 46px; height: 46px; padding: 0; border-radius: 12px; cursor: pointer;
-  border: 2px solid var(--surface-glass-border);
-}
-.color-swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* فورم الإعلان */
-.ad-ann-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-.ad-ann-head__icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
-.ad-ann-head__icon svg { width: 22px; height: 22px; }
-.ad-ann-head h3 { margin: 0; }
-.ad-count { justify-self: end; font-size: 0.74rem; font-weight: 700; color: var(--ink-soft); direction: ltr; }
-.ad-count.is-near { color: #c0392b; }
-@media (max-width: 520px) { .ad-form .form-row { grid-template-columns: minmax(0, 1fr); } }
-.ad-form .ad-actions .btn { min-height: 46px; }
-@media (max-width: 640px) { .ad-form .ad-actions .btn { flex: 0 0 auto; width: 100%; } }
-
-
-/* ===== مركز الإعدادات (لوحة الطالب) ===== */
-.set-tiles { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 6px; }
-.set-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 20px 18px; border-radius: var(--radius-lg); background: var(--surface-glass); border: 1px solid var(--surface-glass-border); color: inherit; font: inherit; text-align: start; cursor: pointer; transition: transform 0.2s var(--ease), border-color 0.2s var(--ease); }
-.set-tile:hover { transform: translateY(-3px); border-color: var(--accent); }
-.set-tile__ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--bg-soft); color: var(--accent); margin-bottom: 4px; }
-.set-tile__ico svg { width: 22px; height: 22px; }
-.set-tile strong { font-size: 1rem; color: var(--brand-strong); }
-.set-tile small { opacity: 0.75; }
-.set-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; padding: 8px 14px; border-radius: 999px; background: var(--surface-glass); border: 1px solid var(--surface-glass-border); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
-.set-back svg { width: 18px; height: 18px; }
-[dir="ltr"] .set-back svg { transform: scaleX(-1); }
-.set-hub[hidden], .set-sub[hidden], .set-card[hidden] { display: none !important; }
-
-/* ==========================================================================
-   Liquid Glass (شكل iOS) — بيشتغل بس لما html[data-liquid="on"]
-   - ألوان المنصة (اللي الأدمن/الطالب مختارها) موجودة، لكن بتظهر "خفيفة" عبر الزجاج الشفاف.
-   - خفيف الأداء: backdrop-filter الحقيقي على عناصر ثابتة قليلة، والباقي زجاج مرسوم.
-   - المتغيرات (--lg-blur / --lg-tint / --lg-rim) بيظبطها liquid.js حسب شريط القوة.
-   ========================================================================== */
-html[data-liquid="on"] {
-  background-color: var(--bg);
-  /* لون الزجاج = ألوان المنصة بعد ما اتخففت بالأبيض */
-  --lg-surface: color-mix(in srgb, #ffffff 64%, var(--sunset-300, var(--accent)) 36%);
-  --lg-edge: 255, 255, 255;
-  --lg-shadow: 20, 40, 60;
-  --lg-radius: 26px;
-}
-html[data-liquid="on"][data-theme="dark"] {
-  --lg-surface: color-mix(in srgb, var(--surface-glass) 86%, var(--accent) 14%);
-  --lg-shadow: 0, 0, 0;
-}
-
-/* خلفية ملوّنة فاتحة بألوان المنصة — طبقة ثابتة واحدة (التمرير يفضل سلس) */
-html[data-liquid="on"] body { background: transparent !important; }
-html[data-liquid="on"]::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background-image:
-    radial-gradient(62vmax 62vmax at 10% 6%, color-mix(in srgb, var(--sunset-300, var(--accent)) 62%, transparent), transparent 64%),
-    radial-gradient(56vmax 56vmax at 94% 20%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 62%),
-    radial-gradient(64vmax 64vmax at 68% 98%, color-mix(in srgb, var(--blob-a, var(--brand)) 26%, transparent), transparent 64%);
-  transform: translateZ(0);
-}
-html[data-liquid="on"][data-theme="dark"]::before {
-  background-image:
-    radial-gradient(62vmax 62vmax at 10% 6%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 64%),
-    radial-gradient(56vmax 56vmax at 94% 20%, color-mix(in srgb, var(--blob-a, var(--brand)) 40%, transparent), transparent 62%),
-    radial-gradient(64vmax 64vmax at 68% 98%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 64%);
-}
-
-/* الأسطح الكبيرة: زجاج شفاف فاتح + حافة مضيئة + لمعة علوية (زي iOS) */
-html[data-liquid="on"] :is(.navbar__inner, .dash-sidebar, .dash-topbar, .dash-tabbar, .modal, .mobile-menu, .auth-card, .nav-progress, .dash-card, .story-head, .chapter-card, .lesson-item, .home-tile, .home-quote, .home-identity-strip, .set-tile) {
-  background:
-    linear-gradient(160deg, rgba(var(--lg-edge), 0.46) 0%, rgba(var(--lg-edge), 0.10) 38%, rgba(var(--lg-edge), 0.03) 62%, rgba(var(--lg-edge), 0.22) 100%),
-    color-mix(in srgb, var(--lg-surface) var(--lg-tint, 50%), transparent) !important;
-  border: 1px solid rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.6)) !important;
-  box-shadow:
-    inset 0 1.5px 0 rgba(var(--lg-edge), var(--lg-rim, 0.5)),
-    inset 1.5px 0 0 rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.55)),
-    inset -1px -1.5px 0 rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.28)),
-    0 6px 16px rgba(var(--lg-shadow), 0.09) !important;
-}
-html[data-liquid="on"][data-theme="dark"] :is(.navbar__inner, .dash-sidebar, .dash-topbar, .dash-tabbar, .modal, .mobile-menu, .auth-card, .nav-progress, .dash-card, .story-head, .chapter-card, .lesson-item, .home-tile, .home-quote, .home-identity-strip, .set-tile) {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 62%, rgba(255, 255, 255, 0.07) 100%),
-    color-mix(in srgb, var(--lg-surface) var(--lg-tint, 50%), transparent) !important;
-  border-color: rgba(255, 255, 255, calc(var(--lg-rim, 0.5) * 0.28)) !important;
-  box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, calc(var(--lg-rim, 0.5) * 0.42)),
-    inset 1.5px 0 0 rgba(255, 255, 255, calc(var(--lg-rim, 0.5) * 0.22)),
-    inset -1px -1.5px 0 rgba(255, 255, 255, calc(var(--lg-rim, 0.5) * 0.1)),
-    0 6px 16px rgba(0, 0, 0, 0.28) !important;
-}
-/* الكروت من غير فلتر: كثافة أعلى شوية عشان الكلام يفضل مقروء */
-html[data-liquid="on"] :is(.dash-card, .story-head, .chapter-card, .lesson-item, .home-tile, .home-quote, .home-identity-strip, .set-tile) {
-  background:
-    linear-gradient(160deg, rgba(var(--lg-edge), 0.46) 0%, rgba(var(--lg-edge), 0.10) 38%, rgba(var(--lg-edge), 0.03) 62%, rgba(var(--lg-edge), 0.22) 100%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 18%), transparent) !important;
-}
-html[data-liquid="on"][data-theme="dark"] :is(.dash-card, .story-head, .chapter-card, .lesson-item, .home-tile, .home-quote, .home-identity-strip, .set-tile) {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 62%, rgba(255, 255, 255, 0.07) 100%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 18%), transparent) !important;
-}
-/* الفلتر الحقيقي: عناصر ثابتة قليلة بس */
-html[data-liquid="on"]:not([data-lg-lite="1"]) :is(.dash-sidebar, .modal, .mobile-menu, .auth-card) {
-  -webkit-backdrop-filter: blur(var(--lg-blur, 14px)) saturate(1.7) !important;
-  backdrop-filter: blur(var(--lg-blur, 14px)) saturate(1.7) !important;
-}
-/* الشرايط اللي المحتوى بيتحرك تحتها: من غير فلتر (أخف بكتير في التمرير)، فنزوّد الكثافة شوية */
-html[data-liquid="on"] :is(.navbar__inner, .dash-topbar, .dash-tabbar, .nav-progress) {
-  background:
-    linear-gradient(160deg, rgba(var(--lg-edge), 0.46) 0%, rgba(var(--lg-edge), 0.10) 38%, rgba(var(--lg-edge), 0.03) 62%, rgba(var(--lg-edge), 0.22) 100%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 22%), transparent) !important;
-}
-html[data-liquid="on"][data-theme="dark"] :is(.navbar__inner, .dash-topbar, .dash-tabbar, .nav-progress) {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 62%, rgba(255, 255, 255, 0.07) 100%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 22%), transparent) !important;
-}
-/* الوضع الخفيف (بيتفعّل تلقائيًا على الأجهزة الضعيفة): نفس الشكل من غير فلتر ولا ظلال خارجية */
-html[data-liquid="on"][data-lg-lite="1"] :is(.navbar__inner, .dash-sidebar, .dash-topbar, .dash-tabbar, .modal, .mobile-menu, .auth-card, .nav-progress, .dash-card, .story-head, .chapter-card, .lesson-item, .home-tile, .home-quote, .home-identity-strip, .set-tile, .btn--ghost, .icon-btn, .mobile-menu__utility-btn, .whatsapp-fab, .set-back, .dash-logout, .custom-select__trigger, .st-preset, .set-tile__ico) { box-shadow: inset 0 1.5px 0 rgba(var(--lg-edge), var(--lg-rim, 0.5)), inset 1.5px 0 0 rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.5)) !important; }
-html[data-liquid="on"][data-lg-lite="1"]::before { background-image: radial-gradient(70vmax 70vmax at 15% 10%, color-mix(in srgb, var(--sunset-300, var(--accent)) 55%, transparent), transparent 65%); }
-
-/* زوايا أكبر زي iOS */
-html[data-liquid="on"] :is(.dash-card, .story-head, .chapter-card, .home-tile, .home-quote, .set-tile, .auth-card, .modal) { border-radius: var(--lg-radius) !important; }
-
-/* الأزرار والكبسولات: زجاج مرسوم + ضغطة ناعمة */
-html[data-liquid="on"] :is(.btn--ghost, .icon-btn, .mobile-menu__utility-btn, .whatsapp-fab, .set-back, .dash-logout, .custom-select__trigger, .st-preset, .set-tile__ico) {
-  background:
-    radial-gradient(130% 150% at 22% 0%, rgba(var(--lg-edge), 0.62), rgba(var(--lg-edge), 0.10) 56%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 6%), transparent) !important;
-  border: 1px solid rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.75)) !important;
-  box-shadow:
-    inset 0 1.5px 1px rgba(var(--lg-edge), var(--lg-rim, 0.5)),
-    inset 0 -1px 1px rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.3)),
-    0 3px 8px rgba(var(--lg-shadow), 0.10) !important;
-}
-html[data-liquid="on"][data-theme="dark"] :is(.btn--ghost, .icon-btn, .mobile-menu__utility-btn, .whatsapp-fab, .set-back, .dash-logout, .custom-select__trigger, .st-preset, .set-tile__ico) {
-  background:
-    radial-gradient(130% 150% at 22% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.03) 56%),
-    color-mix(in srgb, var(--lg-surface) calc(var(--lg-tint, 50%) + 6%), transparent) !important;
-  border-color: rgba(255, 255, 255, calc(var(--lg-rim, 0.5) * 0.3)) !important;
-}
-html[data-liquid="on"] :is(.btn, .icon-btn, .set-tile, .mobile-menu__utility-btn, .dash-logout, .set-back, .dash-nav__link) {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-html[data-liquid="on"] :is(.btn, .icon-btn, .set-tile, .mobile-menu__utility-btn, .dash-logout, .set-back):active { transform: scale(0.96); }
-
-/* زرار الأكشن: زجاج ملوّن بلون المنصة */
-html[data-liquid="on"] .btn--accent {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0) 56%),
-    color-mix(in srgb, var(--accent) 80%, transparent) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, 0.75), inset 0 -1px 1px rgba(255, 255, 255, 0.22), 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent) !important;
-}
-
-/* العنصر النشط في القائمة: كبسولة زجاجية بتدرّج لون المنصة (زي تحديد iOS) */
-html[data-liquid="on"] .dash-nav__link.is-active {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08) 60%),
-    color-mix(in srgb, var(--accent) 24%, transparent) !important;
-  border: 1px solid rgba(255, 255, 255, 0.55) !important;
-  box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, 0.8), inset 0 -1px 1px rgba(255, 255, 255, 0.2), 0 4px 12px color-mix(in srgb, var(--accent) 18%, transparent) !important;
-}
-
-/* الحقول: زجاج غاير للداخل */
-html[data-liquid="on"] :is(.form-field input, .form-field select, .form-field textarea, .exam-question__input) {
-  background: color-mix(in srgb, var(--lg-surface) 38%, transparent) !important;
-  border: 1px solid rgba(var(--lg-edge), calc(var(--lg-rim, 0.5) * 0.6)) !important;
-  box-shadow: inset 0 2px 5px rgba(var(--lg-shadow), 0.10), inset 0 -1px 0 rgba(var(--lg-edge), 0.5) !important;
-  border-radius: 16px !important;
-}
-
-/* شريط القوة: مسار زجاجي + مقبض أبيض بيضاوي زي iOS */
-html[data-liquid="on"] input[type="range"] { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; }
-html[data-liquid="on"] input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, rgba(var(--lg-edge), 0.5)); box-shadow: inset 0 1px 2px rgba(var(--lg-shadow), 0.18); }
-html[data-liquid="on"] input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 24px; margin-top: -8px; border-radius: 999px; background: linear-gradient(180deg, #fff, #eef1f4); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 3px 8px rgba(var(--lg-shadow), 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.06); }
-html[data-liquid="on"] input[type="range"]::-moz-range-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, rgba(var(--lg-edge), 0.5)); }
-html[data-liquid="on"] input[type="range"]::-moz-range-thumb { width: 34px; height: 24px; border-radius: 999px; background: #fff; border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 3px 8px rgba(var(--lg-shadow), 0.3); }
-
-/* مفتاح التشغيل: مسار زجاجي + مقبض أبيض مضيء */
-html[data-liquid="on"] .sn-switch { box-shadow: inset 0 2px 5px rgba(var(--lg-shadow), 0.16); }
-html[data-liquid="on"] .sn-switch span { background: linear-gradient(180deg, #fff, #f1f3f6); box-shadow: 0 3px 8px rgba(var(--lg-shadow), 0.3), inset 0 -1px 2px rgba(0, 0, 0, 0.06); }
-
-/* ===== كارت التفعيل في الإعدادات ===== */
-.glass-card { margin-top: 16px; }
-.glass-row { display: flex; align-items: center; gap: 14px; }
-.glass-row__text { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.glass-row__text strong { font-size: 1rem; color: var(--brand-strong); }
-.glass-row__text small { opacity: 0.75; }
-.sn-switch { position: relative; flex: none; width: 56px; height: 34px; border-radius: 999px; border: 1px solid var(--surface-glass-border); background: var(--bg-soft); cursor: pointer; padding: 0; transition: background 0.25s var(--ease); }
-.sn-switch span { position: absolute; top: 3px; inset-inline-start: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(0, 0, 0, 0.04); transition: inset-inline-start 0.25s var(--ease), width 0.2s var(--ease); }
-.sn-switch:active span { width: 32px; }
-.sn-switch[aria-checked="true"] { background: var(--accent); border-color: transparent; }
-.sn-switch[aria-checked="true"] span { inset-inline-start: calc(100% - 29px); }
-.sn-switch[aria-checked="true"]:active span { inset-inline-start: calc(100% - 35px); }
-.glass-level { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--surface-glass-border); }
-.glass-level[hidden] { display: none; }
-.glass-level label { font-weight: 700; white-space: nowrap; }
-.glass-level input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
-.glass-level span { min-width: 3.2em; text-align: end; font-weight: 800; }
-
-
-/* ===== منتقي الصف الدراسي (إنشاء حساب): قايمة بعرض الكارت كله، وكل اختيار في سطر واحد ===== */
-.custom-select--grade .custom-select__panel.gp-panel { max-height: min(360px, 62vh); padding: 10px; }
-.gp-panel .custom-select__option { white-space: nowrap; padding: 12px 14px; font-size: 0.95rem; }
-.gp-panel .custom-select__option > span { overflow: hidden; text-overflow: ellipsis; }
-.gp-panel .custom-select__group { font-size: 0.82rem; }
-.gp-chev { flex: none; width: 18px; height: 18px; opacity: 0.7; }
-[dir="rtl"] .gp-chev { transform: scaleX(-1); }
-.gp-back { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 6px; border-radius: var(--radius-md); background: var(--bg-soft); cursor: pointer; font-size: 0.88rem; font-weight: 700; color: var(--ink); }
-.gp-back svg { flex: none; width: 18px; height: 18px; }
-[dir="rtl"] .gp-back svg { transform: scaleX(-1); }
-.gp-back strong { margin-inline-start: auto; font-size: 0.82rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-
-/* ===== أزرار الإعدادات المدمجة (لوحة الأدمن): الأيقونة جنب النص وحجم أصغر ===== */
-.set-tiles--compact { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.set-tiles--compact .set-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 1px; align-items: center; padding: 10px 14px; border-radius: 18px; }
-.set-tiles--compact .set-tile__ico { grid-row: 1 / span 2; width: 40px; height: 40px; border-radius: 12px; margin: 0; }
-.set-tiles--compact .set-tile__ico svg { width: 20px; height: 20px; }
-.set-tiles--compact .set-tile strong { grid-column: 2; font-size: 0.95rem; line-height: 1.3; }
-.set-tiles--compact .set-tile small { grid-column: 2; font-size: 0.78rem; line-height: 1.3; }
-.set-tiles--compact .set-tile:hover { transform: translateY(-2px); }
-
-/* ===== إعدادات المنصة: اختيار اللوجو ===== */
-.br-logo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.br-logo__box { width: 84px; height: 84px; border-radius: 20px; background: var(--bg-soft); border: 1px solid var(--surface-glass-border); display: grid; place-items: center; overflow: hidden; flex: none; }
-.br-logo__box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.br-logo__btns { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-
-/* ===== الأوائل (صفحة الطالب + صفحة الأدمن) ===== */
-.hn-card__title { margin: 0 0 6px; font-size: 1.1rem; color: var(--brand-strong); }
-.hn-table-wrap { overflow-x: auto; margin-top: 12px; }
-.hn-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-.hn-table th { padding: 6px 14px; font-size: 0.85rem; font-weight: 700; color: var(--ink-soft); text-align: start; }
-.hn-table td { padding: 12px 14px; background: var(--bg-soft); }
-.hn-table td:first-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
-.hn-table td:last-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
-[dir="ltr"] .hn-table td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
-[dir="ltr"] .hn-table td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
-.hn-table tr.is-you td { background: var(--surface-glass); box-shadow: inset 0 0 0 1.5px var(--accent); }
-.hn-table .hn-rank { width: 52px; text-align: center; font-weight: 800; }
-.hn-table .hn-name { font-weight: 700; color: var(--brand-strong); }
-.hn-table .hn-score { white-space: nowrap; }
-.hn-table .hn-score small { display: block; opacity: 0.7; font-size: 0.78rem; }
-.hn-you { display: inline-block; margin-inline-start: 6px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.72rem; }
-.hn-view__img { display: block; width: auto; height: auto; max-width: min(100%, 340px); max-height: 55vh; margin: 12px auto 16px; border-radius: var(--radius-md); border: 1px solid var(--surface-glass-border); }
-.hn-view__dl { display: flex; margin: 0 auto; }
-.hn-prev { display: grid; gap: 12px; margin: 12px 0; }
-.hn-prev__item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: var(--radius-md); background: var(--bg-soft); }
-.hn-prev__item img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: none; }
-.hn-prev__item input { flex: 1; min-width: 0; }
-.hn-row { margin-bottom: 12px; }
-.hn-row__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.hn-row__meta { display: grid; gap: 2px; min-width: 0; }
-.hn-row__meta span { font-size: 0.85rem; color: var(--ink-soft); }
-.hn-row__actions { display: flex; gap: 8px; }
-.hn-row__img { margin-top: 12px; }
-.hn-row__img img { display: block; width: 100%; max-width: 520px; border-radius: var(--radius-md); }
-@media (max-width: 560px) { .hn-prev__item { flex-wrap: wrap; } .hn-prev__item input { flex-basis: 100%; order: 3; } }
-
-
-/* زر الإعدادات في القايمة الجانبية (موبايل بس) — على الكمبيوتر الإعدادات موجودة في .dash-side-nav */
-.dash-side-mobile { margin-bottom: 4px; }
-@media (min-width: 980px) {
-  .dash-side-mobile { display: none; }
-}
-
-/* زر "اختيار صور من الجهاز" (وكل الأزرار الشفافة التانية في لوحة الأدمن: تحديث، عرض، اختيار اللوجو…) كان بيختفي على الموبايل
-   لأن .btn--ghost الأصلي display:none تحت 620px (معمول لشريط الموقع العلوي بس) */
-.dash-main .btn--ghost:not([hidden]) { display: inline-flex; }
-@media (max-width: 640px) {
-  .ad-form .form-field > label.btn { width: 100%; min-height: 46px; }
-}
-
-/* خانة عنوان الصورة في معاينة الأوائل: بنفس شكل خانات الموقع */
-.hn-prev__item input[type="text"] {
-  box-sizing: border-box;
-  width: 100%;
-  height: 44px;
-  padding-inline: 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--surface-glass-border);
-  background: var(--bg-soft);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-.hn-prev__item input[type="text"]::placeholder { color: var(--ink-soft); opacity: 0.7; }
-.hn-prev__item input[type="text"]:focus,
-.hn-prev__item input[type="text"]:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-}
-.hn-prev__item { background: var(--surface-glass); border: 1px solid var(--surface-glass-border); }
+  window.snDialog = {
+    confirm: function (o) { return show(o, true); },
+    alert: function (o) { return show(o, false); },
+    toast: toast,
+    pick: pick,
+    color: color,
+    isOpen: function () { return open.length > 0; },
+    closeByTag: function (tag) {
+      open.filter(function (x) { return x.tag === tag; }).forEach(function (x) { x.close(x.withCancel ? false : true); });
+    }
+  };
+})();
