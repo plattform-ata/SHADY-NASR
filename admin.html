@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" />
   <title>لوحة تحكم الأدمن — Shady Nasr English Platform</title>
   <link rel="icon" type="image/png" href="favicon.png" />
-  <link rel="stylesheet" href="shared.css?v=20261012" />
+  <link rel="stylesheet" href="shared.css?v=20261013" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap"
@@ -22,6 +22,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="apple-touch-icon" href="shady-nasr-logo.png" />
   <style>
+    /* أزرار .btn--ghost كانت مخفية على الموبايل (تحت 620px) — نظهرها في لوحة الأدمن */
+    .dash-main .btn--ghost:not([hidden]) { display: inline-flex; }
+    @media (max-width: 640px) { .ad-form .form-field > label.btn { width: 100%; min-height: 46px; } }
+
     /* ====== ستايل خاص بلوحة الأدمن (بنفس متغيرات المنصة، فبيتغيّر مع ألوان الموقع والدارك مود) ====== */
     .ad-stats {
       display: grid;
