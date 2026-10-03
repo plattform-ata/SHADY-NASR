@@ -6396,3 +6396,10 @@ html[data-liquid="on"] .sn-switch span { background: linear-gradient(180deg, #ff
 @media (min-width: 980px) {
   .dash-side-mobile { display: none; }
 }
+
+/* زر "اختيار صور من الجهاز" (وأي زر شفاف تاني جوه فورم الأدمن) كان بيختفي على الموبايل
+   لأن .btn--ghost الأصلي display:none تحت 620px (معمول لشريط الموقع العلوي بس) */
+.ad-form .btn--ghost { display: inline-flex; }
+@media (max-width: 640px) {
+  .ad-form .form-field > label.btn { width: 100%; min-height: 46px; }
+}
