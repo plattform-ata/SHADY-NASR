@@ -6403,3 +6403,25 @@ html[data-liquid="on"] .sn-switch span { background: linear-gradient(180deg, #ff
 @media (max-width: 640px) {
   .ad-form .form-field > label.btn { width: 100%; min-height: 46px; }
 }
+
+/* خانة عنوان الصورة في معاينة الأوائل: بنفس شكل خانات الموقع */
+.hn-prev__item input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  padding-inline: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-glass-border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.hn-prev__item input[type="text"]::placeholder { color: var(--ink-soft); opacity: 0.7; }
+.hn-prev__item input[type="text"]:focus,
+.hn-prev__item input[type="text"]:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+.hn-prev__item { background: var(--surface-glass); border: 1px solid var(--surface-glass-border); }
