@@ -2141,7 +2141,7 @@ const PagesUI = {
 /* ==========================================================================
    هوية المنصة (اسم + لوجو): الأدمن بيحددهم من إعدادات المنصة وبيتخزنوا في Firebase (siteBranding)
    - بتتطبق فورًا من الكاش المحلي (من غير ومضة)، وبعدين بنقارن رقم الإصدار بتاع Firebase.
-   - لو الطالب عنده نسخة قديمة: بيظهر شريط ثابت فوق "تحديث" لحد ما يضغط عليه.
+   - لو في إصدار أحدث: بيتحمّل وبيتطبّق تلقائيًا من غير شريط (showBanner لسه موجودة بس مش بتتنده).
    - بتتغير في: الهيدر، لوجو صفحة الدخول/اللوحات، أيقونة التبويب، عنوان الصفحة، النصوص المترجمة.
    ========================================================================== */
 (function () {
@@ -2288,14 +2288,8 @@ const PagesUI = {
       if (!meta) return;
       var ver = Number(meta.version) || 0;
       if (cached && (Number(cached.version) || 0) === ver) return;
-      if (!cached) {
-        // أول مرة (مفيش نسخة قديمة تتحدّث): نطبّق من غير شريط
-        pull(meta).then(function (b) { store(b); apply(b); }).catch(function () {});
-      } else if (isAdminPage) {
-        pull(meta).then(function (b) { store(b); window.location.reload(); }).catch(function () {});
-      } else {
-        showBanner(meta);
-      }
+      // أي تحديث للاسم/اللوجو بيتطبّق تلقائيًا ومن غير شريط ولا ريلود
+      pull(meta).then(function (b) { store(b); apply(b); }).catch(function () {});
     }).catch(function () {});
   }
 
