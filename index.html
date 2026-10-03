@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<script src="auth.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" />
+<title>Shady Nasr — English Platform</title>
+<link rel="icon" type="image/png" href="favicon.png" />
+<script>
+/* يمنع وميض السبلاش لو اتفتح قبل كده في نفس الجلسة، ويطبّق الثيم المحفوظ بدري */
+try {
+  var __t = localStorage.getItem("theme");
+  if (__t) document.documentElement.setAttribute("data-theme", __t);
+  if (sessionStorage.getItem("sn_launch_seen")) document.documentElement.classList.add("no-launch");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="shared.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- PWA: تثبيت المنصة كتطبيق -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#f4eee0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Shady Nasr" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="shady-nasr-logo.png" />
+</head>
+<body>
+  <!-- ======================= سبلاش الافتتاح (شعار ← موجة ← اسم المنصة) ======================= -->
+  <div class="launch-splash" id="launchSplash" aria-hidden="true">
+    <div class="launch-splash__wave">
+      <div class="launch-splash__crest">
+        <svg viewBox="0 0 2880 80" preserveAspectRatio="none"><path d="M0,40 Q180,0 360,40 T720,40 T1080,40 T1440,40 T1800,40 T2160,40 T2520,40 T2880,40 V80 H0 Z"/></svg>
+      </div>
+      <span class="launch-splash__fill"></span>
+    </div>
+    <img class="launch-splash__logo" src="shady-nasr-logo.png" alt="" />
+    <div class="launch-splash__brand">
+      <span class="launch-splash__name">Shady Nasr</span>
+      <span class="launch-splash__tag">English Platform</span>
+    </div>
+  </div>
+
+  <div class="student-splash is-held" id="siteSplash" aria-hidden="true">
+    <div class="student-splash__mark">
+      <span class="student-splash__ring"></span>
+      <span class="student-splash__line student-splash__line--top"></span>
+      <img src="shady-nasr-logo.png" alt="" />
+      <span class="student-splash__line student-splash__line--bottom"></span>
+    </div>
+  </div>
+
+
+  <a class="skip-link" href="#main" data-i18n="skip_link">تخطى إلى المحتوى</a>
+
+  <div class="atmosphere">
+    <span class="blob-1"></span>
+    <span class="blob-2"></span>
+    <span class="blob-3"></span>
+  </div>
+
+  <header class="navbar">
+    <div class="navbar__inner">
+      <div class="nav-progress" id="navProgress"></div>
+      <a class="brand" href="index.html">
+        <img class="brand__mark brand__mark--dark" src="shady-nasr-logo.png" alt="Shady Nasr English Platform" />
+        <img class="brand__mark brand__mark--light" src="shady-nasr-logo.png" alt="Shady Nasr English Platform" />
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#hero" data-i18n="nav_home">الرئيسية</a></li>
+        <li><a href="#prep-section" data-i18n="nav_prep">الإعدادية</a></li>
+        <li><a href="#secondary-section" data-i18n="nav_secondary">الثانوية</a></li>
+        <li><a href="#teacher" data-i18n="nav_teacher">الأستاذ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="icon-btn lang-btn" id="langToggle" type="button" data-i18n-aria="lang_aria" aria-label="تغيير اللغة"><span class="lang-code">EN</span></button>
+        <button class="icon-btn theme-btn" id="themeToggle" type="button" data-i18n-aria="theme_aria" aria-label="تغيير المظهر">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        </button>
+        <span class="divider-v"></span>
+        <a class="btn btn--ghost" href="login.html#login" data-i18n="login_btn">تسجيل الدخول</a>
+        <a class="btn btn--accent" href="login.html#register" data-i18n="start_free_btn">ابدأ مجانًا</a>
+        <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="القائمة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+  <aside class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu__head">
+      <button class="icon-btn" id="mobileMenuClose" type="button" aria-label="قفل القائمة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <ul class="mobile-menu__links">
+      <li><a href="#hero" data-i18n="nav_home">الرئيسية</a></li>
+      <li><a href="#prep-section" data-i18n="nav_prep">الإعدادية</a></li>
+      <li><a href="#secondary-section" data-i18n="nav_secondary">الثانوية</a></li>
+      <li><a href="#teacher" data-i18n="nav_teacher">الأستاذ</a></li>
+    </ul>
+    <div class="mobile-menu__utility">
+      <button class="mobile-menu__utility-btn theme-btn" type="button" aria-label="تغيير المظهر">
+        <span class="mobile-menu__utility-text">
+          <strong data-i18n="menu_theme_title">تغيير المظهر</strong>
+          <small data-i18n="menu_theme_sub">فاتح أو غامق</small>
+        </span>
+        <span class="mobile-menu__utility-icon">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        </span>
+      </button>
+      <button class="mobile-menu__utility-btn lang-btn" type="button" aria-label="تغيير اللغة">
+        <span class="mobile-menu__utility-text">
+          <strong data-i18n="menu_lang_title">تغيير اللغة</strong>
+          <small class="lang-code">EN</small>
+        </span>
+        <span class="mobile-menu__utility-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 4 6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-6-4-9s1.5-6.4 4-9Z"/></svg>
+        </span>
+      </button>
+    </div>
+    <div class="mobile-menu__actions">
+      <a class="btn btn--ghost" href="login.html#login" data-i18n="login_btn">تسجيل الدخول</a>
+      <a class="btn btn--accent" href="login.html#register" data-i18n="start_free_btn">ابدأ مجانًا</a>
+      <button class="btn btn--ghost" type="button" data-install-app hidden><span data-i18n="install_app_btn">حمّل التطبيق</span></button>
+    </div>
+  </aside>
+
+  <main id="main">
+
+  <div class="site-view is-active" id="view-home" data-view="home">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div>
+        <span class="hero__eyebrow" data-i18n="hero_eyebrow">منصة تعليم اللغة الإنجليزية</span>
+        <h1 data-i18n="hero_title" data-i18n-html>اتعلم إنجليزي صح مع <em>الأستاذ Shady Nasr</em></h1>
+        <p data-i18n="hero_desc">دروس تفاعلية لكل مراحل الإعدادي والثانوي، بمتابعة مباشرة وتمارين وامتحانات تتابع مستواك خطوة بخطوة.</p>
+        <div class="hero__cta">
+          <a class="btn btn--accent" href="login.html" data-i18n="hero_cta_start">ابدأ دلوقتي</a>
+          <a class="btn btn--ghost btn--lg" href="#prep-section" data-i18n="hero_cta_view">شوف الفصول الدراسية</a>
+        </div>
+      </div>
+
+      <div class="hero__card">
+        <h3 data-i18n="hero_card_title">متابعة أسبوعية لمستواك</h3>
+        <p data-i18n="hero_card_desc">كل ما تخلّص درس وتحل الامتحان بتاعه، بنحدّثلك تقدمك أول بأول</p>
+        <div class="progress-row">
+          <span data-i18n="progress_grammar">القواعد</span>
+          <div class="progress-track"><div class="progress-fill" style="width:78%"></div></div>
+        </div>
+        <div class="progress-row">
+          <span data-i18n="progress_vocab">المفردات</span>
+          <div class="progress-track"><div class="progress-fill" style="width:64%"></div></div>
+        </div>
+        <div class="progress-row">
+          <span data-i18n="progress_listening">الاستماع</span>
+          <div class="progress-track"><div class="progress-fill" style="width:52%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TEACHER + VIDEO ============ -->
+    <section class="teacher-section" id="teacher">
+      <div class="teacher-section__inner">
+        <div class="video-player" id="videoPlayer">
+          <video id="promoVideo" playsinline preload="metadata">
+            <source src="teacher-promo.mp4" type="video/mp4" />
+          </video>
+          <div class="video-player__poster" id="videoPoster">
+            <span class="video-player__initials">SN</span>
+          </div>
+          <button class="video-player__play" id="videoPlayBtn" data-i18n-aria="video_play_aria" aria-label="تشغيل الفيديو">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="video-player__badge" data-i18n="video_badge">فيديو تعريفي</span>
+        </div>
+
+        <div class="teacher-info">
+          <span class="hero__eyebrow" data-i18n="teacher_eyebrow">مين الأستاذ بتاعك</span>
+          <h2>Shady Nasr</h2>
+          <p class="teacher-role" data-i18n="teacher_role">مدرّس لغة إنجليزية — إعدادي وثانوي</p>
+          <p class="teacher-bio" data-i18n="teacher_bio">بخبرة سنين في تبسيط قواعد اللغة الإنجليزية للطلبة، وبناء منهج تفاعلي يوصل الفكرة من غير تعقيد، مع متابعة لصفحة كل طالب لحد ما يوصل لمستوى ممتاز.</p>
+          <ul class="teacher-badges">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-i18n="badge_1">منهج مبسّط لكل المراحل الدراسية</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-i18n="badge_2">فيديوهات شرح ودروس PDF لكل درس</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-i18n="badge_3">امتحانات تفاعلية ومتابعة أسبوعية</span>
+            </li>
+          </ul>
+          <a class="btn btn--accent" href="login.html" data-i18n="join_btn">انضم للمنصة</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LIVE STATS ============ -->
+    <section class="stats">
+      <div class="stats__heading">
+        <span class="hero__eyebrow" data-i18n="stats_eyebrow">بالأرقام</span>
+        <h2 data-i18n="stats_title">منصة بيثق فيها آلاف الطلبة</h2>
+      </div>
+      <div class="stats-grid" style="max-width:var(--container);margin-inline:auto;padding:0 clamp(16px,4vw,40px) clamp(60px,8vw,96px)">
+        <div class="stat-card">
+          <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8ZM23 20v-2a4 4 0 0 0-3-3.87M16 4.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="stat-card__value" data-count-to="2500" data-prefix="+">+0</span>
+          <span class="stat-card__label" data-i18n="stat_students">طالب مسجّل</span>
+        </div>
+        <div class="stat-card">
+          <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M17 4h3a1 1 0 0 1 1 1v1a5 5 0 0 1-5 5M7 4H4a1 1 0 0 0-1 1v1a5 5 0 0 0 5 5M7 4h10v5a5 5 0 0 1-10 0V4Z"/></svg>
+          <span class="stat-card__value" data-count-to="97" data-suffix="%">0%</span>
+          <span class="stat-card__label" data-i18n="stat_success">نسبة نجاح الطلبة</span>
+        </div>
+        <div class="stat-card">
+          <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          <span class="stat-card__value" data-count-to="5" data-prefix="+">+0</span>
+          <span class="stat-card__label" data-i18n="stat_experience">سنوات خبرة</span>
+        </div>
+        <div class="stat-card">
+          <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+          <span class="stat-card__value" data-count-to="95" data-suffix="%">0%</span>
+          <span class="stat-card__label" data-i18n="stat_satisfaction">نسبة رضا أولياء الأمور</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PREP STAGE GRADES ============ -->
+    <div class="stage-heading" id="prep-section">
+      <span class="hero__eyebrow" style="justify-content:center" data-i18n="prep_eyebrow">المرحلة الإعدادية</span>
+      <h2 data-i18n="choose_grade_title">اختار صفك الدراسي</h2>
+      <p data-i18n="prep_desc">كل صف فيه دروس وفيديوهات وامتحانات مخصّصة — دوس على صفك عشان تشوف المحتوى</p>
+    </div>
+    <section class="grades-section">
+      <div class="grades-grid" data-stage="prep">
+        <button class="grade-card" data-grade-btn data-stage="prep" data-grade="1">
+          <span class="grade-card__badge">1</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="prep1_title">الصف الأول الإعدادي</h3>
+          <p data-i18n="prep1_desc">الأساسيات: القواعد والمفردات الأولى في رحلتك مع الإنجليزي</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+        <button class="grade-card" data-grade-btn data-stage="prep" data-grade="2">
+          <span class="grade-card__badge">2</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="prep2_title">الصف الثاني الإعدادي</h3>
+          <p data-i18n="prep2_desc">قواعد أعمق وقصص قراءة تبني حصيلتك اللغوية</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+        <button class="grade-card" data-grade-btn data-stage="prep" data-grade="3">
+          <span class="grade-card__badge">3</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="prep3_title">الصف الثالث الإعدادي</h3>
+          <p data-i18n="prep3_desc">مراجعة شاملة واستعداد كامل لامتحان الشهادة الإعدادية</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+
+        <div class="grade-carousel" data-carousel="prep-1" hidden><div class="grade-carousel__track"></div></div>
+        <div class="grade-carousel" data-carousel="prep-2" hidden><div class="grade-carousel__track"></div></div>
+        <div class="grade-carousel" data-carousel="prep-3" hidden><div class="grade-carousel__track"></div></div>
+      </div>
+    </section>
+
+    <!-- ============ SECONDARY STAGE GRADES ============ -->
+    <div class="stage-heading" id="secondary-section">
+      <span class="hero__eyebrow" style="justify-content:center" data-i18n="secondary_eyebrow">المرحلة الثانوية</span>
+      <h2 data-i18n="choose_grade_title">اختار صفك الدراسي</h2>
+      <p data-i18n="secondary_desc">نفس نظام الدروس والامتحانات، بمستوى مناسب لكل سنة ثانوي</p>
+    </div>
+    <section class="grades-section">
+      <div class="grades-grid" data-stage="secondary">
+        <button class="grade-card" data-grade-btn data-stage="secondary" data-grade="1">
+          <span class="grade-card__badge">1</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="sec1_title">الصف الأول الثانوي</h3>
+          <p data-i18n="sec1_desc">بداية مرحلة جديدة بمستوى أعلى من القواعد والتعبير</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+        <button class="grade-card" data-grade-btn data-stage="secondary" data-grade="2">
+          <span class="grade-card__badge">2</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="sec2_title">الصف الثاني الثانوي</h3>
+          <p data-i18n="sec2_desc">تعميق المهارات استعدادًا للسنة النهائية</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+        <button class="grade-card" data-grade-btn data-stage="secondary" data-grade="3">
+          <span class="grade-card__badge">3</span>
+          <svg class="grade-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z"/></svg>
+          <h3 data-i18n="sec3_title">الصف الثالث الثانوي</h3>
+          <p data-i18n="sec3_desc">مراجعة نهائية شاملة واستعداد كامل للامتحان النهائي</p>
+          <span class="grade-card__toggle-hint">
+            <span data-i18n="view_lessons">شوف الدروس</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </button>
+
+        <div class="grade-carousel" data-carousel="secondary-1" hidden><div class="grade-carousel__track"></div></div>
+        <div class="grade-carousel" data-carousel="secondary-2" hidden><div class="grade-carousel__track"></div></div>
+        <div class="grade-carousel" data-carousel="secondary-3" hidden><div class="grade-carousel__track"></div></div>
+      </div>
+    </section>
+
+    <!-- ============ SCHEDULE / INQUIRY PROMO BANNER ============ -->
+    <section class="promo-banner-wrap">
+      <div class="promo-banner">
+        <div class="promo-banner__text">
+          <span class="hero__eyebrow" data-i18n="promo_eyebrow">مواعيد الحصص والسناتر</span>
+          <h2 data-i18n="promo_title">حمل جدول المواعيد الكامل أو استعرض المواعيد المتاحة</h2>
+          <p data-i18n="promo_desc">تعرف على أوقات وأماكن التواجد في جميع السناتر لكل المراحل الدراسية.</p>
+        </div>
+        <div class="promo-banner__actions">
+          <a class="btn btn--accent" href="#schedule" data-view-link="schedule" data-i18n="promo_btn_schedule">جدول المواعيد</a>
+          <a class="btn btn--ghost promo-banner__ghost" href="#contact" data-view-link="contact" data-i18n="promo_btn_contact">حجز واستفسار</a>
+          <button class="btn btn--ghost promo-banner__ghost" type="button" data-install-app hidden><span data-i18n="install_app_btn">حمّل التطبيق</span></button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============ SCHEDULE PAGE ============ -->
+  <div class="site-view" id="view-schedule" data-view="schedule" hidden>
+    <section class="page-view-section">
+      <button class="page-back" type="button" data-view-link="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span data-i18n="back_home">الرئيسية</span>
+      </button>
+
+      <div class="page-view-heading">
+        <span class="hero__eyebrow" style="justify-content:center" data-i18n="promo_eyebrow">مواعيد الحصص والسناتر</span>
+        <h1 data-i18n="schedule_title">مواعيد الصفوف الدراسية</h1>
+        <p data-i18n="schedule_desc">يمكنك استعراض الجدول، اضغط عليه لتكبيره أو حمله مباشرة على جهازك</p>
+      </div>
+
+      <button class="schedule-row" type="button" id="scheduleOpenBtn">
+        <span data-i18n="schedule_file_name">جدول مواعيد مستر شادي نصر</span>
+        <img class="schedule-row__thumb" src="schedule-shady-nasr.jpg" alt="" />
+      </button>
+
+      <a class="btn btn--accent schedule-download" id="scheduleDownloadBtn" href="schedule-shady-nasr.jpg" download="جدول-مواعيد-مستر-شادي-نصر.jpg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+        <span data-i18n="schedule_download_btn">تحميل جدول المواعيد PDF / صورة</span>
+      </a>
+
+      <div class="centers-schedule-heading">
+        <h2 data-i18n="centers_schedule_title">مواعيد كل سنتر على حدة</h2>
+        <p data-i18n="centers_schedule_desc">اختار السنتر القريب منك وشوف الصفوف والمواعيد المتاحة فيه</p>
+      </div>
+
+      <div class="centers-schedule-grid" id="centersScheduleGrid"></div>
+    </section>
+  </div>
+
+  <!-- ============ CONTACT / INQUIRY PAGE ============ -->
+  <div class="site-view" id="view-contact" data-view="contact" hidden>
+    <section class="contact-page">
+      <button class="page-back" type="button" data-view-link="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span data-i18n="back_home">الرئيسية</span>
+      </button>
+
+      <div class="contact-page__inner">
+        <div class="contact-page__text">
+          <span class="hero__eyebrow" data-i18n="contact_eyebrow">لنبدأ بالتواصل المباشر</span>
+          <h1 data-i18n="contact_title" data-i18n-html>لديك استفسار؟<br />تواصل معنا بسهولة.</h1>
+          <p data-i18n="contact_desc">شاركنا استفسارك أو المرحلة الدراسية المهتم بها، وسنرد عليك بكافة التفاصيل والمواعيد المتاحة في السناتر.</p>
+        </div>
+
+        <form class="contact-card" id="contactForm">
+          <div class="form-field">
+            <label for="contactName" data-i18n="field_fullname">الاسم بالكامل</label>
+            <input type="text" id="contactName" name="name" data-i18n-placeholder="field_fullname_placeholder" placeholder="الاسم بالكامل" required />
+          </div>
+
+          <div class="form-field">
+            <label for="contactGrade" data-i18n="field_grade">الصف الدراسي</label>
+            <div class="custom-select" data-custom-select>
+              <select id="contactGrade" name="grade" class="custom-select__native" data-enhance required>
+                <option value="" disabled selected data-i18n="option_choose_grade">اختر الصف</option>
+                <optgroup label="المرحلة الإعدادية" data-i18n-label="prep_eyebrow">
+                  <option value="prep-1" data-i18n="prep1_title">الصف الأول الإعدادي</option>
+                  <option value="prep-2" data-i18n="prep2_title">الصف الثاني الإعدادي</option>
+                  <option value="prep-3" data-i18n="prep3_title">الصف الثالث الإعدادي</option>
+                </optgroup>
+                <optgroup label="المرحلة الثانوية" data-i18n-label="secondary_eyebrow">
+                  <option value="secondary-1" data-i18n="sec1_title">الصف الأول الثانوي</option>
+                  <option value="secondary-2" data-i18n="sec2_title">الصف الثاني الثانوي</option>
+                  <option value="secondary-3" data-i18n="sec3_title">الصف الثالث الثانوي</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="contactMsg" data-i18n="field_inquiry">أخبرنا عن الاستفسار</label>
+            <textarea id="contactMsg" name="message" rows="5" data-i18n-placeholder="field_inquiry_placeholder" placeholder="ما الذي تريد الاستفسار عنه؟ (السناتر، المواعيد، الأونلاين...)"></textarea>
+          </div>
+
+          <button class="btn btn--accent contact-submit" type="submit" data-i18n="contact_submit_btn">إرسال التفاصيل عبر واتساب</button>
+          <p class="form-hint contact-submit-hint" data-i18n="contact_submit_hint">بالضغط على إرسال ستفتح رسالة واتساب جاهزة بالتفاصيل اللي أدخلتها.</p>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  </main>
+
+  <!-- ============ SCHEDULE IMAGE LIGHTBOX ============ -->
+  <div class="lightbox" id="scheduleLightbox" hidden>
+    <button class="lightbox__close" type="button" id="scheduleLightboxClose" data-i18n-aria="lightbox_close_aria" aria-label="إغلاق">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <img src="schedule-shady-nasr.jpg" alt="جدول مواعيد مستر شادي نصر" id="scheduleLightboxImg" />
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="footer__brand-mark">
+          <img class="brand__mark--dark" src="shady-nasr-logo.png" alt="Shady Nasr English Platform" />
+          <img class="brand__mark--light" src="shady-nasr-logo.png" alt="Shady Nasr English Platform" />
+          <span class="footer__brand-name">Shady Nasr<br /><small>English Platform</small></span>
+        </div>
+        <p class="footer__desc" data-i18n="footer_desc">تم تصميم هذه المنصة عشان تساعد الطالب على إتقان اللغة الإنجليزية في كل مراحل الإعدادي والثانوي.</p>
+      </div>
+
+      <div class="footer__col">
+        <h4 data-i18n="footer_pages_title">الصفحات</h4>
+        <ul>
+          <li><a href="index.html#hero" data-i18n="nav_home">الرئيسية</a></li>
+          <li><a href="#" data-i18n="footer_help">المساعدة</a></li>
+          <li><a href="login.html#register" data-i18n="footer_register">انشاء حساب جديد</a></li>
+          <li><a href="login.html#login" data-i18n="login_btn">تسجيل الدخول</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 data-i18n="footer_social_title">السوشيال ميديا</h4>
+        <ul class="social-links">
+          <li>
+            <a href="https://www.facebook.com/Mr.ShadyNasr" target="_blank" rel="noopener">
+              <span class="social-icon social-icon--outline" style="background:#1877F2">
+                <svg viewBox="0 0 24 24" fill="#fff"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.86c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34v7.03C18.34 21.2 22 17.06 22 12.06Z"/></svg>
+              </span>
+              <span data-i18n="footer_facebook">فيسبوك</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.instagram.com/shady_nasr/" target="_blank" rel="noopener">
+              <span class="social-icon social-icon--outline" style="background:#E1306C">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="#fff" stroke="none"/></svg>
+              </span>
+              <span data-i18n="footer_instagram">انستجرام</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.youtube.com/@Mr.ShadyNasr" target="_blank" rel="noopener">
+              <span class="social-icon social-icon--outline" style="background:#FF0000">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="5"/><path d="M10 9.5v5l4.5-2.5Z" fill="#fff" stroke="none"/></svg>
+              </span>
+              <span data-i18n="footer_youtube">يوتيوب</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom" data-i18n="footer_text">© 2026 Shady Nasr English Platform. كل الحقوق محفوظة.</div>
+  </footer>
+
+  <a class="whatsapp-fab" href="https://wa.me/201097221867" target="_blank" rel="noopener" aria-label="تواصل معانا على واتساب">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.5 0 9.96-4.46 9.96-9.96S17.54 2 12.04 2Zm5.8 14.24c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.12.11-1.8-.11-.42-.13-.96-.3-1.65-.6-2.9-1.25-4.8-4.16-4.94-4.35-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.4.27-.29.58-.36.78-.36.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.82 2 .89 2.14.07.14.12.31.02.5-.1.19-.15.3-.3.47-.15.16-.31.36-.44.49-.15.14-.3.3-.13.58.17.28.75 1.24 1.61 2 .84.75 1.66 1.09 1.94 1.24.28.14.44.12.6-.08.16-.19.68-.79.86-1.06.18-.28.36-.23.6-.14.24.09 1.53.72 1.79.85.26.13.43.19.5.3.06.11.06.63-.18 1.3Z"/></svg>
+  </a>
+
+  <script src="shared.js"></script>
+  <script>
+    AuthUI.init();
+    GradesUI.init();
+    PagesUI.init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <script src="liquid.js?v=20261009"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" />
+  <title>لوحة تحكم الطالب | Shady Nasr English Platform</title>
+  <meta name="description" content="لوحة تحكم الطالب في منصة Shady Nasr: الكورسات، القصة، التقدم الأكاديمي، الدرجات، أدوات الإنتاجية، لوحة الصدارة والملف الشخصي." />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#f4eee0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+<script>
+/* يمنع وميض السبلاش لو اتفتح قبل كده في نفس الجلسة، ويطبّق الثيم المحفوظ بدري */
+try {
+  var __t = localStorage.getItem("theme");
+  if (__t) document.documentElement.setAttribute("data-theme", __t);
+  if (sessionStorage.getItem("sn_launch_seen")) document.documentElement.classList.add("no-launch");
+} catch (e) {}
+</script>
+  <link rel="stylesheet" href="shared.css?v=20261012" />
+  <!-- PWA: تثبيت المنصة كتطبيق -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Shady Nasr" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="shady-nasr-logo.png" />
+</head>
+<body class="dash-body">
+  <!-- ======================= سبلاش الافتتاح (شعار ← موجة ← اسم المنصة) ======================= -->
+  <div class="launch-splash" id="launchSplash" aria-hidden="true">
+    <div class="launch-splash__wave">
+      <div class="launch-splash__crest">
+        <svg viewBox="0 0 2880 80" preserveAspectRatio="none"><path d="M0,40 Q180,0 360,40 T720,40 T1080,40 T1440,40 T1800,40 T2160,40 T2520,40 T2880,40 V80 H0 Z"/></svg>
+      </div>
+      <span class="launch-splash__fill"></span>
+    </div>
+    <img class="launch-splash__logo" src="shady-nasr-logo.png" alt="" />
+    <div class="launch-splash__brand">
+      <span class="launch-splash__name">Shady Nasr</span>
+      <span class="launch-splash__tag">English Platform</span>
+    </div>
+  </div>
+
+  <div class="student-splash is-held" id="studentSplash" aria-hidden="true">
+    <div class="student-splash__mark">
+      <span class="student-splash__ring"></span>
+      <span class="student-splash__line student-splash__line--top"></span>
+      <img src="shady-nasr-logo.png" alt="" />
+      <span class="student-splash__line student-splash__line--bottom"></span>
+    </div>
+  </div>
+  
+
+  <div class="atmosphere" aria-hidden="true">
+    <span class="blob-1"></span>
+    <span class="blob-2"></span>
+    <span class="blob-3"></span>
+  </div>
+
+  <div class="dash-shell">
+    <!-- ============================= SIDEBAR ============================= -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <a href="index.html" class="brand dash-brand" aria-label="Shady Nasr English Platform — الصفحة الرئيسية">
+        <img src="shady-nasr-logo.png" alt="" class="brand__mark" />
+        <span class="brand__text">
+          <span class="brand__name">Shady Nasr</span>
+          <span class="brand__tagline" data-i18n="dash_tagline">لوحة تحكم الطالب</span>
+        </span>
+      </a>
+
+      <div class="dash-side-utility">
+        <button type="button" class="mobile-menu__utility-btn" id="sideSettingsBtn">
+          <span class="mobile-menu__utility-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span>
+          <span class="mobile-menu__utility-text">
+            <strong data-i18n="dash_nav_settings">الإعدادات</strong>
+            <small data-i18n="settings_sub">المظهر واللغة والتطبيق</small>
+          </span>
+        </button>
+        <button type="button" class="mobile-menu__utility-btn theme-btn" aria-label="تبديل المظهر" data-i18n-aria="theme_aria">
+          <span class="mobile-menu__utility-icon">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          </span>
+          <span class="mobile-menu__utility-text">
+            <strong data-i18n="menu_theme_title">تغيير المظهر</strong>
+            <small data-i18n="menu_theme_sub">فاتح أو غامق</small>
+          </span>
+        </button>
+        <button type="button" class="mobile-menu__utility-btn lang-btn" aria-label="تغيير اللغة" data-i18n-aria="lang_aria">
+          <span class="mobile-menu__utility-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          </span>
+          <span class="mobile-menu__utility-text">
+            <strong data-i18n="menu_lang_title">تغيير اللغة</strong>
+            <small class="lang-code">EN</small>
+          </span>
+        </button>
+        <button type="button" class="dash-logout" data-install-app hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        <span data-i18n="install_app_btn">حمّل التطبيق</span>
+        </button>
+        <button type="button" class="dash-logout dash-logout--danger" id="dashLogoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        <span data-i18n="dash_logout">تسجيل الخروج</span>
+        </button>
+      </div>
+
+      <ul class="dash-nav__list dash-side-nav">
+        <li><button type="button" class="dash-nav__link is-active" data-target="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span data-i18n="dash_nav_home">الرئيسية</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5.25A2.25 2.25 0 0 1 6.25 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-1Z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg><span data-i18n="dash_nav_courses">الدروس</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h11.5v16H6a2 2 0 0 0-2 2Z"/><path d="M6 21h13.5V19"/><path d="M8.5 7h6M8.5 10.5h6"/></svg><span data-i18n="dash_nav_story">القصة</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="announcements"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12"/></svg><span data-i18n="dash_nav_announcements">الإعلانات</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg><span data-i18n="dash_nav_progress">التقدم الأكاديمي</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="grades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4H9z"/><rect x="5" y="7" width="14" height="14" rx="2"/><path d="M9 13h6M9 17h4"/></svg><span data-i18n="dash_nav_grades">سجل الدرجات</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="productivity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg><span data-i18n="dash_nav_productivity">أدوات الإنتاجية</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="leaderboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg><span data-i18n="dash_nav_leaderboard">لوحة الصدارة</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="honors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-3 5 3-1.5-7.5"/></svg><span data-i18n="dash_nav_honors">الأوائل</span></button></li>
+        <li><button type="button" class="dash-nav__link" data-target="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg><span data-i18n="dash_nav_profile">الملف الشخصي</span></button></li>
+        <li hidden><button type="button" class="dash-nav__link" data-target="settings" tabindex="-1" aria-hidden="true"><span data-i18n="dash_nav_settings">الإعدادات</span></button></li>
+      </ul>
+    </aside>
+
+    <!-- ============================= MAIN ============================= -->
+    <div class="dash-content">
+      <header class="dash-topbar">
+        <button type="button" class="icon-btn dash-menu-btn" id="dashMenuBtn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="dashSidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+
+        <h1 class="dash-topbar__title" id="dashPanelTitle">الرئيسية</h1>
+
+        <div class="dash-topbar__actions">
+          <button type="button" class="dash-bell" id="annBell" aria-label="الإعلانات والتنبيهات">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>
+            <span class="an-badge" id="annBellBadge" hidden>0</span>
+          </button>
+
+          <button type="button" class="dash-user-chip" data-target="profile" aria-label="الملف الشخصي">
+            <span class="user-chip__avatar" id="dashAvatar" aria-hidden="true"></span>
+          </button>
+        </div>
+      </header>
+
+      <main id="dashMain" class="dash-main">
+        <!-- ======================= الرئيسية ======================= -->
+        <section class="dash-panel is-active" data-panel="home">
+          <div class="home-hello">
+            <h2 class="home-hello__title" id="homeHello">—</h2>
+            <p class="dash-panel__intro" data-i18n="home_intro">ملخّص سريع لكل حاجة في المنصة — اضغط على أي مربع عشان تفتح صفحته.</p>
+            <div class="home-identity-strip" id="homeIdentityStrip">
+              <strong id="homeIdentityName">—</strong>
+              <span id="homeIdentityGrade">—</span>
+            </div>
+          </div>
+          <button type="button" class="home-ann" id="homeAnn" hidden>
+            <span class="home-ann__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12"/></svg></span>
+            <span class="home-ann__text"><span class="home-ann__label" id="homeAnnLabel"></span><strong class="home-ann__title" id="homeAnnTitle"></strong><span class="home-ann__snippet" id="homeAnnSnippet"></span></span>
+            <svg class="home-ann__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <div class="home-grid" id="homeGrid"></div>
+          <article class="home-quote" id="homeQuote" aria-live="polite">
+            <span class="home-quote__label">نصيحة اليوم</span>
+            <p class="home-quote__text" id="homeQuoteText"></p>
+            <span class="home-quote__source" id="homeQuoteSource"></span>
+          </article>
+        </section>
+
+        <!-- ======================= المزيد ======================= -->
+        <section class="dash-panel" data-panel="more">
+          <p class="dash-panel__intro" data-i18n="more_intro">كل أقسام المنصة في مكان واحد — اضغط على أي قسم عشان تفتحه.</p>
+          <ul class="more-list">
+            <li><button type="button" class="dash-nav__link more-item" data-target="announcements"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12"/></svg><span data-i18n="dash_nav_announcements">الإعلانات</span><span class="an-badge" id="annMoreBadge" hidden>0</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg><span data-i18n="dash_nav_progress">التقدم الأكاديمي</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="grades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4H9z"/><rect x="5" y="7" width="14" height="14" rx="2"/><path d="M9 13h6M9 17h4"/></svg><span data-i18n="dash_nav_grades">سجل الدرجات</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="productivity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg><span data-i18n="dash_nav_productivity">أدوات الإنتاجية</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="leaderboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg><span data-i18n="dash_nav_leaderboard">لوحة الصدارة</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="honors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-3 5 3-1.5-7.5"/></svg><span data-i18n="dash_nav_honors">الأوائل</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+            <li><button type="button" class="dash-nav__link more-item" data-target="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg><span data-i18n="dash_nav_profile">الملف الشخصي</span><svg class="more-item__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button></li>
+          </ul>
+        </section>
+
+        <!-- ======================= الإعلانات ======================= -->
+        <section class="dash-panel" data-panel="announcements">
+          <p class="dash-panel__intro" data-i18n="ann_intro">إعلانات وتنبيهات من إدارة المنصة: مواعيد الامتحانات، الحصص الإضافية، ورسائل التشجيع.</p>
+          <div class="an-list" id="annList"><div class="an-empty">جاري التحميل…</div></div>
+        </section>
+
+        <!-- ======================= الإعدادات ======================= -->
+        <section class="dash-panel" data-panel="settings">
+          <div class="set-hub" id="setHub">
+            <p class="dash-panel__intro" data-i18n="settings_intro">تحكّم في مظهر المنصة ولغتها وتثبيتها كتطبيق على جهازك.</p>
+            <div class="set-tiles">
+            <button type="button" class="set-tile" data-set-open="general"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor"/></svg></span><strong data-i18n="settings_general">المظهر واللغة</strong><small data-i18n="set_tile_general_sub">فاتح/غامق، اللغة، تحميل التطبيق</small></button>
+            <button type="button" class="set-tile" data-set-open="colors"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.6-1.2.2-2.5 1.6-2.5H17a4 4 0 0 0 4-4C21 6.9 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="14.5" cy="7.5" r="1"/></svg></span><strong data-i18n="theme_colors_title">ألوان المنصة</strong><small data-i18n="set_tile_colors_sub">ثيمات وألوان خاصة بيك</small></button>
+            </div>
+            <div class="dash-card glass-card" id="glassCard">
+              <div class="glass-row">
+                <span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="6"/><path d="M7 9.5c1.5-1 3.5-1 5 0"/></svg></span>
+                <div class="glass-row__text"><strong data-i18n="glass_title">Liquid Glass</strong><small data-i18n="glass_sub">مظهر الزجاج السائل بتاع iOS على كل المنصة</small></div>
+                <button type="button" class="sn-switch" id="glassSwitch" role="switch" aria-checked="false" aria-label="Liquid Glass"><span></span></button>
+              </div>
+              <div class="glass-level" id="glassLevel" hidden>
+                <label for="glassRange" data-i18n="glass_level">قوة التأثير</label>
+                <input type="range" id="glassRange" min="0" max="100" step="1" value="60" />
+                <span id="glassValue">60%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="set-sub" id="setSub" hidden>
+          <button type="button" class="set-back" id="setBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg><span data-i18n="set_back">رجوع للإعدادات</span></button>
+
+          <div class="dash-card set-card" data-set-card="general" hidden>
+            <h3 data-i18n="settings_general">المظهر واللغة</h3>
+            <div class="settings-actions">
+              <button type="button" class="mobile-menu__utility-btn theme-btn" aria-label="تبديل المظهر" data-i18n-aria="theme_aria">
+                <span class="mobile-menu__utility-icon">
+                  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                </span>
+                <span class="mobile-menu__utility-text">
+                  <strong data-i18n="menu_theme_title">تغيير المظهر</strong>
+                  <small data-i18n="menu_theme_sub">فاتح أو غامق</small>
+                </span>
+              </button>
+              <button type="button" class="mobile-menu__utility-btn lang-btn" aria-label="تغيير اللغة" data-i18n-aria="lang_aria">
+                <span class="mobile-menu__utility-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+                <span class="mobile-menu__utility-text">
+                  <strong data-i18n="menu_lang_title">تغيير اللغة</strong>
+                  <small class="lang-code">EN</small>
+                </span>
+              </button>
+              <button type="button" class="mobile-menu__utility-btn" data-install-app hidden>
+                <span class="mobile-menu__utility-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span>
+                <span class="mobile-menu__utility-text">
+                  <strong data-i18n="install_app_btn">حمّل التطبيق</strong>
+                  <small data-i18n="settings_install_sub">ثبّت المنصة على شاشتك الرئيسية</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="dash-card set-card" id="userThemeCard" data-set-card="colors" hidden>
+            <h3 data-i18n="theme_colors_title">ألوان المنصة</h3>
+            <p class="dash-tool-card__hint" data-i18n="theme_colors_hint">اختار الألوان اللي تريحك — بتظهر عندك إنت بس وبتتحفظ على حسابك، والدارك مود بيتولّد تلقائيًا من نفس الألوان.</p>
+            <div class="st-presets" id="stPresetGrid"></div>
+            <div class="st-colors" id="stColorGrid"></div>
+            <p class="st-theme-state" id="stThemeState" aria-live="polite"></p>
+            <div class="st-theme-actions">
+              <button type="button" class="btn btn--accent" id="stThemeSave" data-i18n="theme_save">حفظ الألوان</button>
+              <button type="button" class="btn btn--ghost" id="stThemeReset" data-i18n="theme_reset">الرجوع لألوان المنصة</button>
+            </div>
+          </div>
+
+          
+          </div>
+        </section>
+
+        <!-- ======================= الكورسات ======================= -->
+        <section class="dash-panel" data-panel="courses">
+          <p class="dash-panel__intro" id="coursesIntro">دروس صفّك الدراسي — افتح أي درس لتبدأ.</p>
+          <ol class="story-chapters" id="coursesGrid"></ol>
+        </section>
+
+        <!-- ======================= صفحة الدرس ======================= -->
+        <section class="dash-panel" data-panel="lesson">
+          <button type="button" class="chapter-content__back" id="lessonPageBackBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            رجوع للدروس
+          </button>
+          <div class="story-head" id="lessonHead">
+            <span class="story-head__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5.25A2.25 2.25 0 0 1 6.25 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-1Z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg>
+            </span>
+            <span class="story-head__text">
+              <span class="story-head__title" id="lessonHeadTitle">—</span>
+              <span class="story-head__subtitle" id="lessonHeadSubtitle">—</span>
+            </span>
+          </div>
+          <div class="lesson-items" id="lessonItemsGrid"></div>
+        </section>
+
+        <!-- ======================= محرك الامتحان (MCQ + مقالي) ======================= -->
+        <section class="dash-panel" data-panel="exam">
+          <button type="button" class="chapter-content__back" id="examBackBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            رجوع للدرس
+          </button>
+
+          <div class="story-head" id="examHead">
+            <span class="story-head__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4H9z"/><rect x="5" y="7" width="14" height="14" rx="2"/><path d="M9 13h6M9 17h4"/></svg>
+            </span>
+            <span class="story-head__text">
+              <span class="story-head__title" id="examTitle">—</span>
+              <span class="story-head__subtitle" id="examSubtitle">—</span>
+            </span>
+          </div>
+
+          <form class="exam-form" id="examForm" novalidate></form>
+
+          <div class="exam-actions" id="examActions">
+            <button type="submit" form="examForm" class="btn btn--accent" id="examSubmitBtn">تسليم الامتحان</button>
+          </div>
+
+          <div class="exam-result" id="examResult" hidden></div>
+        </section>
+
+        <!-- ======================= القصة ======================= -->
+        <section class="dash-panel" data-panel="story">
+          <p class="dash-panel__intro">تابع قصة صفّك الدراسي مقسّمة إلى فصول بالترتيب، وافتح أي فصل لتشاهد شرحه بالفيديو أو تقرأ نصّه أو تخوض امتحانه الاختياري.</p>
+
+          <div class="dash-tabs" id="storyTabs" role="tablist">
+            <button type="button" class="dash-tab" data-grade="prep1" role="tab" aria-selected="false">الصف الأول الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="prep2" role="tab" aria-selected="false">الصف الثاني الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="prep3" role="tab" aria-selected="false">الصف الثالث الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="secondary1" role="tab" aria-selected="false">الصف الأول الثانوي</button>
+            <button type="button" class="dash-tab" data-grade="secondary2" role="tab" aria-selected="false">الصف الثاني الثانوي</button>
+            <button type="button" class="dash-tab" data-grade="secondary3" role="tab" aria-selected="false">الصف الثالث الثانوي</button>
+          </div>
+
+          <div class="story-head" id="storyHead">
+            <span class="story-head__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h11.5v16H6a2 2 0 0 0-2 2Z"/><path d="M6 21h13.5V19"/></svg>
+            </span>
+            <span class="story-head__text">
+              <span class="story-head__title" id="storyHeadTitle">—</span>
+              <span class="story-head__subtitle" id="storyHeadSubtitle">—</span>
+            </span>
+          </div>
+
+          <ol class="story-chapters" id="storyChaptersGrid"></ol>
+        </section>
+
+        <!-- ======================= التقدم الأكاديمي ======================= -->
+        <section class="dash-panel" data-panel="progress">
+          <p class="dash-panel__intro">نظرة عامة على أدائك ومهاراتك اللغوية هذا الفصل.</p>
+
+          <div class="stats-grid dash-stats-grid">
+            <div class="stat-card">
+              <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+              <span class="stat-card__value" id="statOverall">0%</span>
+              <span class="stat-card__label">نسبة الإنجاز الكلي</span>
+            </div>
+            <div class="stat-card">
+              <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5.25A2.25 2.25 0 0 1 6.25 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-1Z"/></svg>
+              <span class="stat-card__value" id="statLessons">0</span>
+              <span class="stat-card__label">درسًا مكتملًا</span>
+            </div>
+            <div class="stat-card">
+              <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              <span class="stat-card__value" id="statHours">0 د</span>
+              <span class="stat-card__label">وقت التعلّم</span>
+            </div>
+            <div class="stat-card">
+              <svg class="stat-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+              <span class="stat-card__value" id="statStreak">0</span>
+              <span class="stat-card__label">أيام دخول متتالية</span>
+            </div>
+          </div>
+
+          <div class="dash-card dash-analytics-card">
+            <h3>رسم بياني: إنجاز الدروس ومتوسط الدرجات</h3>
+            <div class="dash-analytics-grid">
+              <div class="dash-donut-wrap">
+                <svg class="dash-donut" viewBox="0 0 140 140" role="img" aria-label="نسبة إنجاز الدروس">
+                  <circle class="dash-donut__track" cx="70" cy="70" r="54"></circle>
+                  <circle class="dash-donut__value" id="lessonsDonut" cx="70" cy="70" r="54"></circle>
+                  <text x="70" y="65" class="dash-donut__percent" id="lessonsDonutPercent" text-anchor="middle">0%</text>
+                  <text x="70" y="84" class="dash-donut__caption" text-anchor="middle">إنجاز الدروس</text>
+                </svg>
+                <p class="dash-donut__legend" id="lessonsDonutLegend"></p>
+              </div>
+
+              <div class="dash-bars">
+                <p class="dash-bars__title">متوسط الدرجات حسب نوع التقييم</p>
+                <div class="dash-bars__chart" id="gradesBarChart"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-card dash-skills-card">
+            <h3>مؤشرات التقدم الفعلية</h3>
+            <div class="progress-row" data-skill="lessonPercent"><span>إكمال الدروس</span><strong class="skill-percent">0%</strong><span class="progress-track"><span class="progress-fill"></span></span></div>
+            <div class="progress-row" data-skill="sheetPercent"><span>اجتياز الشيتات</span><strong class="skill-percent">0%</strong><span class="progress-track"><span class="progress-fill"></span></span></div>
+            <div class="progress-row" data-skill="examPercent"><span>متوسط الامتحانات</span><strong class="skill-percent">0%</strong><span class="progress-track"><span class="progress-fill"></span></span></div>
+            <div class="progress-row" data-skill="storyPercent"><span>قراءة القصة</span><strong class="skill-percent">0%</strong><span class="progress-track"><span class="progress-fill"></span></span></div>
+            <div class="progress-row" data-skill="weeklyPercent"><span>الالتزام الأسبوعي</span><strong class="skill-percent">0%</strong><span class="progress-track"><span class="progress-fill"></span></span></div>
+          </div>
+        </section>
+
+        <!-- ======================= سجل الدرجات ======================= -->
+        <section class="dash-panel" data-panel="grades">
+          <p class="dash-panel__intro">نتائج تقييماتك مقسّمة حسب نوع الاختبار.</p>
+
+          <div class="dash-tabs" id="gradesTabs" role="tablist">
+            <button type="button" class="dash-tab is-active" data-category="lessons" role="tab" aria-selected="true">امتحانات الدروس</button>
+            <button type="button" class="dash-tab" data-category="story" role="tab" aria-selected="false">امتحانات القصة</button>
+            <button type="button" class="dash-tab" data-category="weekly" role="tab" aria-selected="false">الشيتات</button>
+          </div>
+
+          <div class="dash-log__average" id="gradesCategoryAverage"></div>
+          <div class="dash-log" id="gradesLog"></div>
+        </section>
+
+        <!-- ======================= أدوات الإنتاجية ======================= -->
+        <section class="dash-panel" data-panel="productivity">
+          <p class="dash-panel__intro">أدوات صغيرة تساعدك على تنظيم مذاكرتك — بياناتك تُحفظ على جهازك فقط.</p>
+
+          <div class="dash-tools-grid">
+            <div class="dash-card dash-tool-card">
+              <h3>قائمة المهام</h3>
+              <form id="todoForm" class="dash-todo-form">
+                <input type="text" id="todoInput" placeholder="أضف مهمة جديدة… مثال: مراجعة الدرس السادس" maxlength="80" required />
+                <button type="submit" class="btn btn--accent">إضافة</button>
+              </form>
+              <ul class="dash-todo-list" id="todoList"></ul>
+            </div>
+
+            <div class="dash-card dash-tool-card dash-tool-card--pomodoro">
+              <h3>مؤقّت التركيز (بومودورو)</h3>
+              <p class="dash-tool-card__hint">اعمل بتركيز لمدة 25 دقيقة ثم خذ استراحة قصيرة.</p>
+              <div class="dash-pomodoro__display" id="pomodoroDisplay">25:00</div>
+              <div class="dash-pomodoro__actions">
+                <button type="button" class="btn btn--accent" id="pomodoroStartBtn">ابدأ</button>
+                <button type="button" class="btn btn--ghost" id="pomodoroResetBtn">إعادة ضبط</button>
+              </div>
+            </div>
+
+            <div class="dash-card dash-tool-card dash-tool-card--wide">
+              <h3>مفكرة سريعة</h3>
+              <p class="dash-tool-card__hint">ملاحظات خاصة بك، تُحفظ تلقائيًا أثناء الكتابة.</p>
+              <textarea id="notesArea" rows="5" placeholder="اكتب هنا أي ملاحظة تريد تذكّرها…"></textarea>
+              <span class="dash-notes__saved" id="notesSavedHint" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>تم الحفظ</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================= لوحة الصدارة ======================= -->
+        <section class="dash-panel" data-panel="leaderboard">
+          <p class="dash-panel__intro">ترتيب الطلاب في صفك الدراسي حسب النقاط.</p>
+
+          <h3 class="dash-leaderboard__grade" id="leaderboardGradeName" hidden></h3>
+
+          <div class="dash-tabs" id="leaderboardTabs" role="tablist">
+            <button type="button" class="dash-tab" data-grade="prep1" role="tab" aria-selected="false">الصف الأول الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="prep2" role="tab" aria-selected="false">الصف الثاني الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="prep3" role="tab" aria-selected="false">الصف الثالث الإعدادي</button>
+            <button type="button" class="dash-tab" data-grade="secondary1" role="tab" aria-selected="false">الصف الأول الثانوي</button>
+            <button type="button" class="dash-tab" data-grade="secondary2" role="tab" aria-selected="false">الصف الثاني الثانوي</button>
+            <button type="button" class="dash-tab" data-grade="secondary3" role="tab" aria-selected="false">الصف الثالث الثانوي</button>
+          </div>
+
+          <ol class="dash-leaderboard" id="leaderboardList"></ol>
+        </section>
+
+        <!-- ======================= الأوائل ======================= -->
+        <section class="dash-panel" data-panel="honors">
+          <div class="hn-hub" id="hnHub">
+            <p class="dash-panel__intro" data-i18n="hn_intro">شوف أوائل الامتحانات في صفّك الدراسي.</p>
+            <div class="set-tiles">
+              <button type="button" class="set-tile" data-hn-open="unit"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg></span><strong data-i18n="hn_unit_title">أوائل امتحان الوحدة</strong><small data-i18n="hn_unit_sub">ترتيب الطلاب في آخر امتحان وحدة</small></button>
+              <button type="button" class="set-tile" data-hn-open="lessons"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg></span><strong data-i18n="hn_lessons_title">أوائل الدروس</strong><small data-i18n="hn_lessons_sub">صور الأوائل مقسّمة حسب الشهور</small></button>
+            </div>
+          </div>
+          <div class="hn-sub" id="hnSub" hidden>
+            <button type="button" class="set-back" id="hnBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg><span data-i18n="hn_back">رجوع</span></button>
+            <div id="hnBody"></div>
+          </div>
+        </section>
+
+        <!-- ======================= الملف الشخصي ======================= -->
+        <section class="dash-panel" data-panel="profile">
+          <p class="dash-panel__intro">دي بياناتك الشخصية للاطّلاع فقط — لو حابب تعدّل فيها تواصل مع إدارة المنصة.</p>
+
+          <div class="dash-profile-grid">
+            <!-- View-only data (student cannot edit) -->
+            <div class="dash-profile-main">
+            <div class="dash-card dash-profile-form-card">
+              <h3>بياناتك</h3>
+              <form class="auth-form" id="profileForm" novalidate>
+                <div class="form-field">
+                  <label for="profileName">الاسم الكامل</label>
+                  <input type="text" id="profileName" name="fullName" autocomplete="name" disabled />
+                </div>
+
+                <div class="form-field">
+                  <label for="profileEmail">البريد الإلكتروني</label>
+                  <input type="email" id="profileEmail" name="email" autocomplete="email" disabled />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="profileAge">السن</label>
+                    <input type="number" id="profileAge" name="age" min="10" max="20" disabled />
+                  </div>
+                  <div class="form-field">
+                    <label for="profileGrade">الصف الدراسي</label>
+                    <select id="profileGrade" name="grade" disabled>
+                      <option value="prep1">الصف الأول الإعدادي</option>
+                      <option value="prep2">الصف الثاني الإعدادي</option>
+                      <option value="prep3">الصف الثالث الإعدادي</option>
+                      <option value="secondary1">الصف الأول الثانوي</option>
+                      <option value="secondary2">الصف الثاني الثانوي</option>
+                      <option value="secondary3">الصف الثالث الثانوي</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <span class="form-field__label">النوع</span>
+                  <div class="gender-options">
+                    <label class="gender-option"><input type="radio" name="gender" value="male" disabled /><span>ذكر</span></label>
+                    <label class="gender-option"><input type="radio" name="gender" value="female" disabled /><span>أنثى</span></label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+              <!-- Profile picture -->
+              <div class="dash-card">
+                <h3 data-i18n="avatar_title">صورة الملف الشخصي</h3>
+                <p class="dash-tool-card__hint" data-i18n="avatar_hint">اختار صورة واضحة لوشّك — هتظهر جنب اسمك في المنصة وفي لوحة الصدارة.</p>
+                <div class="dash-avatar-upload">
+                  <div class="dash-avatar-preview" id="profileAvatarPreview" aria-hidden="true"></div>
+                  <div class="dash-avatar-actions">
+                    <label class="btn btn--accent dash-avatar-btn" for="avatarInput">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1.2-2h6.6l1.2 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                      <span data-i18n="avatar_choose">اختيار صورة</span>
+                    </label>
+                    <input type="file" id="avatarInput" accept="image/*" hidden />
+                    <button type="button" class="btn btn--ghost" id="avatarRemoveBtn" hidden data-i18n="avatar_remove">حذف الصورة</button>
+                  </div>
+                </div>
+                <p class="dash-avatar-status" id="avatarStatus" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="dash-profile-side">
+              <!-- Points & badges -->
+              <div class="dash-card dash-points-card">
+                <h3>نقاطك وشاراتك</h3>
+                <div class="dash-points-total">
+                  <span class="dash-points-total__value" id="profilePoints">0</span>
+                  <span class="dash-points-total__label">نقطة</span>
+                </div>
+                <p class="dash-tool-card__hint">اضغط على أي شارة مكتسبة لتحميلها كصورة ومشاركتها.</p>
+                <div class="dash-badges-grid" id="badgesGrid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="dash-tabbar" id="dashTabbar" aria-label="التنقل الرئيسي">
+    <button type="button" class="dash-nav__link dash-tabbar__btn is-active" data-target="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span data-i18n="dash_nav_home">الرئيسية</span></button>
+    <button type="button" class="dash-nav__link dash-tabbar__btn" data-target="courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5.25A2.25 2.25 0 0 1 6.25 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-1Z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg><span data-i18n="dash_nav_courses">الدروس</span></button>
+    <button type="button" class="dash-nav__link dash-tabbar__btn" data-target="story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h11.5v16H6a2 2 0 0 0-2 2Z"/><path d="M6 21h13.5V19"/><path d="M8.5 7h6M8.5 10.5h6"/></svg><span data-i18n="dash_nav_story">القصة</span></button>
+    <button type="button" class="dash-nav__link dash-tabbar__btn" data-target="more"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.2"/></svg><span data-i18n="dash_nav_more">المزيد</span></button>
+  </nav>
+
+  <div class="dash-sidebar-backdrop" id="dashSidebarBackdrop" hidden></div>
+
+  <!-- ======================= نافذة خيارات الفصل ======================= -->
+  <div class="modal-overlay" id="chapterModal" hidden>
+    <div class="modal modal--chapter" role="dialog" aria-modal="true" aria-labelledby="chapterModalTitle">
+      <button type="button" class="modal__close" id="chapterModalCloseBtn" data-modal-close aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+
+      <!-- عرض الخيارات الثلاثة -->
+      <div class="chapter-modal__view" id="chapterOptionsView">
+        <span class="modal__icon" id="chapterModalIcon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h11.5v16H6a2 2 0 0 0-2 2Z"/><path d="M6 21h13.5V19"/></svg>
+        </span>
+        <h3 id="chapterModalTitle">—</h3>
+        <p id="chapterModalSubtitle">اختر ما تريد فتحه من هذا الفصل</p>
+        <div class="chapter-options" id="chapterOptionsList"></div>
+      </div>
+
+      <!-- عرض المحتوى: فيديو / قصة مكتوبة / امتحان -->
+      <div class="chapter-modal__view" id="chapterContentView" hidden>
+        <button type="button" class="chapter-content__back" id="chapterContentBackBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          رجوع لخيارات الفصل
+        </button>
+        <h3 id="chapterContentTitle">—</h3>
+        <div class="chapter-content__body" id="chapterContentBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= نافذة عرض عامة (فيديو / نص / شيت) ======================= -->
+  <div class="modal-overlay" id="viewerModal" hidden>
+    <div class="modal modal--chapter" role="dialog" aria-modal="true" aria-labelledby="viewerModalTitle">
+      <button type="button" class="modal__close" id="viewerModalCloseBtn" data-modal-close aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <h3 id="viewerModalTitle">—</h3>
+      <div class="chapter-content__body" id="viewerModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ======================= زرار واتساب عائم ======================= -->
+  <a class="dash-wa" href="https://wa.me/201557610664" target="_blank" rel="noopener" aria-label="تواصل معانا على واتساب">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.83 11.83 0 00-3.48-8.413Z"/></svg>
+  </a>
+
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script defer src="firebase.js"></script>
+  <script defer src="shared.js?v=20261004"></script>
+  <script defer src="questions-unit1.js"></script>
+  <script defer src="questions-unit2.js"></script>
+  <script defer src="questions-unit3.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script defer src="dashboard.js?v=20261003"></script>
+  <script defer src="home.js?v=20261003"></script>
+  <script defer src="announcements.js?v=20261003"></script>
+  <script defer src="settings.js?v=20261005"></script>
+  <script defer src="honors.js?v=20261012"></script>
+  <script>
+    /* تبويب "المزيد" يفضل مفعّل طول ما أي صفحة من أقسامه (التقدم، الدرجات، الإنتاجية، الصدارة، الملف) مفتوحة */
+    document.addEventListener("DOMContentLoaded", function () {
+      var bar = document.getElementById("dashTabbar");
+      if (!bar) return;
+      var MAP = { home: "home", courses: "courses", lesson: "courses", exam: "courses", story: "story" };
+      function sync() {
+        var p = document.querySelector(".dash-panel.is-active");
+        var key = p ? (MAP[p.dataset.panel] || "more") : "home";
+        bar.querySelectorAll(".dash-tabbar__btn").forEach(function (b) { b.classList.toggle("is-active", b.dataset.target === key); });
+      }
+      var obs = new MutationObserver(sync);
+      document.querySelectorAll(".dash-panel").forEach(function (p) { obs.observe(p, { attributes: true, attributeFilter: ["class"] }); });
+      sync();
+    });
+  </script>
+</body>
+</html>
