@@ -273,4 +273,104 @@
     // مزامنة ألوان الطالب لو فتح من جهاز تاني
     api.syncFromServer().then(() => { if (!dirty) { draft = base(); renderColors(); renderPresets(); setState(); } });
   }
+
+  /* ================= ملاحظات الأستاذ: قايمتي النوع والشهر بنافذة اختيار بستايل المنصة (بدل قايمة المتصفح) ================= */
+  const IDS = ["tnType", "tnMonth"];
+  const CHEV = '<svg class="custom-select__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const isEn = () => document.documentElement.lang === "en";
+
+  function enhance(sel) {
+    if (!sel || sel.dataset.pickReady) return;
+    sel.dataset.pickReady = "1";
+
+    const label = document.querySelector('label[for="' + sel.id + '"]');
+    const wrap = document.createElement("div");
+    wrap.className = "custom-select custom-select--auto";
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    sel.hidden = true;
+    sel.tabIndex = -1;
+    sel.setAttribute("aria-hidden", "true");
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "custom-select__trigger";
+    trigger.setAttribute("aria-haspopup", "dialog");
+    trigger.innerHTML = '<span class="custom-select__value"></span>' + CHEV;
+    wrap.appendChild(trigger);
+    const valueEl = trigger.querySelector(".custom-select__value");
+    if (label) label.addEventListener("click", (e) => { e.preventDefault(); trigger.focus(); });
+
+    const sync = () => {
+      const o = sel.options[sel.selectedIndex];
+      valueEl.textContent = o ? o.textContent : "";
+    };
+    sync();
+    sel.addEventListener("change", sync);
+    // announcements.js بيعيد تعبئة الاختيارات (لغة / أشهر جديدة) -> نحدّث العنوان
+    new MutationObserver(sync).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["selected"] });
+
+    trigger.addEventListener("click", () => openPicker(sel, label ? label.textContent : "", trigger, sync));
+  }
+
+  function openPicker(sel, title, trigger, sync) {
+    const ov = document.createElement("div");
+    ov.className = "modal-overlay sn-pick";
+    ov.setAttribute("role", "dialog");
+    ov.setAttribute("aria-modal", "true");
+
+    const box = document.createElement("div");
+    box.className = "modal";
+    const h = document.createElement("h3");
+    h.textContent = title;
+    const list = document.createElement("ul");
+    list.className = "sn-pick__list";
+
+    Array.from(sel.options).forEach((o, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "sn-pick__item" + (i === sel.selectedIndex ? " is-selected" : "");
+      b.setAttribute("aria-pressed", String(i === sel.selectedIndex));
+      b.innerHTML = '<span></span><span class="sn-pick__dot"></span>';
+      b.firstChild.textContent = o.textContent;
+      b.addEventListener("click", () => {
+        if (sel.selectedIndex !== i) {
+          sel.selectedIndex = i;
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        sync();
+        close();
+      });
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn btn--ghost sn-pick__cancel";
+    cancel.textContent = isEn() ? "Cancel" : "إلغاء";
+    cancel.addEventListener("click", () => close());
+
+    box.append(h, list, cancel);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add("is-open"));
+
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    document.addEventListener("keydown", onKey);
+    ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
+
+    const first = list.querySelector(".is-selected") || list.querySelector("button");
+    if (first) first.focus({ preventScroll: true });
+
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      ov.classList.remove("is-open");
+      setTimeout(() => ov.remove(), 250);
+      trigger.focus({ preventScroll: true });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => IDS.forEach((id) => enhance(document.getElementById(id))));
 })();
