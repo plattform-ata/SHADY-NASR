@@ -6609,3 +6609,17 @@ html[data-liquid="on"] .exam-result .btn#unitExamNextBtn {
   line-height: 1.3;
   color: #0b1d3a;
 }
+
+/* --- نسخة "تواصل معنا" في القايمة الجانبية (كمبيوتر فقط) --- */
+.dash-sidebar > .more-contact--side {
+  order: 1;
+  margin-top: 0;
+  padding: 12px 12px 10px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+.more-contact--side .more-contact__logo { width: min(190px, 82%); }
+.more-contact--side .more-contact__text { font-size: 0.88rem; }
+@media (max-width: 979px) {
+  .dash-sidebar > .more-contact--side { display: none; }
+}
