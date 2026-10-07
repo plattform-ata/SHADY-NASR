@@ -32,6 +32,7 @@ function initTheme() {
 const I18N = {
   ar: {
     skip_link: "تخطى إلى المحتوى",
+    more_contact: "تواصل معنا",
     nav_home: "الرئيسية",
     nav_prep: "الإعدادية",
     nav_secondary: "الثانوية",
@@ -181,6 +182,7 @@ const I18N = {
   },
   en: {
     skip_link: "Skip to content",
+    more_contact: "Contact us",
     nav_home: "Home",
     nav_prep: "Prep Stage",
     nav_secondary: "Secondary Stage",
