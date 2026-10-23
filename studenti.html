@@ -32,7 +32,15 @@ try {
   if (__l && __l.active && __u && __u.role !== "admin" && localStorage.getItem("shadynasr-lock-ok:" + __u.id) !== __l.lockId) document.documentElement.classList.add("sn-lock-pending");
 } catch (e) {}
 </script>
-<style>html.sn-lock-pending body > *:not(#snLockScreen){display:none!important}html.sn-lock-pending{background:#f4eee0}</style>
+<script>
+/* كود الصف الدراسي: لو الطالب لسه ما دخلش كود صفه في تسجيل الدخول ده نخفي المحتوى فورًا (grade-access.js بيعرض الشاشة) */
+try {
+  var __g = JSON.parse(localStorage.getItem("shadynasr-current-user"));
+  if (__g && __g.id && __g.role !== "admin" && localStorage.getItem("shadynasr-gc-has:" + __g.grade) !== "0" &&
+      localStorage.getItem("shadynasr-gc-ok") !== __g.id + ":" + (localStorage.getItem("shadynasr-login-at") || "0") + ":" + __g.grade) document.documentElement.classList.add("sn-gc-pending");
+} catch (e) {}
+</script>
+<style>html.sn-lock-pending body > *:not(#snLockScreen):not(#snGradeGate){display:none!important}html.sn-lock-pending{background:#f4eee0}html.sn-gc-pending body > *:not(#snGradeGate):not(#snLockScreen){display:none!important}html.sn-gc-pending{background:#f4eee0}</style>
   <link rel="stylesheet" href="shared.css?v=20261116" />
   <link rel="stylesheet" href="exams.css?v=20261118" />
   <link rel="stylesheet" href="chat.css?v=7" />
@@ -676,6 +684,7 @@ try {
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="firebase.js?v=20261117"></script>
   <script defer src="lock.js?v=20261121"></script>
+  <script defer src="grade-access.js?v=20261124"></script>
   <script defer src="shared.js?v=20261015"></script>
   <script defer src="questions-unit1.js"></script>
   <script defer src="questions-unit2.js"></script>
