@@ -1579,7 +1579,7 @@
                   .lk-sec__title svg{width:20px;height:20px;color:var(--accent)}
                   .lk-field{display:flex;align-items:stretch;gap:10px}
                   .lk-field input{flex:1;min-width:0;text-align:center;letter-spacing:.3em;font-size:1.3rem;font-weight:800;padding:14px 10px}
-                  .lk-dice{width:56px;flex:none;border-radius:14px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
+                  .lk-dice{width:56px;flex:none;border-radius:14px;border:1.5px solid var(--surface-glass-border);background:transparent;color:var(--accent);display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
                   .lk-dice:hover,.lk-dice:focus-visible{background:var(--accent);color:#fff;outline:none}
                   .lk-dice:active{transform:rotate(90deg)}
                   .lk-dice svg{width:28px;height:28px}
@@ -1622,7 +1622,7 @@
                   <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.2-8.2M16 7l3 3M14 9l2 2"/></svg>كود القفل الجديد</h4>
                   <label for="lockCode" class="lk-label">اكتب 10 أرقام أو دوس على النرد لتوليد كود عشوائي</label>
                   <div class="lk-field">
-                    <input type="text" id="lockCode" inputmode="numeric" maxlength="10" dir="ltr" autocomplete="off" placeholder="••••••••••" />
+                    <input type="text" id="lockCode" class="sn-code" inputmode="numeric" maxlength="10" dir="ltr" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" placeholder="••••••••••" />
                     <button type="button" class="lk-dice" id="lockGen" aria-label="توليد كود عشوائي" title="توليد كود عشوائي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg></button>
                   </div>
                   <p class="form-error" id="lockErr" hidden></p>
@@ -1632,18 +1632,35 @@
 
               <div class="dash-card set-card" data-set-card="gradecodes" hidden>
                 <style>
-                  .gc-list{display:grid;gap:12px;margin-top:14px}
-                  .gc-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(0,1.4fr) auto auto;gap:10px;align-items:center;border:1px solid var(--surface-glass-border);border-radius:16px;padding:10px 14px}
-                  .gc-row__name{font-weight:800}
-                  .gc-row input{min-width:0;width:100%;box-sizing:border-box;text-align:center;direction:ltr;text-transform:uppercase;letter-spacing:.25em;font-size:1.1rem;font-weight:800;padding:11px 8px}
-                  .gc-ico{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);display:grid;place-items:center;cursor:pointer;padding:0}
-                  .gc-ico:hover,.gc-ico:focus-visible{background:var(--accent);color:#fff;outline:none}
+                  /* شكل موحّد لخانات الأكواد (قفل المنصة + أكواد الصفوف) */
+                  .sn-code{background:rgba(127,127,127,.09)!important;border:1.5px solid var(--surface-glass-border)!important;border-radius:14px!important;color:inherit!important;caret-color:var(--accent);font-family:inherit;transition:border-color .2s,box-shadow .2s,background .2s}
+                  .sn-code:hover{border-color:var(--accent)!important}
+                  .sn-code:focus{outline:none!important;border-color:var(--accent)!important;background:rgba(127,127,127,.14)!important;box-shadow:0 0 0 4px rgba(127,127,127,.2),0 0 0 2px var(--accent)!important}
+                  .sn-code::placeholder{letter-spacing:0;font-weight:600;font-size:.95rem;opacity:.45}
+                  .sn-code::selection{background:var(--accent);color:#fff;-webkit-text-fill-color:#fff}
+                  .sn-code:-webkit-autofill,.sn-code:-webkit-autofill:hover,.sn-code:-webkit-autofill:focus{-webkit-text-fill-color:currentColor;caret-color:var(--accent);-webkit-box-shadow:0 0 0 1000px rgba(127,127,127,.16) inset!important;box-shadow:0 0 0 1000px rgba(127,127,127,.16) inset!important;transition:background-color 99999s ease-out}
+                  .lk-field input.sn-code{min-height:56px}
+                  .gc-list{display:grid;gap:22px;margin-top:16px}
+                  .gc-sec__t{margin:0 0 10px;font-size:.9rem;font-weight:800;opacity:.7;display:flex;align-items:center;gap:10px}
+                  .gc-sec__t::after{content:"";flex:1;height:1px;background:var(--surface-glass-border)}
+                  .gc-sec__rows{display:grid;gap:12px}
+                  .gc-row{border:1px solid var(--surface-glass-border);border-radius:18px;padding:14px 16px;display:grid;gap:12px;transition:border-color .2s}
+                  .gc-row:focus-within{border-color:var(--accent)}
+                  .gc-row__top{display:flex;align-items:center;gap:12px}
+                  .gc-badge{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--accent);color:#fff;font-weight:800;font-size:.95rem}
+                  .gc-row__name{flex:1;min-width:0;font-weight:800}
+                  .gc-chip{padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:700;border:1.5px solid var(--surface-glass-border);white-space:nowrap;opacity:.7}
+                  .gc-chip.is-on{border-color:var(--accent);color:var(--accent);opacity:1}
+                  .gc-chip.is-dirty{border-color:#c98a1b;color:#c98a1b;opacity:1}
+                  .gc-row__ctl{display:flex;align-items:stretch;gap:8px}
+                  .gc-row__ctl input{flex:1;min-width:0;width:100%;box-sizing:border-box;text-align:center;direction:ltr;text-transform:uppercase;letter-spacing:.3em;font-size:1.25rem;font-weight:800;padding:12px 10px;min-height:52px}
+                  .gc-ico{width:52px;flex:none;border-radius:14px;border:1.5px solid var(--surface-glass-border);background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer;padding:0;opacity:.85;transition:background .2s,color .2s,border-color .2s,opacity .2s}
+                  .gc-ico:hover,.gc-ico:focus-visible{background:var(--accent);border-color:var(--accent);color:#fff;opacity:1;outline:none}
                   .gc-ico svg{width:22px;height:22px}
-                  .gc-ico--x{border-color:var(--surface-glass-border);color:inherit;opacity:.75}
                   .gc-exp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
                   .gc-exp .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
                   .gc-exp svg{width:18px;height:18px}
-                  @media(max-width:560px){.gc-row{grid-template-columns:1fr auto auto}.gc-row__name{grid-column:1/-1}.gc-exp{grid-template-columns:1fr}}
+                  @media(max-width:560px){.gc-row{padding:12px}.gc-row__ctl{flex-wrap:wrap}.gc-row__ctl input{flex:1 1 100%;font-size:1.15rem;letter-spacing:.22em}.gc-ico{flex:1 1 0;width:auto;min-height:44px}.gc-exp{grid-template-columns:1fr}}
                 </style>
                 <div class="lk-head">
                   <span class="lk-head__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5Z"/><path d="M7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5"/></svg></span>
@@ -3523,14 +3540,27 @@
       var GC_ICO_DICE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg>';
       var GC_ICO_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
       function gcGrades() { return window.SNGradeAccess ? SNGradeAccess.GRADES : []; }
+      var GC_ICO_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+      function gcRowHtml(g, i) {
+        return "<div class='gc-row' data-g='" + g + "'><div class='gc-row__top'><span class='gc-badge'>" + ((i % 3) + 1) + "</span><span class='gc-row__name'>" + esc(GRADE_NAMES[g] || g) + "</span><span class='gc-chip' data-gc-chip='" + g + "'></span></div>" +
+          "<div class='gc-row__ctl'><input class='sn-code' type='text' maxlength='12' dir='ltr' autocomplete='off' autocorrect='off' spellcheck='false' data-lpignore='true' placeholder='بدون كود' data-gc-input='" + g + "' value='" + esc(GC.saved[g] || "") + "' />" +
+          "<button type='button' class='gc-ico' data-gc-gen='" + g + "' title='توليد كود عشوائي' aria-label='توليد كود عشوائي'>" + GC_ICO_DICE + "</button>" +
+          "<button type='button' class='gc-ico' data-gc-copy='" + g + "' title='نسخ الكود' aria-label='نسخ الكود'>" + GC_ICO_COPY + "</button>" +
+          "<button type='button' class='gc-ico' data-gc-clear='" + g + "' title='مسح الكود' aria-label='مسح الكود'>" + GC_ICO_X + "</button></div></div>";
+      }
+      function gcChip(g) {
+        var chip = $("[data-gc-chip='" + g + "']"), inp = $("[data-gc-input='" + g + "']"); if (!chip || !inp) return;
+        var v = SNGradeAccess.normalize(inp.value), saved = GC.saved[g] || "";
+        chip.className = "gc-chip" + (v !== saved ? " is-dirty" : v ? " is-on" : "");
+        chip.textContent = v !== saved ? "غير محفوظ" : v ? "مفعّل" : "بدون كود";
+      }
       function gcRender() {
         var box = $("#gcList"); if (!box) return;
-        box.innerHTML = gcGrades().map(function (g) {
-          return "<div class='gc-row' data-g='" + g + "'><span class='gc-row__name'>" + esc(GRADE_NAMES[g] || g) + "</span>" +
-            "<input type='text' maxlength='12' dir='ltr' autocomplete='off' spellcheck='false' placeholder='بدون كود' data-gc-input='" + g + "' value='" + esc(GC.saved[g] || "") + "' />" +
-            "<button type='button' class='gc-ico' data-gc-gen='" + g + "' title='توليد كود عشوائي' aria-label='توليد كود عشوائي'>" + GC_ICO_DICE + "</button>" +
-            "<button type='button' class='gc-ico gc-ico--x' data-gc-clear='" + g + "' title='مسح الكود' aria-label='مسح الكود'>" + GC_ICO_X + "</button></div>";
-        }).join("");
+        var gs = gcGrades(), prep = gs.slice(0, 3), sec = gs.slice(3);
+        box.innerHTML =
+          "<div class='gc-sec'><h4 class='gc-sec__t'>المرحلة الإعدادية</h4><div class='gc-sec__rows'>" + prep.map(gcRowHtml).join("") + "</div></div>" +
+          "<div class='gc-sec'><h4 class='gc-sec__t'>المرحلة الثانوية</h4><div class='gc-sec__rows'>" + sec.map(gcRowHtml).join("") + "</div></div>";
+        gs.forEach(gcChip);
       }
       function gcInputs() {
         var o = {};
@@ -3622,12 +3652,18 @@
         $$("[data-set-open='gradecodes']").forEach(function (b) { b.addEventListener("click", gcLoad); });
         list.addEventListener("input", function (e) {
           var i = e.target.closest("[data-gc-input]"); if (!i) return;
-          i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); setErr(err, "");
+          i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); setErr(err, ""); gcChip(i.dataset.gcInput);
         });
         list.addEventListener("click", function (e) {
-          var gen = e.target.closest("[data-gc-gen]"), clr = e.target.closest("[data-gc-clear]");
-          if (gen) { list.querySelector("[data-gc-input='" + gen.dataset.gcGen + "']").value = SNGradeAccess.randomCode(); setErr(err, ""); }
-          if (clr) { list.querySelector("[data-gc-input='" + clr.dataset.gcClear + "']").value = ""; setErr(err, ""); }
+          var gen = e.target.closest("[data-gc-gen]"), clr = e.target.closest("[data-gc-clear]"), cp = e.target.closest("[data-gc-copy]");
+          var inp = function (g) { return list.querySelector("[data-gc-input='" + g + "']"); };
+          if (gen) { inp(gen.dataset.gcGen).value = SNGradeAccess.randomCode(); setErr(err, ""); gcChip(gen.dataset.gcGen); }
+          if (clr) { inp(clr.dataset.gcClear).value = ""; setErr(err, ""); gcChip(clr.dataset.gcClear); }
+          if (cp) {
+            var v = inp(cp.dataset.gcCopy).value;
+            if (!v) { toast("مفيش كود للنسخ", true); return; }
+            (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast("اتنسخ الكود"); }, function () { toast("تعذر النسخ", true); });
+          }
         });
         save.addEventListener("click", async function () {
           setErr(err, "");
