@@ -1596,7 +1596,11 @@
                 <div class="ad-form">
                   <div id="gcList"></div>
                   <p class="form-error" id="gcErr" hidden></p>
-                  <div><button class="btn btn--accent" type="button" id="gcSave">حفظ الأكواد</button></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn--ghost" type="button" id="gcEdit">تعديل الأكواد</button>
+                    <button class="btn btn--accent" type="button" id="gcSave" hidden>حفظ الأكواد</button>
+                    <button class="btn btn--ghost" type="button" id="gcCancel" hidden>إلغاء</button>
+                  </div>
                 </div>
               </div>
 
@@ -3253,15 +3257,27 @@
           GC.orig = (await SNAuth.getGradeCodesAdmin()) || {};
           box.innerHTML = SNAuth.GRADE_KEYS.map(function (g) {
             return '<div class="form-field"><label for="gc_' + g + '">' + esc(GRADE_NAMES[g] || g) + '</label>' +
-              '<div style="display:flex;gap:8px"><input type="text" id="gc_' + g + '" data-gc="' + g + '" dir="ltr" maxlength="20" autocomplete="off" spellcheck="false" placeholder="من غير كود" value="' + esc(GC.orig[g] || "") + '" style="flex:1" />' +
-              '<button class="btn btn--ghost" type="button" data-gc-gen="' + g + '">عشوائي</button></div></div>';
+              '<div style="display:flex;gap:8px"><input type="text" id="gc_' + g + '" data-gc="' + g + '" dir="ltr" maxlength="20" autocomplete="off" spellcheck="false" placeholder="من غير كود" value="' + esc(GC.orig[g] || "") + '" style="flex:1" readonly />' +
+              '<button class="btn btn--ghost" type="button" data-gc-gen="' + g + '" disabled>عشوائي</button></div></div>';
           }).join("");
+          gcSetEdit(false);
         } catch (e) { console.error(e); box.innerHTML = "<p class='form-error'>تعذر تحميل الأكواد — راجع صلاحيات Firebase.</p>"; }
+      }
+      function gcSetEdit(on) {
+        $$("[data-gc]").forEach(function (i) { i.readOnly = !on; });
+        $$("[data-gc-gen]").forEach(function (b) { b.disabled = !on; });
+        $("#gcEdit").hidden = on; $("#gcSave").hidden = !on; $("#gcCancel").hidden = !on;
+        if (on) { var f = $("[data-gc]"); if (f) f.focus(); }
       }
       function bindGradeCodes() {
         if (!$("#gcSave")) return;
         var err = $("#gcErr");
         $$("[data-set-open='gradeCodes']").forEach(function (b) { b.addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); }); });
+        $("#gcEdit").addEventListener("click", async function () {
+          var ok = await confirmBox("تعديل أكواد الصفوف", "الأكواد دي بتتحكم في إنشاء الحسابات الجديدة. هتفتح الحقول للتعديل، ومفيش حاجة بتتغيّر غير لما تضغط حفظ. تكمّل؟", "تعديل");
+          if (ok) gcSetEdit(true);
+        });
+        $("#gcCancel").addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); });
         $("#gcList").addEventListener("click", function (e) {
           var b = e.target.closest("[data-gc-gen]"); if (!b) return;
           $("#gc_" + b.dataset.gcGen).value = SNAuth.randomGradeCode();
