@@ -65,6 +65,11 @@
       "#snLockScreen .lk__or{margin:14px 0 2px;opacity:.6;font-size:.85rem}" +
       "#snLockScreen .lk__cam{display:none;margin-top:12px;border-radius:14px;overflow:hidden;background:#000;position:relative}" +
       "#snLockScreen .lk__cam.is-on{display:block}" +
+      "#snLockScreen .lk__bar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:26px;padding:10px 28px;border-radius:999px;background:rgba(62,60,56,.88);backdrop-filter:blur(6px)}" +
+      "#snLockScreen .lk__bar button{width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}" +
+      "#snLockScreen .lk__bar button[hidden]{display:none}" +
+      "#snLockScreen .lk__bar button:focus-visible,#snLockScreen .lk__bar button:hover{background:rgba(255,255,255,.16);outline:none}" +
+      "#snLockScreen .lk__bar svg{width:30px;height:30px}" +
       "#snLockScreen .lk__cam video{width:100%;display:block;max-height:300px;object-fit:cover}" +
       "#snLockScreen .lk__err{color:#d23b3b;font-weight:700;margin:10px 0 0;min-height:1.2em;font-size:.92rem}" +
       "#snLockScreen .lk__warn{margin:14px 0 0;font-size:.8rem;opacity:.75;line-height:1.6}" +
@@ -97,7 +102,9 @@
       '<div class="lk__row"><button class="lk__opt" id="snLockScan" type="button">' + ICON.cam + "<span>الكاميرا</span></button>" +
       '<button class="lk__opt" id="snLockPick" type="button">' + ICON.img + "<span>من المعرض</span></button></div>" +
       '<input type="file" id="snLockFile" accept="image/*" hidden />' +
-      '<div class="lk__cam" id="snLockCam"><video id="snLockVideo" playsinline muted></video></div>' +
+      '<div class="lk__cam" id="snLockCam"><video id="snLockVideo" playsinline muted></video>' +
+      '<div class="lk__bar"><button type="button" id="snLockFlash" aria-label="الفلاش" hidden></button>' +
+      '<button type="button" id="snLockCamPick" aria-label="اختيار صورة من المعرض">' + ICON.gal + "</button></div></div>" +
       '<p class="lk__err" id="snLockErr" role="alert"></p>' +
       '<p class="lk__warn">لو ما دخلتش الكود خلال 30 يوم من قفل المنصة (أو من تسجيل حسابك لو سجّلت بعد القفل) هيتم مسح حسابك وكل بياناتك نهائيًا.</p>' +
       '<button class="lk__out" id="snLockOut" type="button">تسجيل الخروج</button>' +
@@ -124,6 +131,12 @@
     $("#snLockPick").addEventListener("click", async () => {
       if (await askPermission("photos")) $("#snLockFile").click();
     });
+    $("#snLockCamPick").addEventListener("click", async () => {
+      if (await askPermission("photos")) { stopScan(); $("#snLockFile").click(); }
+    });
+    const fl = $("#snLockFlash");
+    fl.innerHTML = ICON.flashOff;
+    fl.addEventListener("click", toggleTorch);
     $("#snLockFile").addEventListener("change", (e) => {
       const f = e.target.files && e.target.files[0];
       e.target.value = "";
@@ -205,6 +218,9 @@
   const ICON = {
     cam: SV('<path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.6"/>'),
     img: SV('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>'),
+    gal: SV('<rect x="7" y="3" width="14" height="14" rx="2"/><path d="M3 7v12a2 2 0 0 0 2 2h12"/><circle cx="12" cy="8" r="1.4"/><path d="m21 13-3.5-3.5L10 17"/>'),
+    flashOff: SV('<path d="M13 2 5 13h6l-1 9 4-5.5M17.5 10.5 19 8h-5"/><path d="M3 3l18 18"/>'),
+    flashOn: SV('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>'),
     lock: SV('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
   };
   const LOCK_I = ICON.lock.replace("<svg ", '<svg class="lk__i" ');
@@ -384,6 +400,7 @@
     $("#snLockScan").querySelector("span").textContent = "إغلاق الكاميرا";
     try { await video.play(); } catch (e) { /* ignore */ }
     scanning = true;
+    setupTorchButton();
 
     let detector = null;
     if ("BarcodeDetector" in window) {
@@ -428,12 +445,38 @@
     tick();
   }
 
+  let torchOn = false;
+  async function toggleTorch() {
+    const track = stream && stream.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
+      torchOn = !torchOn;
+      const fl = screen && $("#snLockFlash");
+      if (fl) fl.innerHTML = torchOn ? ICON.flashOn : ICON.flashOff;
+    } catch (e) { setErr("الفلاش مش متاح على الجهاز ده."); }
+  }
+  function setupTorchButton() {
+    const fl = screen && $("#snLockFlash");
+    if (!fl) return;
+    torchOn = false;
+    fl.innerHTML = ICON.flashOff;
+    let ok = false;
+    try {
+      const track = stream && stream.getVideoTracks()[0];
+      const caps = track && track.getCapabilities ? track.getCapabilities() : null;
+      ok = !!(caps && caps.torch);
+    } catch (e) { ok = false; }
+    fl.hidden = !ok;
+  }
+
   function stopStream() {
     if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
   }
 
   function stopScan() {
     scanning = false;
+    torchOn = false;
     stopStream();
     if (screen) {
       const cam = $("#snLockCam");
