@@ -2737,6 +2737,10 @@
       learning.dirty = false;
       localStorage.setItem(secKey, String(learning.seconds));
       syncSet(user, "learningSeconds", learning.seconds);
+      // نسخة في users/{id} عشان لوحة الصدارة (بالوقت) عند الطلاب والأدمن تقدر تقراها
+      if (window.SNAuth && window.SNAuth.saveUserFields) {
+        window.SNAuth.saveUserFields(user.id, { learningSeconds: learning.seconds }).catch(() => {});
+      }
     }
 
     // بنعدّ الوقت بس والتاب ظاهر قدام الطالب.
@@ -3031,6 +3035,43 @@
   // --- لوحة الصدارة (لكل صف دراسي، حسب النقاط والدرجات معًا) ---------------------
   /** score = points + (متوسط الدرجات% × 2) — وزن بسيط يمزج الاجتهاد اليومي (نقاط) بالأداء الفعلي (درجات). بيانات تجريبية لكل صف. */
   /* لوحة المتصدرين الحقيقية: بترتب طلاب نفس الصف حسب النقط المخزّنة فعليًا في Firebase. */
+  let lbMode = "points";
+  let lbRows = null;
+
+  function lbTime(sec) {
+    const v = Math.max(0, Math.floor(Number(sec) || 0));
+    const hh = Math.floor(v / 3600), mm = Math.floor((v % 3600) / 60);
+    return hh ? `${hh} س ${mm} د` : `${mm} د`;
+  }
+
+  function paintLeaderboard() {
+    const list = document.getElementById("leaderboardList");
+    if (!list || !lbRows) return;
+    document.querySelectorAll("#leaderboardModes [data-lb-mode]").forEach((b) => {
+      const on = b.dataset.lbMode === lbMode;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", String(on));
+    });
+    if (!lbRows.length) {
+      list.innerHTML = `<li class="dash-leaderboard__row">لسه مفيش طلاب مسجلين في الصف ده</li>`;
+      return;
+    }
+    const rows = lbRows.slice().sort((a, b) =>
+      lbMode === "time" ? b.secs - a.secs || b.points - a.points : b.points - a.points || b.secs - a.secs
+    );
+    list.innerHTML = rows
+      .map(
+        (r, i) => `
+      <li class="dash-leaderboard__row${r.isYou ? " is-you" : ""}">
+        <span class="dash-leaderboard__rank">${i + 1}</span>
+        <span class="dash-leaderboard__avatar"${validPhoto(r.photo) ? ` data-has-photo style="background-image:url(&quot;${r.photo}&quot;)"` : ""}>${initials(r.name)}</span>
+        <span class="dash-leaderboard__name">${r.name}</span>
+        <span class="dash-leaderboard__points">${lbMode === "time" ? lbTime(r.secs) : r.points + " نقطة"}</span>
+      </li>`
+      )
+      .join("");
+  }
+
   async function renderLeaderboardGrade(gradeId, user) {
     const list = document.getElementById("leaderboardList");
     if (!list) return;
@@ -3042,43 +3083,48 @@
       return;
     }
 
-    let rows = [];
     try {
       const gradeUsers = await window.SNAuth.fetchUsersByGrade(gradeId);
-      rows = gradeUsers
+      const localSecs = parseInt(localStorage.getItem(`bloom-learning-seconds-${user.id}`), 10) || 0;
+      lbRows = gradeUsers
         .filter((u) => u.role !== "admin")
         .map((u) => ({
           name: u.id === user.id ? `${u.fullName} (أنت)` : u.fullName,
           points: Number(u.points) || 0,
+          secs: u.id === user.id ? Math.max(localSecs, Number(u.learningSeconds) || 0) : Number(u.learningSeconds) || 0,
           isYou: u.id === user.id,
           photo: (u.id === user.id && localPhoto(u.id)) || u.photoURL || "",
         }));
     } catch (err) {
+      lbRows = null;
       list.innerHTML = `<li class="dash-leaderboard__row">تعذر تحميل لوحة المتصدرين، حاول تاني</li>`;
       return;
     }
+    paintLeaderboard();
+  }
 
-    if (!rows.length) {
-      list.innerHTML = `<li class="dash-leaderboard__row">لسه مفيش طلاب مسجلين في الصف ده</li>`;
-      return;
-    }
-
-    rows.sort((a, b) => b.points - a.points);
-
-    list.innerHTML = rows
-      .map(
-        (r, i) => `
-      <li class="dash-leaderboard__row${r.isYou ? " is-you" : ""}">
-        <span class="dash-leaderboard__rank">${i + 1}</span>
-        <span class="dash-leaderboard__avatar"${validPhoto(r.photo) ? ` data-has-photo style="background-image:url(&quot;${r.photo}&quot;)"` : ""}>${initials(r.name)}</span>
-        <span class="dash-leaderboard__name">${r.name}</span>
-        <span class="dash-leaderboard__points">${r.points} نقطة</span>
-      </li>`
-      )
-      .join("");
+  /* زرار نقاط / وقت في صفحة الصدارة (متزامن مع الزرار اللي في الرئيسية) */
+  function bindLeaderboardModes() {
+    const wrap = document.getElementById("leaderboardModes");
+    if (!wrap) return;
+    wrap.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-lb-mode]");
+      if (!b || b.dataset.lbMode === lbMode) return;
+      lbMode = b.dataset.lbMode;
+      paintLeaderboard();
+      window.dispatchEvent(new CustomEvent("sn:board-mode", { detail: { mode: lbMode } }));
+    });
+    window.addEventListener("sn:board-mode", (e) => {
+      const m = e.detail && e.detail.mode;
+      if ((m === "points" || m === "time") && m !== lbMode) {
+        lbMode = m;
+        paintLeaderboard();
+      }
+    });
   }
 
   function initLeaderboard(user) {
+    bindLeaderboardModes();
     const tabsWrap = document.getElementById("leaderboardTabs");
     const tabs = document.querySelectorAll("#leaderboardTabs .dash-tab");
     if (!tabs.length) return;
