@@ -4,7 +4,7 @@
    - الصفحات (html): النت الأول بمهلة قصيرة (1.2 ثانية) — لو النت بطيء بنفتح النسخة المحفوظة فورًا،
      ولو وقع بنرجع للنسخة المحفوظة. كده التعديلات الجديدة بتظهر من أول فتحة لو النت سريع.
    مش بيتدخل في طلبات Firebase / EmailJS / أي دومين تاني (بيشتغلوا عادي). */
-const CACHE = "shadynasr-v46";
+const CACHE = "shadynasr-v47";
 const NAV_TIMEOUT_MS = 1200;
 const PRECACHE = [
   "./", "index.html", "login.html", "studenti.html", "admin.html", "admin-verify.html",
