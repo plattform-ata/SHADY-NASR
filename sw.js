@@ -4,12 +4,12 @@
    - الصفحات (html): النت الأول بمهلة قصيرة (1.2 ثانية) — لو النت بطيء بنفتح النسخة المحفوظة فورًا،
      ولو وقع بنرجع للنسخة المحفوظة. كده التعديلات الجديدة بتظهر من أول فتحة لو النت سريع.
    مش بيتدخل في طلبات Firebase / EmailJS / أي دومين تاني (بيشتغلوا عادي). */
-const CACHE = "shadynasr-v47";
+const CACHE = "shadynasr-v48";
 const NAV_TIMEOUT_MS = 1200;
 const PRECACHE = [
   "./", "index.html", "login.html", "studenti.html", "admin.html", "admin-verify.html",
   "shared.css", "shared.js", "home.js", "dashboard.js", "firebase.js", "auth.js", "liquid.js",
-  "announcements.js", "accounts.js", "login-accounts.js", "grade-codes.js", "settings.js", "notes.js", "honors.js", "lock.js", "pdf-viewer.js", "admin-notes.js", "questions-unit1.js", "questions-unit2.js", "questions-unit3.js",
+  "announcements.js", "accounts.js", "login-accounts.js", "grade-codes.js", "settings.js", "notes.js", "honors.js", "lock.js", "grade-access.js", "pdf-viewer.js", "admin-notes.js", "questions-unit1.js", "questions-unit2.js", "questions-unit3.js",
   "chat.js", "chat.css", "exams.js", "exams.css", "exams-student.js", "exams-admin.js", "progress-chart.js", "home-customize.js", "year-report.js", "i18n-extra.js", "shady-nasr.jpg", "shady-nasr-logo.png", "favicon.png", "schedule-shady-nasr.jpg", "manifest.webmanifest", "manifest-admin.webmanifest"
 ];
 const CACHEABLE = ["document", "script", "style", "image", "font", "manifest"];
