@@ -1547,6 +1547,7 @@
                     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                     <circle cx="12" cy="16" r="1" />
                   </svg></span><strong>قفل المنصة</strong><small>كود 10 أرقام أو QR لدخول الطلاب</small></button>
+              <button type="button" class="set-tile" data-set-open="gradeCodes"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4" /><path d="m11 12 9-9M16 7l3 3M14 9l2 2" /></svg></span><strong>أكواد الصفوف</strong><small>كود لكل صف لإنشاء الحساب</small></button>
             </div>
           </div>
 
@@ -1591,6 +1592,20 @@
                 </div>
               </div>
 
+              <div class="dash-card set-card" data-set-card="gradeCodes" hidden>
+                <h3>أكواد الصفوف</h3>
+                <p class="ad-note">كل صف دراسي ليه كود (6 إلى 20 حرف أو رقم إنجليزي). الطالب لازم يكتب كود صفه عشان ينشئ حساب جديد. الصف اللي كوده فاضي التسجيل فيه مفتوح من غير كود. تغيير الكود بيأثر على الحسابات الجديدة بس، واللي مسجّلين بالفعل مش بيتأثروا.</p>
+                <div class="ad-form">
+                  <div id="gcList"></div>
+                  <p class="form-error" id="gcErr" hidden></p>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn--ghost" type="button" id="gcEdit">تعديل الأكواد</button>
+                    <button class="btn btn--accent" type="button" id="gcSave" hidden>حفظ الأكواد</button>
+                    <button class="btn btn--ghost" type="button" id="gcCancel" hidden>إلغاء</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="dash-card set-card" data-set-card="promote" hidden>
                 <h3>ترقية الطلاب لنهاية العام الدراسي</h3>
                 <p class="ad-note">كل طالب بيترقّى للصف اللي بعده، وبيتصفّر عنده: النقط والشارات وتقدّم الدروس والدرجات والمقالات وملاحظات الأدمن. حساب الطالب (الاسم والإيميل وكلمة المرور والصورة) والمحادثات بيفضلوا زي ما هم. قبل التصفير بيتحفظ لكل طالب ملف عامه الدراسي (درجات + ملاحظات + إحصائيات)، وبيوصله إشعار يفتح منه 3 ملفات PDF: الدرجات والملاحظات والرسوم البيانية. العملية دي مش بترجع.</p>
@@ -1602,6 +1617,7 @@
                       <option value="delete">يتحذفوا نهائيًا من المنصة</option>
                     </select>
                   </div>
+                  <label class="bk-row" style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" id="promoDrop" /><span>مسح ملفات الأعوام الدراسية من Firebase وعدم حفظ ملف العام الجديد (بيوفّر مساحة، لكن الطلاب مش هيلاقوا ملفات الدرجات والملاحظات بعد كده)</span></label>
                   <div class="form-field">
                     <label for="promoWord">اكتب كلمة «ترقية» للتأكيد</label>
                     <input type="text" id="promoWord" autocomplete="off" />
@@ -3184,6 +3200,7 @@
         $("#setBack").addEventListener("click", function () { setOpen(null); });
         bindPromotion();
         bindLock();
+        bindGradeCodes();
       }
 
       /* ================= لوحة الصدارة (نقاط / وقت على المنصة) ================= */
@@ -3300,7 +3317,7 @@
           }
           btn.disabled = true; word.disabled = true;
           try {
-            var r = await SNAuth.promoteAllStudents({ graduates: del ? "delete" : "keep" });
+            var r = await SNAuth.promoteAllStudents({ graduates: del ? "delete" : "keep", dropArchive: !!($("#promoDrop") && $("#promoDrop").checked) });
             await loadCore(true);
             S.essays = null; S.current = null;
             renderPromoPreview();
@@ -3311,6 +3328,59 @@
             setErr(err, "تعذرت الترقية — راجع صلاحيات Firebase وحاول تاني.");
             btn.disabled = word.value.trim() !== "ترقية";
           } finally { word.disabled = false; }
+        });
+      }
+
+      /* ================= أكواد الصفوف ================= */
+      var GC = { orig: {} };
+      function gcSetEdit(on) {
+        $$("[data-gc]").forEach(function (i) { i.readOnly = !on; });
+        $$("[data-gc-gen]").forEach(function (b) { b.disabled = !on; });
+        $("#gcEdit").hidden = on; $("#gcSave").hidden = !on; $("#gcCancel").hidden = !on;
+        if (on) { var f = $("[data-gc]"); if (f) f.focus(); }
+      }
+      async function renderGradeCodes() {
+        var box = $("#gcList"); box.innerHTML = "<p class='ad-note'>جاري التحميل…</p>";
+        try {
+          GC.orig = (await SNAuth.getGradeCodesAdmin()) || {};
+          box.innerHTML = SNAuth.GRADE_KEYS.map(function (g) {
+            return '<div class="form-field"><label for="gc_' + g + '">' + esc(GRADE_NAMES[g] || g) + '</label>' +
+              '<div style="display:flex;gap:8px"><input type="text" id="gc_' + g + '" data-gc="' + g + '" dir="ltr" maxlength="20" autocomplete="off" spellcheck="false" placeholder="من غير كود" value="' + esc(GC.orig[g] || "") + '" style="flex:1" readonly />' +
+              '<button class="btn btn--ghost" type="button" data-gc-gen="' + g + '" disabled>عشوائي</button></div></div>';
+          }).join("");
+          gcSetEdit(false);
+        } catch (e) { console.error(e); box.innerHTML = "<p class='form-error'>تعذر تحميل الأكواد — راجع صلاحيات Firebase.</p>"; }
+      }
+      function bindGradeCodes() {
+        if (!$("#gcSave")) return;
+        var err = $("#gcErr");
+        $$("[data-set-open='gradeCodes']").forEach(function (b) { b.addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); }); });
+        $("#gcEdit").addEventListener("click", async function () {
+          var ok = await confirmBox("تعديل أكواد الصفوف", "الأكواد دي بتتحكم في إنشاء الحسابات الجديدة. هتفتح الحقول للتعديل، ومفيش حاجة بتتغيّر غير لما تضغط حفظ. تكمّل؟", "تعديل");
+          if (ok) gcSetEdit(true);
+        });
+        $("#gcCancel").addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); });
+        $("#gcList").addEventListener("click", function (e) {
+          var b = e.target.closest("[data-gc-gen]"); if (!b || b.disabled) return;
+          $("#gc_" + b.dataset.gcGen).value = SNAuth.randomGradeCode();
+        });
+        $("#gcSave").addEventListener("click", async function () {
+          setErr(err, "");
+          var map = {}, seen = {}, removed = 0, changed = 0;
+          var rows = $$("[data-gc]");
+          for (var i = 0; i < rows.length; i++) {
+            var g = rows[i].dataset.gc, v = rows[i].value.trim().replace(/\s+/g, "");
+            if (v && !SNAuth.validGradeCode(v)) { setErr(err, "كود " + (GRADE_NAMES[g] || g) + " لازم يكون من 6 لـ 20 حرف أو رقم إنجليزي من غير رموز."); return; }
+            if (v) { if (seen[v.toLowerCase()]) { setErr(err, "الكود ده متكرر بين " + (GRADE_NAMES[seen[v.toLowerCase()]] || "") + " و" + (GRADE_NAMES[g] || g) + ". كل صف لازم يكون ليه كود مختلف."); return; } seen[v.toLowerCase()] = g; }
+            if (v !== (GC.orig[g] || "")) { map[g] = v; changed++; if (!v) removed++; }
+          }
+          if (!changed) { toast("مفيش تغيير للحفظ"); gcSetEdit(false); return; }
+          var ok = await confirmBox("تغيير أكواد الصفوف", "هيتغيّر كود " + changed + " صف" + (removed ? " (و" + removed + " منهم هيبقى التسجيل فيه من غير كود)" : "") + ". الكود الجديد بيتطلب لإنشاء الحسابات الجديدة بس، والطلاب المسجّلين مش بيتأثروا. تكمّل؟", "حفظ");
+          if (!ok) return;
+          this.disabled = true;
+          try { await SNAuth.saveGradeCodes(map); toast("تم حفظ الأكواد"); await renderGradeCodes(); }
+          catch (e) { console.error(e); setErr(err, "تعذر الحفظ — راجع صلاحيات Firebase."); }
+          finally { this.disabled = false; }
         });
       }
 
