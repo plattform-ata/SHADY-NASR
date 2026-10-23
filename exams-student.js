@@ -33,6 +33,11 @@
     try { localStorage.setItem(draftKey(S.curId), JSON.stringify({ answers: S.answers, startedAt: S.startedAt })); } catch (e) { }
   }
   function clearDraft(id) { try { localStorage.removeItem(draftKey(id)); } catch (e) { } }
+  /* علامة "خرج من المنصة أثناء الامتحان": بتفضل محفوظة لحد ما التسليم ينجح (حتى لو التطبيق اتقفل أو النت وقع) */
+  function leftKey(id) { return "shadynasr-exam-left:" + me.id + ":" + id; }
+  function markLeft(id) { try { localStorage.setItem(leftKey(id), String(Date.now())); } catch (e) { } }
+  function wasLeft(id) { try { return !!localStorage.getItem(leftKey(id)); } catch (e) { return false; } }
+  function clearLeft(id) { try { localStorage.removeItem(leftKey(id)); } catch (e) { } }
   function mmss(sec) { var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
 
   /* ------------------------------------------------------------ تحميل */
@@ -49,11 +54,32 @@
       .filter(function (e) { return e && e.id && e.status !== "draft" && X.matches(e, S.user); })
       .sort(function (a, b) { return String(b.publishedAt || "").localeCompare(String(a.publishedAt || "")); });
     refreshSubs().then(function () {
+      checkLeft();
       if (S.view !== "take") render();
       paintAlert();
     });
   }
 
+  /* أي امتحان الطالب خرج منه ومااتسلّمش → يتسلّم تلقائيًا بالإجابات المحفوظة */
+  function checkLeft() {
+    if (S.sending || S.view === "take") return;
+    var hit = null;
+    S.exams.forEach(function (e) {
+      if (S.subs[e.id]) { clearLeft(e.id); return; }
+      if (!hit && wasLeft(e.id)) hit = e;
+    });
+    if (!hit) return;
+    var d = loadDraft(hit.id);
+    S.curId = hit.id; S.answers = d.answers || {}; S.startedAt = d.startedAt || Date.now();
+    submit("left");
+  }
+
+  function onLeave() {
+    if (S.view !== "take" || !S.curId || S.sending) return;
+    markLeft(S.curId);
+    saveDraft();
+    submit("left");
+  }
   function boot() {
     var p = Promise.resolve(me.email && SNAuth.findUserByEmail ? SNAuth.findUserByEmail(me.email) : null).catch(function () { return null; });
     p.then(function (u) {
@@ -174,9 +200,32 @@
     root.innerHTML = '<div class="exm-root">' +
       '<div class="exm-taking__bar"><div><strong>' + esc(e.title) + '</strong><div class="exm-sub">أجبت على <span id="exmAnswered">' + answeredCount(e) + "</span> من " + total + "</div></div>" +
       (e.durationMin > 0 ? '<span class="exm-timer" id="exmTimer" aria-live="off">--:--</span>' : "") + "</div>" +
+      '<div class="exm-note" role="note">ممنوع الخروج من المنصة أثناء الامتحان — لو خرجت هيتسلّم تلقائيًا.</div>' +
       (S.flash ? '<div class="exm-note" role="alert">' + esc(S.flash) + "</div>" : "") +
-      html + foot +
-      '<button type="button" class="exm-btn" data-act="leave">حفظ والرجوع للقائمة</button></div>';
+      html + foot + "</div>";
+  }
+
+  function renderWarn() {
+    var e = cur();
+    if (!e) { S.view = "list"; return render(); }
+    root.innerHTML = '<div class="exm-root"><div class="exm-card exm-warn" role="alertdialog">' +
+      '<h3 class="exm-title">تحذير مهم قبل ما تبدأ</h3>' +
+      '<p class="exm-sub"><strong>' + esc(e.title) + "</strong></p>" +
+      '<ul class="exm-warn__list">' +
+      "<li>لو خرجت من المنصة وإنت بتحل الامتحان (فتحت تطبيق تاني، رجعت للشاشة الرئيسية، غيّرت التاب أو قفلت الشاشة) الامتحان هيتسلّم فورًا بالإجابات اللي كتبتها لحد وقتها.</li>" +
+      "<li>بعد التسليم مش هتقدر ترجع تكمّل أو تعيد الامتحان.</li>" +
+      "<li>الوقت شغّال طول الامتحان حتى لو خرجت.</li>" +
+      "<li>اتأكد إن النت شغّال وإن مفيش حاجة هتقاطعك قبل ما تبدأ.</li></ul>" +
+      '<div class="exm-confirm"><button type="button" class="exm-btn exm-btn--red" data-act="confirmStart">فاهم، ابدأ الامتحان</button>' +
+      '<button type="button" class="exm-btn" data-act="cancelStart">رجوع</button></div></div></div>';
+  }
+
+  function warn(id) {
+    var e = find(id);
+    if (!e || e.status !== "published" || S.subs[id]) return;
+    S.curId = id; S.view = "warn"; S.flash = "";
+    render();
+    window.scrollTo(0, 0);
   }
 
   function startTimer() {
@@ -221,15 +270,24 @@
     Promise.resolve(SNAuth.saveExamSubmission(e.id, me.id, data)).then(function (ok) {
       S.sending = false;
       clearDraft(e.id);
+      clearLeft(e.id);
       if (ok) S.subs[e.id] = data;
       S.flash = ok
-        ? (auto ? "انتهى الوقت وتم تسليم إجاباتك تلقائيًا. هتظهر درجتك بعد التصحيح." : "تم تسليم الامتحان بنجاح. هتظهر درجتك بعد تصحيح الأستاذ.")
+        ? (auto === "left" ? "الامتحان اتسلّم تلقائيًا لأنك خرجت من المنصة أثناء الحل. هتظهر درجتك بعد التصحيح."
+          : auto ? "انتهى الوقت وتم تسليم إجاباتك تلقائيًا. هتظهر درجتك بعد التصحيح." : "تم تسليم الامتحان بنجاح. هتظهر درجتك بعد تصحيح الأستاذ.")
         : "الامتحان ده اتسلّم قبل كده.";
       S.view = "list"; S.curId = null; S.confirm = false;
       render(); paintAlert(); window.scrollTo(0, 0);
       if (!ok) refreshSubs().then(function () { render(); paintAlert(); });
+      setTimeout(checkLeft, 0);
     }).catch(function () {
       S.sending = false;
+      if (auto === "left") {
+        S.view = "list"; S.curId = null; S.confirm = false;
+        S.flash = "خرجت من المنصة أثناء الامتحان — هيتسلّم تلقائيًا أول ما النت يرجع.";
+        render();
+        return;
+      }
       S.flash = "تعذّر التسليم — اتأكد من النت وجرّب تاني (إجاباتك محفوظة).";
       render();
       startTimer();
@@ -265,6 +323,7 @@
   function render() {
     if (!root) return;
     if (S.view === "take") return renderTake();
+    if (S.view === "warn") return renderWarn();
     if (S.view === "result") return renderResult();
     renderList();
   }
@@ -275,14 +334,16 @@
       var b = ev.target.closest("[data-act]");
       if (!b) return;
       var act = b.dataset.act;
-      if (act === "start") start(b.dataset.id);
+      if (act === "start") warn(b.dataset.id);
+      else if (act === "confirmStart") start(S.curId);
+      else if (act === "cancelStart") { S.view = "list"; S.curId = null; render(); }
       else if (act === "result") { S.curId = b.dataset.id; S.view = "result"; render(); window.scrollTo(0, 0); }
       else if (act === "resultPdf") openResultPdf();
       else if (act === "back") { S.view = "list"; S.curId = null; render(); }
       else if (act === "askSubmit") { S.confirm = true; S.flash = ""; render(); window.scrollTo(0, document.body.scrollHeight); }
       else if (act === "cancelSubmit") { S.confirm = false; render(); }
       else if (act === "doSubmit") submit(false);
-      else if (act === "leave") { clearInterval(S.timer); saveDraft(); S.view = "list"; S.curId = null; S.flash = ""; render(); }
+
     });
     var onAns = function (ev) {
       var t = ev.target;
@@ -302,6 +363,16 @@
       if (on && !was && S.view !== "take") refreshSubs().then(function () { render(); paintAlert(); });
       was = on;
     }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  /* الخروج من المنصة أثناء الامتحان = تسليم تلقائي */
+  document.addEventListener("visibilitychange", function () { if (document.hidden) onLeave(); else checkLeft(); });
+  window.addEventListener("pagehide", onLeave);
+  window.addEventListener("online", checkLeft);
+  if (window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    window.addEventListener("blur", function () {
+      setTimeout(function () { if (!document.hasFocus() && !document.hidden) onLeave(); }, 400);
+    });
   }
 
   function init() {
