@@ -609,6 +609,19 @@
       cursor: pointer;
     }
 
+    /* ===== لوحة الصدارة (الرئيسية + الصفحة الكبيرة) ===== */
+    .ad-board-card { cursor: pointer; }
+    .ad-board-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .ad-board-head h3 { margin: 0; }
+    .ad-board-more { color: var(--brand-strong); font-weight: 800; font-size: 0.82rem; white-space: nowrap; }
+    .ad-board-card .dash-tabs, #lbTabs.dash-tabs { margin-bottom: 12px; }
+    .ad-board-card .dash-tab, #lbTabs .dash-tab { min-width: 92px; }
+    .ad-board-meta { color: var(--ink-soft); font-size: 0.85rem; font-weight: 700; margin: 0 0 10px; }
+    #lbBar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+    #lbBar .custom-select { flex: 0 1 260px; min-width: 190px; }
+    @media (max-width: 640px) { #lbBar .custom-select { flex: 1 1 100%; width: 100%; } }
+
+
     .ad-detail-head {
       display: flex;
       flex-wrap: wrap;
@@ -1329,6 +1342,28 @@
           </div>
         </section>
 
+
+        <!-- ===== لوحة الصدارة (صفحة كاملة) ===== -->
+        <section class="dash-panel" id="panel-leaderboard">
+          <button class="btn btn--ghost" id="lbBack" type="button" style="margin-bottom:14px">← رجوع للرئيسية</button>
+          <div id="lbBar">
+            <div id="lbTabs" class="dash-tabs" role="tablist" style="margin:0"></div>
+            <select id="lbGrade" aria-label="الصف الدراسي" data-enhance>
+              <option value="all">كل الصفوف</option>
+              <option value="prep1">الصف الأول الإعدادي</option>
+              <option value="prep2">الصف الثاني الإعدادي</option>
+              <option value="prep3">الصف الثالث الإعدادي</option>
+              <option value="secondary1">الصف الأول الثانوي</option>
+              <option value="secondary2">الصف الثاني الثانوي</option>
+              <option value="secondary3">الصف الثالث الثانوي</option>
+            </select>
+          </div>
+          <div class="dash-card">
+            <p class="ad-board-meta" id="lbMeta"></p>
+            <ul class="ad-list" id="lbList"></ul>
+          </div>
+        </section>
+
         <!-- ===== الطلاب ===== -->
         <section class="dash-panel" id="panel-students">
           <div id="studentsListView">
@@ -1757,7 +1792,7 @@
         { name: "رمادي أردوازي", c: { ink: "#1a1f26", brand: "#2f3b4a", accent: "#4f6a8a", accentSoft: "#b6c4d6", bg: "#f1f3f6", bgSoft: "#e0e5ec" } },
         { name: "تيل غامق", c: { ink: "#0b2a2a", brand: "#14524f", accent: "#1f8f86", accentSoft: "#9edcd5", bg: "#edf5f3", bgSoft: "#d9e8e4" } }
       ];
-      var PANEL_TITLES = { overview: "نظرة عامة", students: "الطلاب", announcements: "الإعلانات", honors: "الأوائل", exams: "الامتحانات", settings: "الإعدادات" };
+      var PANEL_TITLES = { overview: "نظرة عامة", students: "الطلاب", announcements: "الإعلانات", honors: "الأوائل", exams: "الامتحانات", leaderboard: "لوحة الصدارة", settings: "الإعدادات" };
 
       var $ = function (s, r) { return (r || document).querySelector(s); };
       var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -1796,6 +1831,7 @@
 
       /* ---------- الحالة ---------- */
       var S = { users: [], grades: {}, essays: null, loaded: false, current: null };
+      var B = { mode: "points", grade: "all", times: null, loading: false }; // لوحة الصدارة: النوع (نقاط/وقت) + الصف + وقت التعلّم من userData
 
       function students() { return S.users.filter(function (u) { return u && u.role !== "admin"; }); }
 
@@ -1890,8 +1926,81 @@
         var res = await Promise.all([SNAuth.fetchAllUsers(), SNAuth.fetchAllGrades().catch(function () { return {}; })]);
         S.users = res[0] || [];
         S.grades = res[1] || {};
-        if (force) S.udPromise = null;
+        if (force) { S.udPromise = null; B.times = null; }
         S.loaded = true;
+      }
+
+      /* ================= لوحة الصدارة ================= */
+      function boardSecs(u) {
+        return B.times && B.times[u.id] != null ? B.times[u.id] : num(u.learningSeconds);
+      }
+      function boardList(mode, grade, limit) {
+        var l = students().filter(function (u) { return grade === "all" || u.grade === grade; });
+        l.sort(function (a, b) {
+          return mode === "time"
+            ? (boardSecs(b) - boardSecs(a)) || (num(b.points) - num(a.points))
+            : (num(b.points) - num(a.points)) || (boardSecs(b) - boardSecs(a));
+        });
+        return limit ? l.slice(0, limit) : l;
+      }
+      function boardValue(u, mode) { return mode === "time" ? fmtDuration(boardSecs(u)) : num(u.points) + " نقطة"; }
+      function boardItems(list, mode, clickable) {
+        if (mode === "time" && !B.times) return "<li>جاري تحميل وقت الطلاب…</li>";
+        if (!list.length) return "<li>لسه مفيش طلاب</li>";
+        return list.map(function (u, i) {
+          return "<li" + (clickable ? ' data-open="' + esc(u.id) + '"' : "") + '><span class="ad-li-main"><span class="ad-li-name">' + (i + 1) + ". " + esc(u.fullName) +
+            '</span><small class="ad-li-sub">' + esc(gradeFull(u) || "—") + "</small></span><b>" + esc(boardValue(u, mode)) + "</b></li>";
+        }).join("");
+      }
+      function boardTabsInner() {
+        return [["points", "حسب النقاط"], ["time", "حسب الوقت"]].map(function (m) {
+          var on = B.mode === m[0];
+          return '<button type="button" class="dash-tab' + (on ? " is-active" : "") + '" role="tab" aria-selected="' + on + '" data-board-mode="' + m[0] + '">' + m[1] + "</button>";
+        }).join("");
+      }
+      function boardTabsHtml() { return '<div class="dash-tabs" role="tablist">' + boardTabsInner() + "</div>"; }
+      function loadBoardTimes() {
+        if (B.times || B.loading) return;
+        B.loading = true;
+        if (!S.udPromise) S.udPromise = SNAuth.fetchAllUserData().catch(function (e) { S.udPromise = null; throw e; });
+        S.udPromise.then(function (ud) {
+          B.times = {};
+          Object.keys(ud || {}).forEach(function (id) { B.times[id] = num(ud[id] && ud[id].learningSeconds); });
+        }).catch(function () { B.times = {}; }).then(function () { B.loading = false; renderBoards(); });
+      }
+      function renderBoards() {
+        $$("[data-board-mode]").forEach(function (b) {
+          var on = b.dataset.boardMode === B.mode;
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-selected", on);
+        });
+        var a = $("#adBoardList");
+        if (a) a.innerHTML = boardItems(boardList(B.mode, "all", 5), B.mode, false);
+        var l = $("#lbList");
+        if (l) {
+          var all = boardList(B.mode, B.grade, 0);
+          l.innerHTML = boardItems(all, B.mode, true);
+          var meta = $("#lbMeta");
+          if (meta) meta.textContent = (B.mode === "time" ? "الترتيب حسب الوقت على المنصة" : "الترتيب حسب النقاط") + " — " + (B.grade === "all" ? "كل الصفوف" : GRADE_NAMES[B.grade]) + " (" + all.length + " طالب)";
+        }
+      }
+      function bindBoard() {
+        $("#lbTabs").innerHTML = boardTabsInner();
+        $("#lbBack").addEventListener("click", function () { showPanel("overview"); });
+        ["change", "input"].forEach(function (ev) {
+          $("#lbGrade").addEventListener(ev, function () { B.grade = this.value || "all"; renderBoards(); });
+        });
+        document.addEventListener("click", function (e) {
+          var m = e.target.closest("[data-board-mode]");
+          if (m) {
+            e.stopPropagation();
+            B.mode = m.dataset.boardMode;
+            if (B.mode === "time") loadBoardTimes();
+            renderBoards();
+            return;
+          }
+          if (e.target.closest("[data-board-open]")) showPanel("leaderboard");
+        });
       }
 
       /* ================= نظرة عامة ================= */
@@ -1941,9 +2050,12 @@
           '<div class="dash-card" id="adTrend" style="margin-bottom:18px"></div>' +
           '<div class="ad-grid-2">' +
           '<div class="dash-card"><h3>الطلاب حسب الصف</h3><div class="ad-bars">' + bars + "</div></div>" +
-          '<div class="dash-card"><h3>أعلى 5 طلاب نقاطًا</h3><ul class="ad-list">' + topHtml + "</ul></div>" +
+          '<div class="dash-card ad-board-card" id="adBoardCard" data-board-open title="افتح لوحة الصدارة كاملة"><div class="ad-board-head"><h3>لوحة الصدارة — أعلى 5 طلاب</h3><span class="ad-board-more">عرض الكل ←</span></div>' + boardTabsHtml() + '<ul class="ad-list" id="adBoardList"></ul></div>' +
           "</div>" +
           '<div class="dash-card"><h3>آخر المسجّلين</h3><ul class="ad-list">' + recentHtml + "</ul></div>";
+
+        renderBoards();
+        if (B.mode === "time") loadBoardTimes();
 
         // رسم حركة المنصة: درجات + نشاط + تسجيلات (كله من Firebase)
         if (window.SNChart) {
@@ -3379,8 +3491,10 @@
       var settingsLoaded = false;
       function showPanel(name) {
         $$(".dash-panel").forEach(function (p) { p.classList.toggle("is-active", p.id === "panel-" + name); });
-        $$(".dash-nav__link").forEach(function (b) { b.classList.toggle("is-active", b.dataset.panel === name); });
+        var navName = name === "leaderboard" ? "overview" : name;
+        $$(".dash-nav__link").forEach(function (b) { b.classList.toggle("is-active", b.dataset.panel === navName); });
         $("#adTitle").textContent = PANEL_TITLES[name] || "";
+        if (name === "leaderboard") { if (B.mode === "time") loadBoardTimes(); renderBoards(); window.scrollTo({ top: 0 }); }
         if (name === "settings") setOpen(null);
         closeSidebar();
         if (name === "students" && !$("#studentDetailView").hidden && !S.current) closeStudent();
@@ -3402,6 +3516,7 @@
         bindSettingsHub();
         bindAnnouncements();
         bindHonors();
+        bindBoard();
         if (window.SNExamsAdmin) SNExamsAdmin.setContext({
           getUsers: function () { return S.users || []; },
           toast: toast,
