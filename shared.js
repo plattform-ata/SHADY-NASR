@@ -703,6 +703,8 @@ function initAuthSteps() {
     // حساب اتعمل من جديد بنفس الإيميل؟ نمسح بيانات الحساب القديم المتبقية على الجهاز
     try { if (window.SNAuth && SNAuth.syncAccountGeneration) SNAuth.syncAccountGeneration(user, !!isNewAccount); } catch { /* ignore */ }
     localStorage.setItem("shadynasr-auth", "1");
+    // بصمة وقت تسجيل الدخول: بتخلّي بوابة كود الصف تطلب الكود في كل تسجيل دخول جديد
+    try { localStorage.setItem("shadynasr-login-at", String(Date.now())); } catch { /* ignore */ }
     localStorage.setItem(
       "shadynasr-current-user",
       JSON.stringify({ id: user.id, fullName: user.fullName, email: user.email, grade: user.grade, role: user.role || "student" })
