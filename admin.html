@@ -3235,6 +3235,20 @@
       /* ================= قفل المنصة ================= */
       var LOCK = { data: null };
       var LOCK_CODE_KEY = "shadynasr-lock-code";
+      /* الكود بيتخزّن كمان في adminSettings (مكان خاص بالأدمن) عشان يظهر على كل الأجهزة اللي الأدمن مسجّل عليها */
+      async function lockGetCode(lockId) {
+        var c = lockSavedCode(lockId);
+        if (c) return c;
+        try {
+          var st = await SNAuth.getAdminSettings();
+          var v = st && st.platformLockCode;
+          if (v && v.lockId === lockId && v.code) {
+            try { localStorage.setItem(LOCK_CODE_KEY, JSON.stringify({ lockId: lockId, code: v.code })); } catch (e) { }
+            return v.code;
+          }
+        } catch (e) { }
+        return "";
+      }
       function lockSavedCode(lockId) {
         try { var v = JSON.parse(localStorage.getItem(LOCK_CODE_KEY)); return v && v.lockId === lockId ? v.code : ""; } catch (e) { return ""; }
       }
@@ -3267,7 +3281,8 @@
         var left = Math.max(0, 30 - Math.floor((Date.now() - d.lockedAt) / 864e5));
         st.textContent = "آخر قفل اتنفّذ في " + new Date(d.lockedAt).toLocaleDateString("ar-EG") + ".";
         $("#lockStats").innerHTML = '<span class="lk-stat">دخلوا الكود: ' + ok + " / " + list.length + '</span><span class="lk-stat">فاضل ' + left + " يوم قبل المسح</span>";
-        var code = lockSavedCode(d.lockId), qr = $("#lockQr");
+        var code = await lockGetCode(d.lockId), qr = $("#lockQr");
+        LOCK.code = code;
         $("#lockCodeShow").textContent = code || "";
         $("#lockPrint").hidden = !code;
         qr.hidden = !code;
@@ -3316,6 +3331,8 @@
           try {
             var lock = await SNAuth.activatePlatformLock(code);
             try { localStorage.setItem(LOCK_CODE_KEY, JSON.stringify({ lockId: lock.lockId, code: code })); } catch (e) { }
+            try { await SNAuth.saveAdminSettings({ platformLockCode: { lockId: lock.lockId, code: code } }); }
+            catch (e) { toast("القفل اتنفّذ، بس تعذر حفظ الكود لباقي أجهزتك — راجع صلاحيات adminSettings.", true); }
             codeEl.value = "";
             LOCK.data = lock; renderLock();
             toast("تم قفل المنصة");
@@ -3326,7 +3343,7 @@
           }
         });
         $("#lockPrint").addEventListener("click", function () {
-          var d = LOCK.data, code = d && lockSavedCode(d.lockId);
+          var d = LOCK.data, code = d && LOCK.code;
           if (!code) return;
           var svg = $("#lockQr").innerHTML;
           var w = window.open("", "_blank");
