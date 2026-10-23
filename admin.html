@@ -3347,29 +3347,20 @@
           if (!code) return;
           var svg = $("#lockQr").innerHTML;
           var base = function (f) { return new URL(f, location.href).href; };
-          var step = function (n, t) { return "<div class='st'><b>" + n + "</b><span>" + t + "</span></div>"; };
+          /* كارت صغير للتوزيع على الطلاب: صورة الأستاذ + اللوجو + QR + الكود بس، 4 كروت في الصفحة للقص */
+          var one = "<div class='card'><div class='ph'><div class='photo'></div><div class='logo'></div></div>" +
+            "<div class='qr'>" + svg + "</div><div class='code'>" + esc(code) + "</div></div>";
           var html = "<!doctype html><html lang='ar' dir='rtl'><head><meta charset='utf-8'><title>كود دخول المنصة</title><style>" +
-            "*{box-sizing:border-box}body{font-family:Tajawal,Cairo,'Segoe UI',Tahoma,sans-serif;margin:0;color:#173b47;background:#fff}" +
-            ".card{margin:26px auto 0;border-radius:40px;overflow:hidden;border:4px solid #35a2b8;background:#fff}" +
-            ".top{height:200px;background:linear-gradient(135deg,#35a2b8 0%,#4a7fc4 55%,#5b2a9a 100%);display:flex;align-items:center;justify-content:center;gap:22px;padding:0 36px;color:#fff}" +
-            ".logo{width:104px;height:104px;border-radius:50%;border:5px solid #fff;background:#fff url(" + base("favicon.png") + ") center/cover no-repeat;flex:none}" +
-            ".brand b{display:block;font-size:34px;font-weight:800;line-height:1.3}.brand span{font-size:19px;opacity:.92}" +
-            ".photo{width:184px;height:184px;border-radius:50%;border:7px solid #fff;margin:-92px auto 0;background:#5b2a9a url(" + base("shady-nasr.jpg") + ") center top/cover no-repeat;position:relative}" +
-            "h1{margin:16px 0 4px;text-align:center;font-size:38px;font-weight:800;color:#1d5f70}" +
-            ".sub{text-align:center;font-size:19px;color:#4b6670;margin:0 0 22px}" +
-            ".qr{width:318px;margin:0 auto;background:#fff;border:3px solid #35a2b8;border-radius:28px;padding:20px}.qr svg{display:block;width:272px;height:272px}" +
-            ".code{width:max-content;margin:24px auto 0;direction:ltr;background:#f1eafa;color:#5b2a9a;border-radius:20px;padding:10px 30px;font-size:46px;font-weight:800;letter-spacing:12px}" +
-            ".steps{display:flex;gap:12px;margin:28px 34px 0}.st{flex:1;background:#eaf6f9;border-radius:18px;padding:12px 10px;text-align:center;font-size:16px;font-weight:700;color:#1d5f70}" +
-            ".st b{display:block;width:30px;height:30px;line-height:30px;margin:0 auto 6px;border-radius:50%;background:#35a2b8;color:#fff;font-size:16px}" +
-            ".foot{margin-top:28px;padding:16px;text-align:center;font-size:16px;color:#fff;background:linear-gradient(135deg,#35a2b8,#5b2a9a)}" +
-            "</style></head><body><div class='card'>" +
-            "<div class='top'><div class='logo'></div><div class='brand'><b>Mr. Shady Nasr</b><span>English Platform</span></div></div>" +
-            "<div class='photo'></div>" +
-            "<h1>كود دخول المنصة</h1><p class='sub'>امسح الـ QR بالكاميرا أو اكتب الكود المكوّن من 10 أرقام</p>" +
-            "<div class='qr'>" + svg + "</div><div class='code'>" + esc(code) + "</div>" +
-            "<div class='steps'>" + step("1", "افتح المنصة وسجّل دخولك") + step("2", "هتظهرلك صفحة القفل") + step("3", "اكتب الكود أو امسح الـ QR") + "</div>" +
-            "<div class='foot'>الكود ده خاص بطلاب المنصة فقط</div></div></body></html>";
-          if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كود دخول المنصة", filename: "platform-code.pdf" });
+            "*{box-sizing:border-box}body{font-family:Tajawal,Cairo,'Segoe UI',Tahoma,sans-serif;margin:0;background:#fff}" +
+            ".grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:6px}" +
+            ".card{height:490px;border-radius:28px;background:linear-gradient(160deg,#35a2b8 0%,#4a7fc4 52%,#5b2a9a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;outline:2px dashed #b9b9b9;outline-offset:6px}" +
+            ".ph{position:relative;width:132px;height:132px}" +
+            ".photo{width:132px;height:132px;border-radius:50%;border:5px solid #fff;background:#5b2a9a url(" + base("shady-nasr.jpg") + ") center top/cover no-repeat}" +
+            ".logo{position:absolute;right:-18px;bottom:-6px;width:62px;height:62px;border-radius:50%;border:4px solid #fff;background:#fff url(" + base("favicon.png") + ") center/cover no-repeat}" +
+            ".qr{background:#fff;border-radius:22px;padding:14px;margin-top:6px}.qr svg{display:block;width:212px;height:212px}" +
+            ".code{direction:ltr;background:#fff;color:#5b2a9a;border-radius:16px;padding:8px 18px;font-size:30px;font-weight:800;letter-spacing:5px}" +
+            "</style></head><body><div class='grid'>" + one + one + one + one + "</div></body></html>";
+          if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت كود دخول المنصة", filename: "platform-code-cards.pdf" });
           else toast("عارض الملفات مش متاح", true);
         });
       }
