@@ -1540,6 +1540,12 @@
                     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                     <circle cx="12" cy="16" r="1" />
                   </svg></span><strong>قفل المنصة</strong><small>كود 10 أرقام أو QR لدخول الطلاب</small></button>
+              <button type="button" class="set-tile" data-set-open="gradecodes"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M3 9l9-5 9 5-9 5-9-5Z" />
+                    <path d="M7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5" />
+                  </svg></span><strong>أكواد الصفوف</strong><small>كود دخول لكل صف دراسي</small></button>
             </div>
           </div>
 
@@ -1621,6 +1627,40 @@
                   </div>
                   <p class="form-error" id="lockErr" hidden></p>
                   <button class="btn btn--accent lk-go" type="button" id="lockBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="lockBtnTxt">قفل المنصة</span></button>
+                </div>
+              </div>
+
+              <div class="dash-card set-card" data-set-card="gradecodes" hidden>
+                <style>
+                  .gc-list{display:grid;gap:12px;margin-top:14px}
+                  .gc-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(0,1.4fr) auto auto;gap:10px;align-items:center;border:1px solid var(--surface-glass-border);border-radius:16px;padding:10px 14px}
+                  .gc-row__name{font-weight:800}
+                  .gc-row input{min-width:0;width:100%;box-sizing:border-box;text-align:center;direction:ltr;text-transform:uppercase;letter-spacing:.25em;font-size:1.1rem;font-weight:800;padding:11px 8px}
+                  .gc-ico{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);display:grid;place-items:center;cursor:pointer;padding:0}
+                  .gc-ico:hover,.gc-ico:focus-visible{background:var(--accent);color:#fff;outline:none}
+                  .gc-ico svg{width:22px;height:22px}
+                  .gc-ico--x{border-color:var(--surface-glass-border);color:inherit;opacity:.75}
+                  .gc-exp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+                  .gc-exp .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+                  .gc-exp svg{width:18px;height:18px}
+                  @media(max-width:560px){.gc-row{grid-template-columns:1fr auto auto}.gc-row__name{grid-column:1/-1}.gc-exp{grid-template-columns:1fr}}
+                </style>
+                <div class="lk-head">
+                  <span class="lk-head__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5Z"/><path d="M7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5"/></svg></span>
+                  <div class="lk-head__txt"><h3>أكواد الصفوف الدراسية</h3></div>
+                </div>
+                <p class="ad-note">كل صف ليه كود (4 إلى 12 حرف إنجليزي أو رقم). الطالب لازم يكتب كود صفه المسجّل بيه في كل مرة يسجّل دخول، أو يعمل حساب جديد، أو يضيف/يبدّل حساب، وكمان لو المنصة مقفولة. سيب خانة الصف فاضية لو مش عايز كود على الصف ده. الأكواد بتتحفظ مشفّرة للطلاب وبتظهر ليك إنت بس هنا.</p>
+                <div class="gc-list" id="gcList"></div>
+                <p class="form-error" id="gcErr" hidden></p>
+                <button class="btn btn--accent lk-go" type="button" id="gcSave"><span>حفظ الأكواد</span></button>
+
+                <div class="lk-sec">
+                  <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>تصدير كل الأكواد</h4>
+                  <p class="lk-hint" style="margin:0 0 12px">كروت منظّمة بنفس شكل كروت قفل المنصة، كارت لكل صف (بيطلع اللي اتحفظ بس).</p>
+                  <div class="gc-exp">
+                    <button class="btn btn--ghost" type="button" id="gcPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>تصدير PDF</button>
+                    <button class="btn btn--ghost" type="button" id="gcImg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg>تصدير صورة</button>
+                  </div>
                 </div>
               </div>
 
@@ -1746,6 +1786,7 @@
   <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
   <script defer src="exams-admin.js?v=20261118"></script>
+  <script defer src="grade-access.js?v=20261124"></script>
   <script defer src="progress-chart.js?v=20261115"></script>
   <script>
     (function () {
@@ -3291,6 +3332,7 @@
         $("#setBack").addEventListener("click", function () { setOpen(null); });
         bindPromotion();
         bindLock();
+        bindGradeCodes();
       }
 
       /* ================= ترقية الطلاب لنهاية العام ================= */
@@ -3476,6 +3518,152 @@
           else toast("عارض الملفات مش متاح", true);
         });
       }
+      /* ================= أكواد الصفوف الدراسية ================= */
+      var GC = { saved: {} };
+      var GC_ICO_DICE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg>';
+      var GC_ICO_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+      function gcGrades() { return window.SNGradeAccess ? SNGradeAccess.GRADES : []; }
+      function gcRender() {
+        var box = $("#gcList"); if (!box) return;
+        box.innerHTML = gcGrades().map(function (g) {
+          return "<div class='gc-row' data-g='" + g + "'><span class='gc-row__name'>" + esc(GRADE_NAMES[g] || g) + "</span>" +
+            "<input type='text' maxlength='12' dir='ltr' autocomplete='off' spellcheck='false' placeholder='بدون كود' data-gc-input='" + g + "' value='" + esc(GC.saved[g] || "") + "' />" +
+            "<button type='button' class='gc-ico' data-gc-gen='" + g + "' title='توليد كود عشوائي' aria-label='توليد كود عشوائي'>" + GC_ICO_DICE + "</button>" +
+            "<button type='button' class='gc-ico gc-ico--x' data-gc-clear='" + g + "' title='مسح الكود' aria-label='مسح الكود'>" + GC_ICO_X + "</button></div>";
+        }).join("");
+      }
+      function gcInputs() {
+        var o = {};
+        $$("[data-gc-input]").forEach(function (i) { o[i.dataset.gcInput] = SNGradeAccess.normalize(i.value); });
+        return o;
+      }
+      async function gcLoad() {
+        if (!window.SNGradeAccess) { toast("ملف أكواد الصفوف مش متحمّل", true); return; }
+        try { GC.saved = await SNGradeAccess.loadAdmin(); } catch (e) { GC.saved = {}; toast("تعذر تحميل الأكواد المحفوظة", true); }
+        gcRender();
+      }
+      function gcSavedItems() {
+        return gcGrades().filter(function (g) { return GC.saved[g]; }).map(function (g) { return { grade: g, name: GRADE_NAMES[g] || g, code: GC.saved[g] }; });
+      }
+      function gcExportPdf() {
+        var items = gcSavedItems();
+        if (!items.length) { toast("احفظ كود واحد على الأقل الأول", true); return; }
+        var base = function (f) { return new URL(f, location.href).href; };
+        var cards = items.map(function (it) {
+          return "<div class='card'><div class='ph'><div class='photo'></div><div class='logo'></div></div>" +
+            "<div class='gname'>" + esc(it.name) + "</div><div class='lbl'>كود الدخول</div><div class='code'>" + esc(it.code) + "</div></div>";
+        }).join("");
+        var html = "<!doctype html><html lang='ar' dir='rtl'><head><meta charset='utf-8'><title>أكواد الصفوف الدراسية</title><style>" +
+          "*{box-sizing:border-box}body{font-family:Tajawal,Cairo,'Segoe UI',Tahoma,sans-serif;margin:0;background:#fff}" +
+          ".grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:6px}" +
+          ".card{height:318px;border-radius:26px;background:linear-gradient(160deg,#35a2b8 0%,#4a7fc4 52%,#5b2a9a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;outline:2px dashed #b9b9b9;outline-offset:6px;break-inside:avoid;page-break-inside:avoid}" +
+          ".ph{position:relative;width:96px;height:96px}" +
+          ".photo{width:96px;height:96px;border-radius:50%;border:4px solid #fff;background:#5b2a9a url(" + base("shady-nasr.jpg") + ") center top/cover no-repeat}" +
+          ".logo{position:absolute;right:-14px;bottom:-4px;width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:#fff url(" + base("favicon.png") + ") center/cover no-repeat}" +
+          ".gname{color:#fff;font-size:22px;font-weight:800;text-align:center;margin-top:4px}" +
+          ".lbl{color:rgba(255,255,255,.85);font-size:13px;font-weight:700}" +
+          ".code{direction:ltr;background:#fff;color:#5b2a9a;border-radius:16px;padding:8px 18px;font-size:30px;font-weight:800;letter-spacing:5px}" +
+          "</style></head><body><div class='grid'>" + cards + "</div></body></html>";
+        if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت أكواد الصفوف الدراسية", filename: "grade-code-cards.pdf" });
+        else toast("عارض الملفات مش متاح", true);
+      }
+      async function gcExportImage() {
+        var items = gcSavedItems();
+        if (!items.length) { toast("احفظ كود واحد على الأقل الأول", true); return; }
+        var loadImg = function (src) { return new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; }); };
+        try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load("800 40px Cairo"), document.fonts.load("800 40px Tajawal")]); } catch (e) { }
+        var photo = await loadImg("shady-nasr.jpg"), logo = await loadImg("favicon.png");
+        var W = 1240, H = 1754, pad = 60, gap = 44, cols = 2, rows = 3;
+        var cw = (W - pad * 2 - gap) / cols, ch = (H - pad * 2 - gap * (rows - 1)) / rows;
+        var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+        var c = cv.getContext("2d");
+        c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+        function rr(x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+        function circleImg(im, cx, cy, r, bg) {
+          c.save(); c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.closePath(); c.fillStyle = bg; c.fill(); c.clip();
+          if (im) { var s = Math.max(2 * r / im.width, 2 * r / im.height); var w = im.width * s, h = im.height * s; c.drawImage(im, cx - w / 2, cy - r, w, h); }
+          c.restore();
+          c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.lineWidth = 7; c.strokeStyle = "#fff"; c.stroke();
+        }
+        function spaced(txt, cx, y, sp) {
+          var chars = txt.split(""), widths = chars.map(function (ch2) { return c.measureText(ch2).width; });
+          var total = widths.reduce(function (a, b) { return a + b; }, 0) + sp * (chars.length - 1), x = cx - total / 2;
+          c.textAlign = "left";
+          chars.forEach(function (ch2, i) { c.fillText(ch2, x, y); x += widths[i] + sp; });
+        }
+        items.slice(0, cols * rows).forEach(function (it, i) {
+          var x = pad + (i % cols) * (cw + gap), y = pad + Math.floor(i / cols) * (ch + gap), cx = x + cw / 2;
+          var g = c.createLinearGradient(x, y, x + cw * 0.5, y + ch);
+          g.addColorStop(0, "#35a2b8"); g.addColorStop(0.52, "#4a7fc4"); g.addColorStop(1, "#5b2a9a");
+          rr(x, y, cw, ch, 44); c.fillStyle = g; c.fill();
+          c.save(); c.setLineDash([14, 10]); c.strokeStyle = "#b9b9b9"; c.lineWidth = 3; rr(x - 10, y - 10, cw + 20, ch + 20, 52); c.stroke(); c.restore();
+          var py = y + 100;
+          circleImg(photo, cx, py, 62, "#5b2a9a");
+          circleImg(logo, cx + 62, py + 52, 28, "#fff");
+          c.fillStyle = "#fff"; c.textAlign = "center"; c.direction = "rtl";
+          c.font = "800 36px Cairo, Tajawal, sans-serif"; c.fillText(it.name, cx, py + 128);
+          c.fillStyle = "rgba(255,255,255,.85)"; c.font = "700 22px Cairo, Tajawal, sans-serif"; c.fillText("كود الدخول", cx, py + 164);
+          c.direction = "ltr";
+          c.font = "800 46px Cairo, Tajawal, sans-serif";
+          var tw = it.code.split("").reduce(function (a, ch2) { return a + c.measureText(ch2).width + 9; }, -9), bw = tw + 64, bh = 78, by = py + 186;
+          rr(cx - bw / 2, by, bw, bh, 22); c.fillStyle = "#fff"; c.fill();
+          c.fillStyle = "#5b2a9a"; c.textBaseline = "middle"; spaced(it.code, cx, by + bh / 2 + 2, 9); c.textBaseline = "alphabetic";
+        });
+        cv.toBlob(function (blob) {
+          if (!blob) { toast("تعذر إنشاء الصورة", true); return; }
+          var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "grade-code-cards.png";
+          document.body.appendChild(a); a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+        }, "image/png");
+      }
+      function bindGradeCodes() {
+        var list = $("#gcList"), save = $("#gcSave"), err = $("#gcErr");
+        if (!list || !save) return;
+        $$("[data-set-open='gradecodes']").forEach(function (b) { b.addEventListener("click", gcLoad); });
+        list.addEventListener("input", function (e) {
+          var i = e.target.closest("[data-gc-input]"); if (!i) return;
+          i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); setErr(err, "");
+        });
+        list.addEventListener("click", function (e) {
+          var gen = e.target.closest("[data-gc-gen]"), clr = e.target.closest("[data-gc-clear]");
+          if (gen) { list.querySelector("[data-gc-input='" + gen.dataset.gcGen + "']").value = SNGradeAccess.randomCode(); setErr(err, ""); }
+          if (clr) { list.querySelector("[data-gc-input='" + clr.dataset.gcClear + "']").value = ""; setErr(err, ""); }
+        });
+        save.addEventListener("click", async function () {
+          setErr(err, "");
+          if (!window.SNGradeAccess) { setErr(err, "ملف أكواد الصفوف مش متحمّل."); return; }
+          var vals = gcInputs(), seen = {};
+          for (var i = 0; i < SNGradeAccess.GRADES.length; i++) {
+            var g = SNGradeAccess.GRADES[i], v = vals[g];
+            if (!v) continue;
+            if (!SNGradeAccess.isValid(v)) { setErr(err, "كود " + (GRADE_NAMES[g] || g) + " لازم يكون من 4 إلى 12 حرف إنجليزي أو رقم."); return; }
+            if (seen[v]) { setErr(err, "الكود ده مكرر بين " + (GRADE_NAMES[seen[v]] || seen[v]) + " و" + (GRADE_NAMES[g] || g) + " — اختار لكل صف كود مختلف."); return; }
+            seen[v] = g;
+          }
+          var ok = await window.snDialog.confirm({ title: "حفظ أكواد الصفوف", message: "هيتم حفظ الأكواد دي. أي طالب هيسجّل دخول بعد كده هيحتاج كود صفه، وأي صف سايبه فاضي هيدخل من غير كود. تحفظ؟", confirmText: "احفظ", cancelText: "إلغاء" });
+          if (!ok) return;
+          save.disabled = true;
+          try {
+            GC.saved = await SNGradeAccess.saveAll(vals);
+            gcRender();
+            toast("تم حفظ أكواد الصفوف");
+          } catch (e) {
+            console.error(e);
+            setErr(err, String(e && e.message).indexOf("INVALID:") === 0 ? "في كود مش مطابق للشروط." : "تعذر الحفظ — راجع صلاحيات Firebase لمسار gradeAccessCodes وحاول تاني.");
+          } finally { save.disabled = false; }
+        });
+        $("#gcPdf").addEventListener("click", function () {
+          var cur = gcInputs(), dirty = gcGrades().some(function (g) { return (cur[g] || "") !== (GC.saved[g] || ""); });
+          if (dirty) { toast("في تعديلات لسه ما اتحفظتش — احفظ الأول", true); return; }
+          gcExportPdf();
+        });
+        $("#gcImg").addEventListener("click", function () {
+          var cur = gcInputs(), dirty = gcGrades().some(function (g) { return (cur[g] || "") !== (GC.saved[g] || ""); });
+          if (dirty) { toast("في تعديلات لسه ما اتحفظتش — احفظ الأول", true); return; }
+          gcExportImage();
+        });
+      }
+
       /* مسح الطلاب اللي عدّى عليهم 30 يوم من غير ما يدخلوا كود القفل */
       async function runLockSweep() {
         try {
