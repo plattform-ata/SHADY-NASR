@@ -58,6 +58,10 @@
       "background:var(--accent,#c8902e);color:#fff}" +
       "#snLockScreen .lk__btn:disabled{opacity:.5;cursor:not-allowed}" +
       "#snLockScreen .lk__btn--ghost{background:transparent;color:inherit;border:1.5px solid var(--surface-glass-border,rgba(0,0,0,.25))}" +
+      "#snLockScreen .lk__row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}" +
+      "#snLockScreen .lk__opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:16px;border:1.5px solid var(--surface-glass-border,rgba(0,0,0,.25));background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}" +
+      "#snLockScreen .lk__opt:hover,#snLockScreen .lk__opt:focus-visible{border-color:var(--accent,#c8902e);outline:none}" +
+      "#snLockScreen .lk__opt svg{width:28px;height:28px;color:var(--accent,#c8902e)}" +
       "#snLockScreen .lk__or{margin:14px 0 2px;opacity:.6;font-size:.85rem}" +
       "#snLockScreen .lk__cam{display:none;margin-top:12px;border-radius:14px;overflow:hidden;background:#000;position:relative}" +
       "#snLockScreen .lk__cam.is-on{display:block}" +
@@ -89,9 +93,9 @@
       "<p>اكتب كود الدخول المكوّن من 10 أرقام اللي إدارة المنصة إدّتهولك، أو افتح الكاميرا وامسح الـ QR.</p>" +
       '<input class="lk__code" id="snLockCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" placeholder="••••••••••" aria-label="كود الدخول" />' +
       '<button class="lk__btn" id="snLockGo" type="button" disabled>دخول</button>' +
-      '<div class="lk__or">أو</div>' +
-      '<button class="lk__btn lk__btn--ghost" id="snLockScan" type="button">فتح الكاميرا لمسح QR</button>' +
-      '<button class="lk__btn lk__btn--ghost" id="snLockPick" type="button">اختيار صورة QR من المعرض</button>' +
+      '<div class="lk__or">أو امسح الـ QR</div>' +
+      '<div class="lk__row"><button class="lk__opt" id="snLockScan" type="button">' + ICON.cam + "<span>الكاميرا</span></button>" +
+      '<button class="lk__opt" id="snLockPick" type="button">' + ICON.img + "<span>من المعرض</span></button></div>" +
       '<input type="file" id="snLockFile" accept="image/*" hidden />' +
       '<div class="lk__cam" id="snLockCam"><video id="snLockVideo" playsinline muted></video></div>' +
       '<p class="lk__err" id="snLockErr" role="alert"></p>' +
@@ -377,7 +381,7 @@
     const video = $("#snLockVideo");
     video.srcObject = stream;
     $("#snLockCam").classList.add("is-on");
-    $("#snLockScan").textContent = "إغلاق الكاميرا";
+    $("#snLockScan").querySelector("span").textContent = "إغلاق الكاميرا";
     try { await video.play(); } catch (e) { /* ignore */ }
     scanning = true;
 
@@ -435,7 +439,7 @@
       const cam = $("#snLockCam");
       const btn = $("#snLockScan");
       if (cam) cam.classList.remove("is-on");
-      if (btn) btn.textContent = "فتح الكاميرا لمسح QR";
+      if (btn) btn.querySelector("span").textContent = "الكاميرا";
     }
   }
 
