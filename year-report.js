@@ -160,11 +160,18 @@
     document.querySelectorAll("[data-yf-label]").forEach(function (el) { el.textContent = t("ملفات الأعوام الدراسية", "School-year files"); });
     var box = $("#yfList"); if (!box) return;
     var s = seenList();
+    var cur = '<article class="yf-card"><h3>' + esc(t("ملفي الحالي", "My current file")) + "</h3>" +
+      '<p class="yf-card__sub">' + esc(t("درجاتك وملاحظات الأستاذ وإحصائياتك لحد دلوقتي — بيتحدّث كل مرة تفتحه", "Your grades, teacher notes and stats so far — refreshed each time you open it")) + "</p>" +
+      '<div class="yf-files">' +
+      fileBtn("cur", "grades", ICON_DOC, t("ملف الدرجات", "Grades file")) +
+      fileBtn("cur", "notes", ICON_NOTE, t("ملف الملاحظات", "Notes file")) +
+      fileBtn("cur", "charts", ICON_CHART, t("ملف الرسوم البيانية", "Charts file")) +
+      "</div></article>";
     if (!reports.length) {
-      box.innerHTML = '<div class="yf-empty">' + esc(t("لسه مفيش ملفات أعوام دراسية. هتظهر هنا لما ينتهي العام الدراسي.", "No school-year files yet. They will appear here when the year ends.")) + "</div>";
+      box.innerHTML = cur + '<div class="yf-empty">' + esc(t("لسه مفيش ملفات أعوام دراسية. هتظهر هنا لما ينتهي العام الدراسي.", "No school-year files yet. They will appear here when the year ends.")) + "</div>";
       return;
     }
-    box.innerHTML = reports.map(function (r, i) {
+    box.innerHTML = cur + reports.map(function (r, i) {
       var isNew = s.indexOf(r.key) < 0;
       var gl = gname(r.gradeFrom);
       var gradesCount = countEntries(r.grades), notesCount = (r.notes || []).length;
@@ -396,7 +403,7 @@
     var C = colors();
     var titles = { grades: t("ملف الدرجات", "Grades file"), notes: t("ملف الملاحظات", "Notes file"), charts: t("ملف الرسوم البيانية", "Charts file") };
     var blocks = kind === "grades" ? buildGrades(r, C) : kind === "notes" ? buildNotes(r, C) : buildCharts(r, C);
-    var student = (me.fullName || "");
+    var student = (r.studentName || me.fullName || "");
     var family = getComputedStyle(document.body).fontFamily;
     var rtl = !isEn();
 
@@ -433,7 +440,7 @@
         if (i) doc.addPage();
         doc.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, 210, 297);
       }
-      var fname = kind + "-" + String(r.label).replace("/", "-") + ".pdf";
+      var fname = kind + "-" + String(r.label).replace("/", "-") + "-" + String(me.id).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 12) + ".pdf";
       if (window.SNPdf) await window.SNPdf.open({ blob: doc.output("blob"), title: titles[kind] + " — " + r.label, filename: fname, mime: "application/pdf" });
       else doc.save(fname);
     } finally { host.remove(); }
@@ -444,11 +451,16 @@
     var list = $("#yfList"); if (!list) return;
     list.addEventListener("click", async function (e) {
       var b = e.target.closest(".yf-file"); if (!b || b.disabled) return;
-      var r = reports[Number(b.dataset.i)]; if (!r) return;
+      var isCur = b.dataset.i === "cur";
+      var r = isCur ? null : reports[Number(b.dataset.i)];
+      if (!isCur && !r) return;
       b.disabled = true;
       var small = b.querySelector("small"), old = small ? small.textContent : "";
       if (small) small.textContent = t("جاري التجهيز…", "Preparing…");
-      try { await makePdf(r, b.dataset.kind); if (small) small.textContent = old; }
+      try {
+        if (isCur) { r = await SNAuth.fetchStudentSnapshot(me.id); r.studentName = r.studentName || me.fullName || ""; }
+        await makePdf(r, b.dataset.kind); if (small) small.textContent = old;
+      }
       catch (err) {
         console.error(err);
         if (small) small.textContent = t("تعذر التجهيز — اتأكد من النت وحاول تاني", "Failed — check your connection and retry");
@@ -470,7 +482,7 @@
     ensureUi(); bindPanel(); renderPanel();
     whenAuth(function () {
       Promise.resolve(SNAuth.fetchYearReports(me.id)).then(function (list) {
-        reports = Array.isArray(list) ? list : [];
+        reports = (Array.isArray(list) ? list : []).filter(function (r) { return r && (!r.uid || r.uid === me.id); });
         renderPanel(); refreshNotify(); showModalOnce();
       }).catch(function () { });
     });
