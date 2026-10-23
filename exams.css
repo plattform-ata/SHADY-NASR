@@ -165,3 +165,7 @@
 
 .exm-field[hidden] { display: none; }
 .exm-sec__head { margin: 6px 0 0; }
+
+/* ---------- تحذير قبل بدء الامتحان ---------- */
+.exm-warn { border-color: #e5484d; box-shadow: 0 0 0 1px #e5484d inset; }
+.exm-warn__list { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; line-height: 1.7; }
