@@ -1173,33 +1173,6 @@
       }
     }
   </style>
-<style id="lockCardStyle">
-  .lk-card { display: flex; flex-direction: column; gap: 18px; }
-  .lk-head { display: flex; align-items: center; gap: 12px; }
-  .lk-head h3 { margin: 0; font-size: 1.15rem; }
-  .lk-head__ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: var(--accent); color: var(--accent-ink); }
-  .lk-head__ico svg { width: 24px; height: 24px; }
-  .lk-state { display: block; margin-top: 2px; font-size: .85rem; font-weight: 700; color: var(--ink-soft); }
-  .lk-state.is-on { color: #1f8a57; }
-  .lk-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .lk-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: rgba(127, 127, 127, .1); }
-  .lk-stat strong { font-size: 1.6rem; line-height: 1.2; }
-  .lk-stat span { font-size: .8rem; font-weight: 700; color: var(--ink-soft); }
-  .lk-form { display: flex; flex-direction: column; gap: 10px; }
-  .lk-form label { font-size: .88rem; font-weight: 700; color: var(--ink-soft); }
-  .lk-input { display: flex; gap: 8px; }
-  .lk-input input { flex: 1; min-width: 0; box-sizing: border-box; text-align: center; letter-spacing: .3em; font-size: 1.35rem; font-weight: 800; padding: 12px 10px; border-radius: 14px; border: 1px solid var(--surface-glass-border); background: transparent; color: var(--ink); font-family: inherit; }
-  .lk-input input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .lk-dice { flex: none; width: 52px; border-radius: 14px; border: 1px solid var(--surface-glass-border); background: transparent; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .lk-dice:hover { border-color: var(--accent); color: var(--accent); }
-  .lk-dice svg { width: 24px; height: 24px; }
-  .lk-go { width: 100%; padding: 13px; font-size: 1rem; }
-  .lk-qr { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px; border-radius: 18px; border: 1px dashed var(--surface-glass-border); }
-  .lk-qr__box { width: min(220px, 100%); background: #fff; padding: 8px; border-radius: 14px; box-sizing: border-box; }
-  .lk-qr__box svg { display: block; width: 100%; height: auto; }
-  .lk-qr__code { font-size: 1.5rem; font-weight: 800; letter-spacing: .25em; text-align: center; }
-  .lk-qr__code.is-muted { font-size: .85rem; letter-spacing: 0; font-weight: 700; color: var(--ink-soft); }
-</style>
 </head>
 
 <body class="dash-body">
@@ -1244,7 +1217,6 @@
               <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a9 9 0 0 1 0 12" />
             </svg><span>الإعلانات</span></button></li>
         <li><button class="dash-nav__link" type="button" data-panel="honors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5" /><path d="M8.5 13.5 7 21l5-3 5 3-1.5-7.5" /></svg><span>الأوائل</span></button></li>
-        <li><button class="dash-nav__link" type="button" data-panel="leaderboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg><span>لوحة الصدارة</span></button></li>
         <li><button class="dash-nav__link" type="button" data-panel="exams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M15 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>الامتحانات</span></button></li>
         <li><button class="dash-nav__link" type="button" data-panel="settings"><svg viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1434,6 +1406,9 @@
                 <div class="form-field"><label for="anTarget">يظهر لـ</label><select id="anTarget"
                     data-enhance></select></div>
               </div>
+              <div class="form-field"><label for="anFiles">مرفقات (صور أو PDF — حتى 4 ملفات)</label>
+                <input type="file" id="anFiles" accept="image/*,application/pdf" multiple />
+                <div id="anFilesList" style="margin-top:8px;display:grid;gap:6px"></div></div>
               <p class="form-error" id="anErr" hidden></p>
               <div class="ad-actions">
                 <button class="btn btn--accent" id="anSubmit" type="submit">نشر الإعلان</button>
@@ -1469,23 +1444,6 @@
 
         <!-- ===== الإعدادات ===== -->
         <!-- ============ الامتحانات: إنشاء • بناء • مراجعة وتصحيح • PDF ============ -->
-        <section class="dash-panel" id="panel-leaderboard">
-          <div class="dash-tabs lb-modes" id="adLbModes" role="tablist">
-            <button type="button" class="dash-tab is-active" data-mode="points" role="tab" aria-selected="true">لوحة النقاط</button>
-            <button type="button" class="dash-tab" data-mode="time" role="tab" aria-selected="false">لوحة الوقت</button>
-          </div>
-          <div class="dash-tabs lb-grades" id="adLbGrades" role="tablist">
-            <button type="button" class="dash-tab is-active" data-grade="">كل الصفوف</button>
-            <button type="button" class="dash-tab" data-grade="prep1">الصف الأول الإعدادي</button>
-            <button type="button" class="dash-tab" data-grade="prep2">الصف الثاني الإعدادي</button>
-            <button type="button" class="dash-tab" data-grade="prep3">الصف الثالث الإعدادي</button>
-            <button type="button" class="dash-tab" data-grade="secondary1">الصف الأول الثانوي</button>
-            <button type="button" class="dash-tab" data-grade="secondary2">الصف الثاني الثانوي</button>
-            <button type="button" class="dash-tab" data-grade="secondary3">الصف الثالث الثانوي</button>
-          </div>
-          <ol class="dash-leaderboard" id="adLbList"></ol>
-        </section>
-
         <section class="dash-panel" id="panel-exams">
           <div id="exmAdminRoot"></div>
         </section>
@@ -1547,7 +1505,6 @@
                     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                     <circle cx="12" cy="16" r="1" />
                   </svg></span><strong>قفل المنصة</strong><small>كود 10 أرقام أو QR لدخول الطلاب</small></button>
-              <button type="button" class="set-tile" data-set-open="gradeCodes"><span class="set-tile__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4" /><path d="m11 12 9-9M16 7l3 3M14 9l2 2" /></svg></span><strong>أكواد الصفوف</strong><small>كود لكل صف لإنشاء الحساب</small></button>
             </div>
           </div>
 
@@ -1567,42 +1524,68 @@
                 </form>
               </div>
 
-              <div class="dash-card set-card lk-card" data-set-card="lock" hidden>
+              <div class="dash-card set-card" data-set-card="lock" hidden>
+                <style>
+                  .lk-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+                  .lk-head__ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--accent);color:#fff;flex:none}
+                  .lk-head__ico svg{width:26px;height:26px}
+                  .lk-head h3{margin:0!important}
+                  .lk-head__txt{flex:1;min-width:0}
+                  .lk-chip{padding:6px 14px;border-radius:999px;font-weight:700;font-size:.85rem;border:1.5px solid var(--surface-glass-border);white-space:nowrap}
+                  .lk-chip.is-on{background:#c0392b;border-color:#c0392b;color:#fff}
+                  .lk-sec{border:1px solid var(--surface-glass-border);border-radius:18px;padding:18px;margin-top:16px}
+                  .lk-sec__title{margin:0 0 12px;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px}
+                  .lk-sec__title svg{width:20px;height:20px;color:var(--accent)}
+                  .lk-field{display:flex;align-items:stretch;gap:10px}
+                  .lk-field input{flex:1;min-width:0;text-align:center;letter-spacing:.3em;font-size:1.3rem;font-weight:800;padding:14px 10px}
+                  .lk-dice{width:56px;flex:none;border-radius:14px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
+                  .lk-dice:hover,.lk-dice:focus-visible{background:var(--accent);color:#fff;outline:none}
+                  .lk-dice:active{transform:rotate(90deg)}
+                  .lk-dice svg{width:28px;height:28px}
+                  .lk-hint{margin:8px 0 0;font-size:.85rem;opacity:.7}
+                  .lk-go{width:100%;margin-top:14px;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px}
+                  .lk-go svg{width:20px;height:20px}
+                  .lk-panel{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+                  .lk-qr{width:190px;background:#fff;padding:8px;border-radius:14px;border:1px solid var(--surface-glass-border)}
+                  .lk-qr svg{display:block;width:100%;height:auto}
+                  .lk-label{font-size:.85rem;opacity:.7;margin-bottom:4px}
+                  .lk-code{font-size:1.6rem;font-weight:800;letter-spacing:.22em;margin-bottom:12px;word-break:break-all}
+                  .lk-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+                  .lk-stat{padding:6px 12px;border-radius:12px;background:rgba(127,127,127,.12);font-size:.85rem;font-weight:700}
+                  .lk-print{display:inline-flex;align-items:center;gap:8px}
+                  .lk-print svg{width:18px;height:18px}
+                  @media(max-width:560px){.lk-panel{grid-template-columns:1fr;justify-items:center;text-align:center}.lk-head{flex-wrap:wrap}}
+                </style>
                 <div class="lk-head">
-                  <span class="lk-head__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /><circle cx="12" cy="16" r="1" /></svg></span>
-                  <div><h3>قفل المنصة</h3><span class="lk-state" id="lockStatus"></span></div>
+                  <span class="lk-head__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1"/></svg></span>
+                  <div class="lk-head__txt"><h3>قفل المنصة</h3></div>
+                  <span class="lk-chip" id="lockChip">المنصة مفتوحة</span>
                 </div>
-                <div class="lk-stats" id="lockStats" hidden>
-                  <div class="lk-stat"><strong id="lockStatIn">0</strong><span>دخلوا الكود</span></div>
-                  <div class="lk-stat"><strong id="lockStatOut">0</strong><span>لسه ما دخلوش</span></div>
+                <p class="ad-note">زرار القفل أمر بتنفّذه وقت ما تحب. بمجرد تنفيذه بتتقفل المنصة قدام كل الطلاب، حتى اللي فاتحينها دلوقتي، ومحدش بيدخل غير بالكود (10 أرقام) أو بمسح الـ QR. الطالب اللي يفضل 30 يوم من غير ما يدخل الكود حسابه وبياناته بيتمسحوا نهائيًا.</p>
+                <p class="ad-note" id="lockStatus"></p>
+
+                <div class="lk-sec" id="lockOn" hidden>
+                  <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/></svg>القفل الحالي</h4>
+                  <div class="lk-panel">
+                    <div class="lk-qr" id="lockQr"></div>
+                    <div>
+                      <div class="lk-label">كود الدخول</div>
+                      <div class="lk-code" id="lockCodeShow" dir="ltr"></div>
+                      <div class="lk-stats" id="lockStats"></div>
+                      <button class="btn btn--ghost lk-print" type="button" id="lockPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>طباعة الكود وQR</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="lk-form" id="lockFormOff">
-                  <label for="lockCode">كود الدخول (10 أرقام)</label>
-                  <div class="lk-input">
+
+                <div class="lk-sec" id="lockFormOff">
+                  <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.2-8.2M16 7l3 3M14 9l2 2"/></svg>كود القفل الجديد</h4>
+                  <label for="lockCode" class="lk-label">اكتب 10 أرقام أو دوس على النرد لتوليد كود عشوائي</label>
+                  <div class="lk-field">
                     <input type="text" id="lockCode" inputmode="numeric" maxlength="10" dir="ltr" autocomplete="off" placeholder="••••••••••" />
-                    <button class="lk-dice" type="button" id="lockGen" title="كود عشوائي" aria-label="كود عشوائي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3" /><circle cx="9" cy="9" r="1" /><circle cx="15" cy="9" r="1" /><circle cx="9" cy="15" r="1" /><circle cx="15" cy="15" r="1" /></svg></button>
+                    <button type="button" class="lk-dice" id="lockGen" aria-label="توليد كود عشوائي" title="توليد كود عشوائي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg></button>
                   </div>
                   <p class="form-error" id="lockErr" hidden></p>
-                  <button class="btn btn--accent lk-go" type="button" id="lockBtn" disabled>قفل المنصة</button>
-                </div>
-                <div class="lk-qr" id="lockOn" hidden>
-                  <div class="lk-qr__box" id="lockQr"></div>
-                  <div class="lk-qr__code" id="lockCodeShow" dir="ltr"></div>
-                  <button class="btn lk-print" type="button" id="lockPrint">طباعة الكود وQR</button>
-                </div>
-              </div>
-
-              <div class="dash-card set-card" data-set-card="gradeCodes" hidden>
-                <h3>أكواد الصفوف</h3>
-                <p class="ad-note">كل صف دراسي ليه كود (6 إلى 20 حرف أو رقم إنجليزي). الطالب لازم يكتب كود صفه عشان ينشئ حساب جديد. الصف اللي كوده فاضي التسجيل فيه مفتوح من غير كود. تغيير الكود بيأثر على الحسابات الجديدة بس، واللي مسجّلين بالفعل مش بيتأثروا.</p>
-                <div class="ad-form">
-                  <div id="gcList"></div>
-                  <p class="form-error" id="gcErr" hidden></p>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn btn--ghost" type="button" id="gcEdit">تعديل الأكواد</button>
-                    <button class="btn btn--accent" type="button" id="gcSave" hidden>حفظ الأكواد</button>
-                    <button class="btn btn--ghost" type="button" id="gcCancel" hidden>إلغاء</button>
-                  </div>
+                  <button class="btn btn--accent lk-go" type="button" id="lockBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="lockBtnTxt">قفل المنصة</span></button>
                 </div>
               </div>
 
@@ -1617,7 +1600,6 @@
                       <option value="delete">يتحذفوا نهائيًا من المنصة</option>
                     </select>
                   </div>
-                  <label class="bk-row" style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" id="promoDrop" /><span>مسح ملفات الأعوام الدراسية من Firebase وعدم حفظ ملف العام الجديد (بيوفّر مساحة، لكن الطلاب مش هيلاقوا ملفات الدرجات والملاحظات بعد كده)</span></label>
                   <div class="form-field">
                     <label for="promoWord">اكتب كلمة «ترقية» للتأكيد</label>
                     <input type="text" id="promoWord" autocomplete="off" />
@@ -1726,6 +1708,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="firebase.js?v=20261117"></script>
   <script defer src="shared.js?v=20261104"></script>
+  <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
   <script defer src="exams-admin.js?v=20261118"></script>
   <script defer src="progress-chart.js?v=20261115"></script>
@@ -1774,7 +1757,7 @@
         { name: "رمادي أردوازي", c: { ink: "#1a1f26", brand: "#2f3b4a", accent: "#4f6a8a", accentSoft: "#b6c4d6", bg: "#f1f3f6", bgSoft: "#e0e5ec" } },
         { name: "تيل غامق", c: { ink: "#0b2a2a", brand: "#14524f", accent: "#1f8f86", accentSoft: "#9edcd5", bg: "#edf5f3", bgSoft: "#d9e8e4" } }
       ];
-      var PANEL_TITLES = { overview: "نظرة عامة", students: "الطلاب", announcements: "الإعلانات", honors: "الأوائل", leaderboard: "لوحة الصدارة", exams: "الامتحانات", settings: "الإعدادات" };
+      var PANEL_TITLES = { overview: "نظرة عامة", students: "الطلاب", announcements: "الإعلانات", honors: "الأوائل", exams: "الامتحانات", settings: "الإعدادات" };
 
       var $ = function (s, r) { return (r || document).querySelector(s); };
       var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -1902,74 +1885,13 @@
       }
 
       /* ---------- تحميل ---------- */
-      /* نسخة محفوظة على جهاز الأدمن (من غير كلمات المرور) عشان اللوحة تفتح فورًا، وبعدها بتتحدّث من Firebase في الخلفية */
-      function coreIdb() {
-        return new Promise(function (res, rej) {
-          try {
-            var r = indexedDB.open("sn-admin-cache", 1);
-            r.onupgradeneeded = function () { r.result.createObjectStore("kv"); };
-            r.onsuccess = function () { res(r.result); };
-            r.onerror = function () { rej(r.error); };
-          } catch (e) { rej(e); }
-        });
-      }
-      function coreCacheGet() {
-        return coreIdb().then(function (db) {
-          return new Promise(function (res) {
-            var q = db.transaction("kv").objectStore("kv").get("core-v1");
-            q.onsuccess = function () { res(q.result || null); };
-            q.onerror = function () { res(null); };
-          });
-        }).catch(function () { return null; });
-      }
-      function coreCacheSet(v) {
-        return coreIdb().then(function (db) { db.transaction("kv", "readwrite").objectStore("kv").put(v, "core-v1"); }).catch(function () { });
-      }
-      function coreCacheClear() {
-        return coreIdb().then(function (db) {
-          return new Promise(function (res) {
-            var t = db.transaction("kv", "readwrite"); t.objectStore("kv").delete("core-v1");
-            t.oncomplete = t.onerror = t.onabort = function () { res(); };
-          });
-        }).catch(function () { });
-      }
-      function coreStrip(users) {
-        return (users || []).map(function (u) {
-          var c = {};
-          Object.keys(u || {}).forEach(function (k) { if (!/^(password|passwordhash|pwd|salt|otp|secret|token)/i.test(k)) c[k] = u[k]; });
-          return c;
-        });
-      }
-      function onFreshCore() {
-        try {
-          renderOverview(); renderStudents();
-          if ($("#panel-leaderboard").classList.contains("is-active")) renderAdminBoard();
-        } catch (e) { console.error(e); }
-      }
       async function loadCore(force) {
         if (S.loaded && !force) return;
-        var net = Promise.all([SNAuth.fetchAllUsers(), SNAuth.fetchAllGrades().catch(function () { return {}; })]).then(function (res) {
-          var users = res[0] || [], grades = res[1] || {};
-          var json = JSON.stringify({ users: coreStrip(users), grades: grades });
-          var changed = json !== S.coreJson;
-          S.users = users; S.grades = grades; S.loaded = true; S.fromCache = false;
-          if (force) S.udPromise = null;
-          if (changed) { S.coreJson = json; coreCacheSet({ t: Date.now(), who: session.id, json: json }); }
-          return changed;
-        });
-        S.fresh = net;
-        if (!force) {
-          var c = await coreCacheGet();
-          if (c && c.who === session.id && Date.now() - c.t < 7 * 864e5 && !S.loaded) {
-            try {
-              var d = JSON.parse(c.json);
-              S.users = d.users || []; S.grades = d.grades || {}; S.coreJson = c.json; S.loaded = true; S.fromCache = true;
-              net.then(function (changed) { if (changed) onFreshCore(); }).catch(function () { });
-              return;
-            } catch (e) { /* نكمّل من الشبكة */ }
-          }
-        }
-        await net;
+        var res = await Promise.all([SNAuth.fetchAllUsers(), SNAuth.fetchAllGrades().catch(function () { return {}; })]);
+        S.users = res[0] || [];
+        S.grades = res[1] || {};
+        if (force) S.udPromise = null;
+        S.loaded = true;
       }
 
       /* ================= نظرة عامة ================= */
@@ -1997,6 +1919,11 @@
           return '<div class="ad-bar"><span>' + esc(x.name) + '</span><div class="ad-bar__track"><div class="ad-bar__fill" style="width:' + Math.round((x.n / maxN) * 100) + '%"></div></div><b>' + x.n + "</b></div>";
         }).join("");
 
+        var top = list.slice().sort(function (a, b) { return num(b.points) - num(a.points); }).slice(0, 5);
+        var topHtml = top.length ? top.map(function (u, i) {
+          return '<li data-open="' + esc(u.id) + '"><span class="ad-li-main"><span class="ad-li-name">' + (i + 1) + ". " + esc(u.fullName) + '</span><small class="ad-li-sub">' + esc(gradeFull(u) || "—") + "</small></span><b>" + num(u.points) + " نقطة</b></li>";
+        }).join("") : '<li>لسه مفيش طلاب</li>';
+
         var recent = list.slice().sort(function (a, b) { return Date.parse(b.createdAt) - Date.parse(a.createdAt); }).slice(0, 5);
         var recentHtml = recent.length ? recent.map(function (u) {
           return '<li data-open="' + esc(u.id) + '"><span class="ad-li-main"><span class="ad-li-name">' + esc(u.fullName) + '</span><small class="ad-li-sub">' + esc(gradeFull(u) || "—") + "</small></span><b>" + fmtDate(u.createdAt) + "</b></li>";
@@ -2014,17 +1941,9 @@
           '<div class="dash-card" id="adTrend" style="margin-bottom:18px"></div>' +
           '<div class="ad-grid-2">' +
           '<div class="dash-card"><h3>الطلاب حسب الصف</h3><div class="ad-bars">' + bars + "</div></div>" +
-          '<div class="dash-card ad-ovboard" id="adOvBoard" role="button" tabindex="0" aria-label="افتح لوحة الصدارة">' +
-          '<div class="ad-ovboard__head"><span class="ad-ovboard__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg></span><h3>لوحة الصدارة</h3></div>' +
-          '<div class="dash-tabs lb-modes" id="adOvModes" role="tablist">' +
-          '<button type="button" class="dash-tab' + (lbMode === "points" ? " is-active" : "") + '" data-mode="points" role="tab" aria-selected="' + (lbMode === "points") + '">النقاط</button>' +
-          '<button type="button" class="dash-tab' + (lbMode === "time" ? " is-active" : "") + '" data-mode="time" role="tab" aria-selected="' + (lbMode === "time") + '">الوقت</button></div>' +
-          '<ol class="ad-ovboard__list" id="adOvList"><li class="ad-ovboard__row">جاري التحميل…</li></ol>' +
-          '<span class="ad-ovboard__cta">افتح الصفحة <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span></div>' +
+          '<div class="dash-card"><h3>أعلى 5 طلاب نقاطًا</h3><ul class="ad-list">' + topHtml + "</ul></div>" +
           "</div>" +
           '<div class="dash-card"><h3>آخر المسجّلين</h3><ul class="ad-list">' + recentHtml + "</ul></div>";
-
-        renderOvBoard();
 
         // رسم حركة المنصة: درجات + نشاط + تسجيلات (كله من Firebase)
         if (window.SNChart) {
@@ -2199,9 +2118,7 @@
       var NOTE_TYPES = { advice: ["نصيحة", "Advice"], encourage: ["تشجيع", "Encouragement"], warning: ["تحذير", "Warning"], alert: ["تنبيه", "Alert"] };
 
       async function exportStudentPdf(u, ud, grades, essays, g, days, lessons) {
-        var w = window.open("", "_blank");
-        if (!w) { toast(rl("المتصفح منع النافذة — اسمح بالنوافذ المنبثقة وجرّب تاني", "Pop-up blocked — allow pop-ups and try again"), true); return; }
-        w.document.write("<p style='font-family:sans-serif;padding:20px'>" + esc(rl("جاري تجهيز التقرير…", "Preparing the report…")) + "</p>");
+        toast(rl("جاري تجهيز التقرير…", "Preparing the report…"));
         var notes = [];
         try { notes = await SNAuth.fetchAdminNotes(u.id); } catch (e) { }
         notes.sort(function (a, b) { return entryTs(b) - entryTs(a); });
@@ -2245,8 +2162,9 @@
           (chart ? "<section class='snc'><h3>" + esc(rl("تطوّر المستوى", "Progress")) + " · " + esc(now) + "</h3><p class='mut'>" + esc(sub) + "</p><div class='chart'>" + chart + "</div></section>" : "") +
           block(rl("درجات الامتحانات", "Exam grades"), g.exams) + block(rl("درجات الشيتات", "Sheet grades"), g.sheets) + block(rl("امتحانات فصول القصة", "Story chapter exams"), g.story) +
           "<section><h3>" + esc(rl("ملاحظات الأستاذ", "Teacher's notes")) + "</h3>" + notesHtml + "</section>" +
-          "<script>window.onload=function(){setTimeout(function(){window.print()},400)}<\/script></body></html>";
-        w.document.open(); w.document.write(html); w.document.close();
+          "</body></html>";
+        if (window.SNPdf) await window.SNPdf.openHtml(html, { title: (u.fullName || "") + " — " + rl("تقرير الطالب", "Student report"), filename: "report-" + (u.fullName || "student") + ".pdf" });
+        else toast(rl("عارض الملفات مش متاح", "Viewer unavailable"), true);
       }
 
       function stripSecrets(u) {
@@ -2913,6 +2831,55 @@
         });
       }
 
+      /* ===== مرفقات الإعلانات (صور / PDF) ===== */
+      S.anFiles = []; S.anRemoved = [];
+      function anFilesOf(x) { var f = x && x.files; return !f ? [] : (Array.isArray(f) ? f : Object.keys(f).map(function (k) { return f[k]; })).filter(Boolean); }
+      function anFileIcon(type) {
+        return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-inline-end:6px" aria-hidden="true">' +
+          (/^image\//.test(type) ? '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' : '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>') + "</svg>";
+      }
+      function anFmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
+      function anRenderFiles() {
+        var box = $("#anFilesList"); if (!box) return;
+        box.innerHTML = S.anFiles.map(function (f, i) {
+          return '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;border:1px solid var(--surface-glass-border,#ddd);border-radius:10px;padding:6px 10px">' +
+            '<span dir="auto" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + anFileIcon(f.type) + esc(f.name) + ' <small>(' + anFmtSize(f.size) + ')</small></span>' +
+            '<button type="button" class="btn btn--ghost" data-an-fdel="' + i + '">إزالة</button></div>';
+        }).join("");
+      }
+      function anReadAsDataUrl(file) {
+        return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej; r.readAsDataURL(file); });
+      }
+      function anCompressImage(file) {
+        return new Promise(function (res, rej) {
+          var url = URL.createObjectURL(file), img = new Image();
+          img.onload = function () {
+            var k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+            c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+            var ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+            URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.82));
+          };
+          img.onerror = function () { URL.revokeObjectURL(url); rej(new Error("IMG")); };
+          img.src = url;
+        });
+      }
+      async function anAddFiles(list) {
+        var err = $("#anErr"); setErr(err, "");
+        for (var i = 0; i < list.length; i++) {
+          var file = list[i];
+          if (S.anFiles.length >= 4) { setErr(err, "الحد الأقصى 4 مرفقات للإعلان."); break; }
+          try {
+            var isPdf = file.type === "application/pdf", isImg = /^image\//.test(file.type) && file.type !== "image/svg+xml";
+            if (!isPdf && !isImg) { setErr(err, "الملف «" + file.name + "» مش مدعوم — صور أو PDF بس."); continue; }
+            if (isPdf && file.size > 2.5 * 1048576) { setErr(err, "ملف PDF «" + file.name + "» أكبر من 2.5 ميجا."); continue; }
+            var data = isPdf ? await anReadAsDataUrl(file) : await anCompressImage(file);
+            var name = isImg ? file.name.replace(/\.[^.]+$/, "") + ".jpg" : file.name;
+            S.anFiles.push({ id: "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, type: isPdf ? "application/pdf" : "image/jpeg", size: Math.round(data.length * 0.75), data: data, isNew: true });
+          } catch (e) { setErr(err, "تعذر قراءة «" + file.name + "»."); }
+        }
+        anRenderFiles();
+      }
+
       function renderAnnouncements() {
         var box = $("#anList");
         var list = (S.ann || []).slice().sort(function (a, b) { return anTs(b) - anTs(a); });
@@ -2922,7 +2889,7 @@
           return '<article class="an-card an-card--' + type + '">' +
             '<div class="an-card__head"><span class="an-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + AN_ICONS[type] + '</svg></span>' +
             '<div class="an-card__meta"><strong class="an-card__title">' + esc(x.title) + '</strong>' +
-            '<span class="an-card__sub">' + esc(AN_TYPES[type]) + ' · ' + esc(anTargetLabel(x.target)) + ' · ' + fmtDate(x.createdAt) + (x.updatedAt ? ' (معدّل)' : '') + '</span></div></div>' +
+            '<span class="an-card__sub">' + esc(AN_TYPES[type]) + ' · ' + esc(anTargetLabel(x.target)) + ' · ' + fmtDate(x.createdAt) + (x.updatedAt ? ' (معدّل)' : '') + (anFilesOf(x).length ? ' · ' + anFilesOf(x).length + ' مرفق' : '') + '</span></div></div>' +
             '<p class="an-card__body" dir="auto">' + esc(x.body) + '</p>' +
             '<div class="an-card__actions"><button class="btn btn--ghost" type="button" data-an-edit="' + esc(x.id) + '">تعديل</button>' +
             '<button class="btn btn--danger" type="button" data-an-del="' + esc(x.id) + '">حذف</button></div></article>';
@@ -2931,7 +2898,7 @@
       }
 
       function anResetForm() {
-        S.annEditing = null;
+        S.annEditing = null; S.anFiles = []; S.anRemoved = []; anRenderFiles();
         $("#anForm").reset();
         setTimeout(function () {
           ["anTitle", "anBody"].forEach(function (id) { var el = $("#" + id); if (el && el._updCount) el._updCount(); });
@@ -2949,6 +2916,9 @@
         var x = (S.ann || []).filter(function (z) { return z.id === id; })[0];
         if (!x) return;
         S.annEditing = id;
+        S.anRemoved = [];
+        S.anFiles = anFilesOf(x).map(function (f) { return { id: f.id, name: f.name, type: f.type, size: f.size, isNew: false }; });
+        anRenderFiles();
         $("#anTitle").value = x.title || "";
         $("#anBody").value = x.body || "";
         $("#anType").value = AN_TYPES[x.type] ? x.type : "general";
@@ -2978,6 +2948,13 @@
         bindCount("anBody", "anBodyCount", 600);
 
         $("#anCancel").onclick = anResetForm;
+        $("#anFiles").addEventListener("change", function (e) { var l = Array.prototype.slice.call(e.target.files || []); e.target.value = ""; anAddFiles(l); });
+        $("#anFilesList").addEventListener("click", function (e) {
+          var b = e.target.closest("[data-an-fdel]"); if (!b) return;
+          var f = S.anFiles.splice(Number(b.dataset.anFdel), 1)[0];
+          if (f && !f.isNew) S.anRemoved.push(f.id);
+          anRenderFiles();
+        });
         $("#anForm").addEventListener("submit", async function (e) {
           e.preventDefault();
           var title = $("#anTitle").value.trim();
@@ -2987,15 +2964,17 @@
           var btn = $("#anSubmit");
           btn.disabled = true;
           var data = { title: title, body: body, type: $("#anType").value, target: $("#anTarget").value };
+          var addedFiles = S.anFiles.filter(function (f) { return f.isNew; });
           try {
             if (S.annEditing) {
               data.updatedAt = new Date().toISOString();
-              await SNAuth.updateAnnouncement(S.annEditing, data);
+              data.files = S.anFiles.filter(function (f) { return !f.isNew; }).map(function (f) { return { id: f.id, name: f.name, type: f.type, size: f.size }; });
+              await SNAuth.updateAnnouncement(S.annEditing, data, addedFiles, S.anRemoved);
               toast("تم تعديل الإعلان");
             } else {
               data.createdAt = new Date().toISOString();
               data.createdBy = session.id;
-              await SNAuth.pushAnnouncement(data);
+              await SNAuth.pushAnnouncement(data, addedFiles);
               toast("تم نشر الإعلان للطلاب");
             }
             anResetForm();
@@ -3200,84 +3179,6 @@
         $("#setBack").addEventListener("click", function () { setOpen(null); });
         bindPromotion();
         bindLock();
-        bindGradeCodes();
-      }
-
-      /* ================= لوحة الصدارة (نقاط / وقت على المنصة) ================= */
-      /* بيانات حقيقية من Firebase: النقاط من publicProfiles، ووقت الاستخدام من userData/users (الطالب بيسجّله كل دقيقة تقريبًا) */
-      function boardUD() {
-        if (!S.udPromise || (S.udAt && Date.now() - S.udAt > 120000)) {
-          S.udAt = Date.now();
-          S.udPromise = SNAuth.fetchAllUserData().catch(function (e) { S.udPromise = null; S.udAt = 0; throw e; });
-        } else if (!S.udAt) S.udAt = Date.now();
-        return S.udPromise;
-      }
-      async function boardRows(mode, grade) {
-        await loadCore(false);
-        var ud = {};
-        if (mode === "time") ud = (await boardUD()) || {};
-        var rows = students().filter(function (u) { return !grade || u.grade === grade; }).map(function (u) {
-          return { u: u, points: num(u.points), secs: Math.max(num(u.learningSeconds), num((ud[u.id] || {}).learningSeconds)) };
-        });
-        rows.sort(function (x, y) { return mode === "time" ? (y.secs - x.secs || y.points - x.points) : (y.points - x.points || y.secs - x.secs); });
-        return rows;
-      }
-      function boardRowHtml(r, i, mode, cls) {
-        return '<li class="' + cls + '"' + (cls === "dash-leaderboard__row" ? ' data-open="' + esc(r.u.id) + '"' : "") + '>' +
-          '<span class="dash-leaderboard__rank">' + (i + 1) + "</span>" + avatar(r.u) +
-          '<span class="dash-leaderboard__name">' + esc(r.u.fullName) + "</span>" +
-          '<span class="dash-leaderboard__meta">' + esc(gradeFull(r.u) || "—") + "</span>" +
-          '<span class="dash-leaderboard__points">' + (mode === "time" ? esc(fmtDuration(r.secs)) : r.points + " نقطة") + "</span></li>";
-      }
-      var lbMode = "points", lbGrade = "", lbSeq = 0, ovSeq = 0;
-      async function renderAdminBoard() {
-        var list = $("#adLbList");
-        var seq = ++lbSeq, mode = lbMode;
-        list.innerHTML = '<li class="dash-leaderboard__row">جاري التحميل…</li>';
-        var rows;
-        try { rows = await boardRows(mode, lbGrade); }
-        catch (e) { if (seq === lbSeq) list.innerHTML = '<li class="dash-leaderboard__row">تعذر تحميل البيانات، جرّب تاني</li>'; return; }
-        if (seq !== lbSeq) return;
-        if (!rows.length) { list.innerHTML = '<li class="dash-leaderboard__row">مفيش طلاب في الاختيار ده</li>'; return; }
-        list.innerHTML = rows.map(function (r, i) { return boardRowHtml(r, i, mode, "dash-leaderboard__row"); }).join("");
-      }
-      async function renderOvBoard() {
-        if (!$("#adOvList")) return;
-        var seq = ++ovSeq, mode = lbMode, rows;
-        try { rows = await boardRows(mode, ""); }
-        catch (e) { if (seq === ovSeq && $("#adOvList")) $("#adOvList").innerHTML = '<li class="ad-ovboard__row">تعذر تحميل البيانات، جرّب تاني</li>'; return; }
-        var list = $("#adOvList");
-        if (seq !== ovSeq || !list) return;
-        rows = rows.slice(0, 5);
-        list.innerHTML = rows.length ? rows.map(function (r, i) { return boardRowHtml(r, i, mode, "ad-ovboard__row"); }).join("") : '<li class="ad-ovboard__row">لسه مفيش طلاب</li>';
-      }
-      function setLbMode(m) {
-        lbMode = m;
-        ["#adOvModes", "#adLbModes"].forEach(function (sel) {
-          $$(sel + " .dash-tab").forEach(function (x) { var on = x.dataset.mode === m; x.classList.toggle("is-active", on); x.setAttribute("aria-selected", String(on)); });
-        });
-        renderOvBoard();
-        if ($("#panel-leaderboard").classList.contains("is-active")) renderAdminBoard();
-      }
-      function bindBoard() {
-        $$("#adLbModes .dash-tab").forEach(function (b) { b.addEventListener("click", function () { setLbMode(b.dataset.mode); }); });
-        $$("#adLbGrades .dash-tab").forEach(function (b) {
-          b.addEventListener("click", function () {
-            lbGrade = b.dataset.grade;
-            $$("#adLbGrades .dash-tab").forEach(function (x) { x.classList.toggle("is-active", x === b); });
-            renderAdminBoard();
-          });
-        });
-        document.addEventListener("click", function (e) {
-          var card = e.target.closest("#adOvBoard");
-          if (!card) return;
-          var tab = e.target.closest("#adOvModes .dash-tab");
-          if (tab) { e.stopPropagation(); setLbMode(tab.dataset.mode); return; }
-          showPanel("leaderboard");
-        });
-        document.addEventListener("keydown", function (e) {
-          if ((e.key === "Enter" || e.key === " ") && e.target.id === "adOvBoard") { e.preventDefault(); showPanel("leaderboard"); }
-        });
       }
 
       /* ================= ترقية الطلاب لنهاية العام ================= */
@@ -3317,7 +3218,7 @@
           }
           btn.disabled = true; word.disabled = true;
           try {
-            var r = await SNAuth.promoteAllStudents({ graduates: del ? "delete" : "keep", dropArchive: !!($("#promoDrop") && $("#promoDrop").checked) });
+            var r = await SNAuth.promoteAllStudents({ graduates: del ? "delete" : "keep" });
             await loadCore(true);
             S.essays = null; S.current = null;
             renderPromoPreview();
@@ -3331,62 +3232,23 @@
         });
       }
 
-      /* ================= أكواد الصفوف ================= */
-      var GC = { orig: {} };
-      function gcSetEdit(on) {
-        $$("[data-gc]").forEach(function (i) { i.readOnly = !on; });
-        $$("[data-gc-gen]").forEach(function (b) { b.disabled = !on; });
-        $("#gcEdit").hidden = on; $("#gcSave").hidden = !on; $("#gcCancel").hidden = !on;
-        if (on) { var f = $("[data-gc]"); if (f) f.focus(); }
-      }
-      async function renderGradeCodes() {
-        var box = $("#gcList"); box.innerHTML = "<p class='ad-note'>جاري التحميل…</p>";
-        try {
-          GC.orig = (await SNAuth.getGradeCodesAdmin()) || {};
-          box.innerHTML = SNAuth.GRADE_KEYS.map(function (g) {
-            return '<div class="form-field"><label for="gc_' + g + '">' + esc(GRADE_NAMES[g] || g) + '</label>' +
-              '<div style="display:flex;gap:8px"><input type="text" id="gc_' + g + '" data-gc="' + g + '" dir="ltr" maxlength="20" autocomplete="off" spellcheck="false" placeholder="من غير كود" value="' + esc(GC.orig[g] || "") + '" style="flex:1" readonly />' +
-              '<button class="btn btn--ghost" type="button" data-gc-gen="' + g + '" disabled>عشوائي</button></div></div>';
-          }).join("");
-          gcSetEdit(false);
-        } catch (e) { console.error(e); box.innerHTML = "<p class='form-error'>تعذر تحميل الأكواد — راجع صلاحيات Firebase.</p>"; }
-      }
-      function bindGradeCodes() {
-        if (!$("#gcSave")) return;
-        var err = $("#gcErr");
-        $$("[data-set-open='gradeCodes']").forEach(function (b) { b.addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); }); });
-        $("#gcEdit").addEventListener("click", async function () {
-          var ok = await confirmBox("تعديل أكواد الصفوف", "الأكواد دي بتتحكم في إنشاء الحسابات الجديدة. هتفتح الحقول للتعديل، ومفيش حاجة بتتغيّر غير لما تضغط حفظ. تكمّل؟", "تعديل");
-          if (ok) gcSetEdit(true);
-        });
-        $("#gcCancel").addEventListener("click", function () { setErr(err, ""); renderGradeCodes(); });
-        $("#gcList").addEventListener("click", function (e) {
-          var b = e.target.closest("[data-gc-gen]"); if (!b || b.disabled) return;
-          $("#gc_" + b.dataset.gcGen).value = SNAuth.randomGradeCode();
-        });
-        $("#gcSave").addEventListener("click", async function () {
-          setErr(err, "");
-          var map = {}, seen = {}, removed = 0, changed = 0;
-          var rows = $$("[data-gc]");
-          for (var i = 0; i < rows.length; i++) {
-            var g = rows[i].dataset.gc, v = rows[i].value.trim().replace(/\s+/g, "");
-            if (v && !SNAuth.validGradeCode(v)) { setErr(err, "كود " + (GRADE_NAMES[g] || g) + " لازم يكون من 6 لـ 20 حرف أو رقم إنجليزي من غير رموز."); return; }
-            if (v) { if (seen[v.toLowerCase()]) { setErr(err, "الكود ده متكرر بين " + (GRADE_NAMES[seen[v.toLowerCase()]] || "") + " و" + (GRADE_NAMES[g] || g) + ". كل صف لازم يكون ليه كود مختلف."); return; } seen[v.toLowerCase()] = g; }
-            if (v !== (GC.orig[g] || "")) { map[g] = v; changed++; if (!v) removed++; }
-          }
-          if (!changed) { toast("مفيش تغيير للحفظ"); gcSetEdit(false); return; }
-          var ok = await confirmBox("تغيير أكواد الصفوف", "هيتغيّر كود " + changed + " صف" + (removed ? " (و" + removed + " منهم هيبقى التسجيل فيه من غير كود)" : "") + ". الكود الجديد بيتطلب لإنشاء الحسابات الجديدة بس، والطلاب المسجّلين مش بيتأثروا. تكمّل؟", "حفظ");
-          if (!ok) return;
-          this.disabled = true;
-          try { await SNAuth.saveGradeCodes(map); toast("تم حفظ الأكواد"); await renderGradeCodes(); }
-          catch (e) { console.error(e); setErr(err, "تعذر الحفظ — راجع صلاحيات Firebase."); }
-          finally { this.disabled = false; }
-        });
-      }
-
       /* ================= قفل المنصة ================= */
       var LOCK = { data: null };
       var LOCK_CODE_KEY = "shadynasr-lock-code";
+      /* الكود بيتخزّن كمان في adminSettings (مكان خاص بالأدمن) عشان يظهر على كل الأجهزة اللي الأدمن مسجّل عليها */
+      async function lockGetCode(lockId) {
+        var c = lockSavedCode(lockId);
+        if (c) return c;
+        try {
+          var st = await SNAuth.getAdminSettings();
+          var v = st && st.platformLockCode;
+          if (v && v.lockId === lockId && v.code) {
+            try { localStorage.setItem(LOCK_CODE_KEY, JSON.stringify({ lockId: lockId, code: v.code })); } catch (e) { }
+            return v.code;
+          }
+        } catch (e) { }
+        return "";
+      }
       function lockSavedCode(lockId) {
         try { var v = JSON.parse(localStorage.getItem(LOCK_CODE_KEY)); return v && v.lockId === lockId ? v.code : ""; } catch (e) { return ""; }
       }
@@ -3405,26 +3267,28 @@
         return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
       }
       async function renderLock() {
-        var d = LOCK.data, st = $("#lockStatus");
+        var d = LOCK.data, st = $("#lockStatus"), chip = $("#lockChip");
         if (!st) return;
-        if (d === undefined) { st.textContent = "تعذر قراءة حالة القفل — راجع الاتصال."; st.classList.remove("is-on"); return; }
+        if (d === undefined) { st.textContent = "تعذر قراءة حالة القفل — راجع الاتصال وقواعد Firebase."; return; }
         var on = !!(d && d.active);
-        $("#lockOn").hidden = !on; $("#lockStats").hidden = !on;
-        st.classList.toggle("is-on", on);
-        if (!on) { st.textContent = "المنصة مفتوحة"; return; }
+        $("#lockOn").hidden = !on;
+        chip.textContent = on ? "المنصة مقفولة" : "المنصة مفتوحة";
+        chip.classList.toggle("is-on", on);
+        $("#lockBtnTxt").textContent = on ? "قفل المنصة من جديد" : "قفل المنصة";
+        if (!on) { st.textContent = "لسه ما اتنفّذش قفل للمنصة."; return; }
         var list = students();
         var ok = list.filter(function (u) { return u.lockOk === d.lockId; }).length;
-        st.textContent = "مقفولة من " + new Date(d.lockedAt).toLocaleDateString("ar-EG");
-        $("#lockStatIn").textContent = ok;
-        $("#lockStatOut").textContent = Math.max(0, list.length - ok);
-        var code = lockSavedCode(d.lockId), qr = $("#lockQr"), show = $("#lockCodeShow");
+        var left = Math.max(0, 30 - Math.floor((Date.now() - d.lockedAt) / 864e5));
+        st.textContent = "آخر قفل اتنفّذ في " + new Date(d.lockedAt).toLocaleDateString("ar-EG") + ".";
+        $("#lockStats").innerHTML = '<span class="lk-stat">دخلوا الكود: ' + ok + " / " + list.length + '</span><span class="lk-stat">فاضل ' + left + " يوم قبل المسح</span>";
+        var code = await lockGetCode(d.lockId), qr = $("#lockQr");
+        LOCK.code = code;
+        $("#lockCodeShow").textContent = code || "";
         $("#lockPrint").hidden = !code;
         qr.hidden = !code;
-        show.classList.toggle("is-muted", !code);
-        show.textContent = code || "الكود مش متاح على الجهاز ده — اقفل المنصة بكود جديد.";
-        if (!code) return;
+        if (!code) { $("#lockCodeShow").textContent = "—"; $("#lockCodeShow").title = "الكود مش متاح للعرض من الجهاز ده؛ اقفل المنصة من جديد بكود جديد"; return; }
         try { await loadQrLib(); qr.innerHTML = qrSvg(code); }
-        catch (e) { qr.hidden = true; toast("تعذر تحميل مولّد الـ QR (محتاج نت) — الكود ظاهر نصيًا.", true); }
+        catch (e) { qr.hidden = true; toast("تعذر تحميل مولّد الـ QR (محتاج نت) — الكود النصي ظاهر.", true); }
       }
       async function refreshLock() {
         try { LOCK.data = await SNAuth.fetchPlatformLock(); } catch (e) { LOCK.data = undefined; }
@@ -3453,33 +3317,51 @@
           setErr(err, "");
           var code = codeEl.value;
           if (!/^\d{10}$/.test(code)) { setErr(err, "الكود لازم يكون 10 أرقام بالظبط."); return; }
-          var ok = await window.snDialog.confirm({
-            title: "قفل المنصة",
-            message: "هتتقفل المنصة قدام كل الطلاب (" + students().length + " طالب)، حتى اللي دخلوا الكود قبل كده، ومحدش هيدخل غير بالكود الجديد " + code + ".",
-            confirmText: "قفل المنصة", cancelText: "إلغاء", tone: "danger", icon: "info"
-          });
-          if (!ok) return;
+          var cnt = students().length;
+          var steps = [
+            { title: "تحذير 1 من 3", message: "هتتقفل المنصة قدام كل الطلاب (" + cnt + " طالب)، حتى اللي فاتحين المنصة دلوقتي، ومحدش هيدخل لوحة الطالب غير بالكود أو الـ QR. " + (LOCK.data && LOCK.data.active ? "ده هيلغي القفل السابق وكل الطلاب لازم يدخلوا الكود الجديد. " : "") + "متأكد؟", confirmText: "أوافق (1 من 3)" },
+            { title: "تحذير 2 من 3", message: "الطالب اللي ما يدخلش الكود خلال 30 يوم حسابه وكل بياناته هتتمسح نهائيًا. وكمان أي حساب جديد هيحتاج الكود قبل الدخول. موافق؟", confirmText: "أوافق (2 من 3)" },
+            { title: "تحذير أخير 3 من 3", message: "الكود هو " + code + " — سجّله دلوقتي وسلّمه للطلاب. تقفل المنصة؟", confirmText: "أوافق واقفل (3 من 3)" }
+          ];
+          for (var i = 0; i < steps.length; i++) {
+            var ok = await window.snDialog.confirm({ title: steps[i].title, message: steps[i].message, confirmText: steps[i].confirmText, cancelText: "إلغاء", tone: "danger", icon: "trash" });
+            if (!ok) return;
+          }
           btn.disabled = true;
           try {
             var lock = await SNAuth.activatePlatformLock(code);
             try { localStorage.setItem(LOCK_CODE_KEY, JSON.stringify({ lockId: lock.lockId, code: code })); } catch (e) { }
+            try { await SNAuth.saveAdminSettings({ platformLockCode: { lockId: lock.lockId, code: code } }); }
+            catch (e) { toast("القفل اتنفّذ، بس تعذر حفظ الكود لباقي أجهزتك — راجع صلاحيات adminSettings.", true); }
             codeEl.value = "";
             LOCK.data = lock; renderLock();
             toast("تم قفل المنصة");
           } catch (e) {
             console.error(e);
-            setErr(err, "تعذر قفل المنصة — راجع الاتصال وصلاحيات Firebase وحاول تاني.");
+            setErr(err, "تعذر قفل المنصة — راجع صلاحيات Firebase (platformLock) وحاول تاني.");
+            btn.disabled = codeEl.value.length !== 10;
           }
-          btn.disabled = codeEl.value.length !== 10;
         });
         $("#lockPrint").addEventListener("click", function () {
-          var d = LOCK.data, code = d && lockSavedCode(d.lockId);
+          var d = LOCK.data, code = d && LOCK.code;
           if (!code) return;
           var svg = $("#lockQr").innerHTML;
-          var w = window.open("", "_blank");
-          if (!w) { toast("اسمح بالنوافذ المنبثقة للطباعة.", true); return; }
-          w.document.write("<!DOCTYPE html><html dir='rtl'><head><meta charset='utf-8'><title>كود دخول المنصة</title><style>body{font-family:Tajawal,Cairo,sans-serif;text-align:center;padding:30px}svg{width:260px;height:260px}.c{font-size:34px;font-weight:700;letter-spacing:.25em;direction:ltr;margin-top:14px}</style></head><body><h2>كود دخول المنصة</h2>" + svg + "<div class='c'>" + esc(code) + "</div><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>");
-          w.document.close();
+          var base = function (f) { return new URL(f, location.href).href; };
+          /* كارت صغير للتوزيع على الطلاب: صورة الأستاذ + اللوجو + QR + الكود بس، 4 كروت في الصفحة للقص */
+          var one = "<div class='card'><div class='ph'><div class='photo'></div><div class='logo'></div></div>" +
+            "<div class='qr'>" + svg + "</div><div class='code'>" + esc(code) + "</div></div>";
+          var html = "<!doctype html><html lang='ar' dir='rtl'><head><meta charset='utf-8'><title>كود دخول المنصة</title><style>" +
+            "*{box-sizing:border-box}body{font-family:Tajawal,Cairo,'Segoe UI',Tahoma,sans-serif;margin:0;background:#fff}" +
+            ".grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:6px}" +
+            ".card{height:490px;border-radius:28px;background:linear-gradient(160deg,#35a2b8 0%,#4a7fc4 52%,#5b2a9a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;outline:2px dashed #b9b9b9;outline-offset:6px}" +
+            ".ph{position:relative;width:132px;height:132px}" +
+            ".photo{width:132px;height:132px;border-radius:50%;border:5px solid #fff;background:#5b2a9a url(" + base("shady-nasr.jpg") + ") center top/cover no-repeat}" +
+            ".logo{position:absolute;right:-18px;bottom:-6px;width:62px;height:62px;border-radius:50%;border:4px solid #fff;background:#fff url(" + base("favicon.png") + ") center/cover no-repeat}" +
+            ".qr{background:#fff;border-radius:22px;padding:14px;margin-top:6px}.qr svg{display:block;width:212px;height:212px}" +
+            ".code{direction:ltr;background:#fff;color:#5b2a9a;border-radius:16px;padding:8px 18px;font-size:30px;font-weight:800;letter-spacing:5px}" +
+            "</style></head><body><div class='grid'>" + one + one + one + one + "</div></body></html>";
+          if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت كود دخول المنصة", filename: "platform-code-cards.pdf" });
+          else toast("عارض الملفات مش متاح", true);
         });
       }
       /* مسح الطلاب اللي عدّى عليهم 30 يوم من غير ما يدخلوا كود القفل */
@@ -3505,7 +3387,6 @@
         if (name === "essays") loadEssays(false);
         if (name === "announcements") loadAnnouncements(false);
         if (name === "honors") loadHonorsAdmin(false);
-        if (name === "leaderboard") renderAdminBoard();
         if (name === "exams" && window.SNExamsAdmin) SNExamsAdmin.open();
         if (name === "settings" && !settingsLoaded) { settingsLoaded = true; loadSettings(); }
       }
@@ -3521,7 +3402,6 @@
         bindSettingsHub();
         bindAnnouncements();
         bindHonors();
-        bindBoard();
         if (window.SNExamsAdmin) SNExamsAdmin.setContext({
           getUsers: function () { return S.users || []; },
           toast: toast,
@@ -3543,12 +3423,9 @@
         $("#adBackdrop").addEventListener("click", closeSidebar);
 
         $("#adminLogoutBtn").addEventListener("click", function () {
-          var go = function () {
-            localStorage.removeItem("shadynasr-auth");
-            localStorage.removeItem("shadynasr-current-user");
-            window.location.replace("index.html");
-          };
-          coreCacheClear().then(go, go);
+          localStorage.removeItem("shadynasr-auth");
+          localStorage.removeItem("shadynasr-current-user");
+          window.location.replace("index.html");
         });
 
         document.addEventListener("click", function (e) {
@@ -3572,28 +3449,23 @@
         var corePromise = loadCore(false);
         corePromise.catch(function () { /* الخطأ بيتعالج تحت */ });
 
-        // تأكيد الدور من قاعدة البيانات (مش بس من localStorage) — بيشتغل بالتوازي ومش بيأخّر عرض البيانات
-        var rolePromise = (async function () {
-          try {
-            var fresh = await SNAuth.findUserByEmail(session.email);
-            if (!fresh || fresh.role !== "admin") {
-              coreCacheClear();
-              localStorage.removeItem("shadynasr-auth");
-              localStorage.removeItem("shadynasr-current-user");
-              window.location.replace("login.html");
-              return false;
-            }
-            if (fresh.fullName !== session.fullName) updateSession({ fullName: fresh.fullName });
-          } catch (e) { /* مفيش نت: نكمّل بالجلسة المحلية */ }
-          return true;
-        })();
+        // تأكيد الدور من قاعدة البيانات (مش بس من localStorage)
+        try {
+          var fresh = await SNAuth.findUserByEmail(session.email);
+          if (!fresh || fresh.role !== "admin") {
+            localStorage.removeItem("shadynasr-auth");
+            localStorage.removeItem("shadynasr-current-user");
+            window.location.replace("login.html");
+            return;
+          }
+          if (fresh.fullName !== session.fullName) updateSession({ fullName: fresh.fullName });
+        } catch (e) { /* مفيش نت: نكمّل بالجلسة المحلية */ }
 
         try {
           await corePromise;
           renderOverview();
           renderStudents();
-          // مسح اللي عدّت مهلتهم: بس بعد تأكيد الدور ووصول بيانات حقيقية من Firebase (مش من النسخة المحفوظة)
-          Promise.all([S.fresh, rolePromise]).then(function (r) { if (r[1]) runLockSweep(); }).catch(function () { });
+          runLockSweep();
         } catch (e) {
           $("#overviewBody").innerHTML = '<div class="ad-empty">تعذر تحميل البيانات من Firebase — راجع الاتصال وصلاحيات Realtime Database.</div>';
           var why = (e && (e.code || e.message)) ? String(e.code || e.message) : "";
