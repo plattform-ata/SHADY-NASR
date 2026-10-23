@@ -1586,6 +1586,8 @@
                   .lk-head__txt{flex:1;min-width:0}
                   .lk-chip{padding:6px 14px;border-radius:999px;font-weight:700;font-size:.85rem;border:1.5px solid var(--surface-glass-border);white-space:nowrap}
                   .lk-chip.is-on{background:#c0392b;border-color:#c0392b;color:#fff}
+                  .lk-chip.is-open{background:#1f8a57;border-color:#1f8a57;color:#fff}
+                  .lk-unlock{background:#1f8a57;border-color:#1f8a57;color:#fff}
                   .lk-sec{border:1px solid var(--surface-glass-border);border-radius:18px;padding:18px;margin-top:16px}
                   .lk-sec__title{margin:0 0 12px;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px}
                   .lk-sec__title svg{width:20px;height:20px;color:var(--accent)}
@@ -1612,7 +1614,7 @@
                 <div class="lk-head">
                   <span class="lk-head__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1"/></svg></span>
                   <div class="lk-head__txt"><h3>قفل المنصة</h3></div>
-                  <span class="lk-chip" id="lockChip">المنصة مفتوحة</span>
+                  <span class="lk-chip is-open" id="lockChip">المنصة مفتوحة</span>
                 </div>
                 <p class="ad-note">زرار القفل أمر بتنفّذه وقت ما تحب. بمجرد تنفيذه بتتقفل المنصة قدام كل الطلاب، حتى اللي فاتحينها دلوقتي، ومحدش بيدخل غير بالكود (10 أرقام) أو بمسح الـ QR. الطالب اللي يفضل 30 يوم من غير ما يدخل الكود حسابه وبياناته بيتمسحوا نهائيًا.</p>
                 <p class="ad-note" id="lockStatus"></p>
@@ -1635,6 +1637,12 @@
                       <button class="btn btn--ghost" type="button" id="lockImg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg>تصدير صورة</button>
                     </div>
                   </div>
+                </div>
+
+                <div class="lk-sec" id="lockOpenSec" hidden>
+                  <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="16" r="1"/></svg>فك قفل المنصة</h4>
+                  <p class="lk-hint" style="margin:0 0 12px">بيفتح المنصة قدام كل الطلاب من غير كود ولا QR، وبيوقف مسح الحسابات بعد 30 يوم.</p>
+                  <button class="btn lk-go lk-unlock" type="button" id="lockOpenBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="16" r="1"/></svg><span>فك قفل المنصة</span></button>
                 </div>
 
                 <div class="lk-sec" id="lockFormOff">
@@ -3464,6 +3472,8 @@
         $("#lockOn").hidden = !on;
         chip.textContent = on ? "المنصة مقفولة" : "المنصة مفتوحة";
         chip.classList.toggle("is-on", on);
+        chip.classList.toggle("is-open", !on);
+        $("#lockOpenSec").hidden = !on;
         $("#lockBtnTxt").textContent = on ? "قفل المنصة من جديد" : "قفل المنصة";
         if (!on) { st.textContent = "لسه ما اتنفّذش قفل للمنصة."; return; }
         var list = students();
@@ -3531,6 +3541,22 @@
             setErr(err, "تعذر قفل المنصة — راجع صلاحيات Firebase (platformLock) وحاول تاني.");
             btn.disabled = codeEl.value.length !== 10;
           }
+        });
+        $("#lockOpenBtn").addEventListener("click", async function () {
+          var b = this;
+          var ok = await window.snDialog.confirm({ title: "فك قفل المنصة", message: "المنصة هتتفتح قدام كل الطلاب من غير كود، والكود والـ QR الحاليين مش هيفضلوا مطلوبين. متأكد؟", confirmText: "فك القفل", cancelText: "إلغاء" });
+          if (!ok) return;
+          b.disabled = true;
+          try {
+            await SNAuth.deactivatePlatformLock();
+            try { localStorage.removeItem(LOCK_CODE_KEY); } catch (e) { }
+            LOCK.data = null; LOCK.code = "";
+            renderLock();
+            toast("تم فك قفل المنصة");
+          } catch (e) {
+            console.error(e);
+            toast("تعذر فك القفل — راجع صلاحيات Firebase (platformLock) وحاول تاني.", true);
+          } finally { b.disabled = false; }
         });
         $("#lockPdf").addEventListener("click", function () {
           var d = LOCK.data, code = d && LOCK.code;
