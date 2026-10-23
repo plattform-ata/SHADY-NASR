@@ -494,6 +494,7 @@
   async function promoteAllStudents(opts) {
     const NEXT = { prep1: "prep2", prep2: "prep3", prep3: "secondary1", secondary1: "secondary2", secondary2: "secondary3" };
     const deleteGraduates = !!(opts && opts.graduates === "delete");
+    const dropArchive = !!(opts && opts.dropArchive); // لتوفير المساحة: مسح ملفات الأعوام (القديمة) وعدم حفظ ملف العام الجديد
     const read = async (path) => { try { const s = await db.ref(path).get(); return s.exists() ? s.val() : {}; } catch (e) { return {}; } };
     const users = await read("users");
     const [allGrades, allNotes, allData, allReports] = await Promise.all([read("grades"), read("adminNotes"), read("userData"), read("yearReports")]);
@@ -531,12 +532,12 @@
       };
       const hasData = !!grades || notes.length || (Number(u.points) || 0) > 0 || (u.badges && u.badges.length) ||
         stats.lessonsDone || stats.storyDone || stats.examsDone || stats.storyExamsDone || stats.sheetsDone || stats.learningSeconds || visitDays.length;
-      if (hasData) {
+      if (hasData && !dropArchive) {
         const existing = allReports[id] || {};
         let key = "y" + startYear, n = 2;
         while (existing[key]) key = "y" + startYear + "-" + n++;
         updates["yearReports/" + id + "/" + key] = {
-          key, label: yearLabel, createdAt: stamp,
+          key, uid: id, label: yearLabel, createdAt: stamp,
           gradeFrom: u.grade || "", gradeTo: toGrade, track: u.track || null,
           points: Number(u.points) || 0,
           badges: Array.isArray(u.badges) ? u.badges : [],
@@ -556,6 +557,7 @@
     if (Object.keys(updates).length) {
       updates["essaySubmissions"] = null;
       updates["classAvg"] = null;
+      if (dropArchive) updates["yearReports"] = null;
       await db.ref().update(updates);
     }
     for (const id of toDelete) await deleteUserCompletely(id);
@@ -983,6 +985,93 @@
     return n;
   }
 
+  /* ==========================================================================
+     أكواد الصفوف (إنشاء حساب جديد): gradeCodes/{grade} = { hash, updatedAt }  — الكود نفسه عند الأدمن في adminSettings/gradeCodes
+     صف من غير كود = التسجيل فيه مفتوح. الفحص بيتم في المتصفح (grade-codes.js).
+     ========================================================================== */
+  const GRADE_KEYS = ["prep1", "prep2", "prep3", "secondary1", "secondary2", "secondary3"];
+  const normGradeCode = (c) => String(c == null ? "" : c).trim().replace(/\s+/g, "").replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x660));
+  const validGradeCode = (c) => /^[A-Za-z0-9]{6,20}$/.test(normGradeCode(c));
+  const gradeCodeHash = (grade, code) => hashPassword("gc:" + grade + ":" + normGradeCode(code).toLowerCase());
+  async function getGradeCodes() { // الصفوف اللي ليها كود (الـ hash بس). null = مقدرناش نقرا
+    try { const s = await db.ref("gradeCodes").get(); return s.exists() ? s.val() : {}; } catch (e) { return null; }
+  }
+  async function verifyGradeCode(grade, code) {
+    const all = await getGradeCodes();
+    if (all === null) throw new Error("NETWORK");
+    const g = all[grade];
+    if (!g || !g.hash) return true;
+    const c = normGradeCode(code);
+    if (!c) return false;
+    return (await gradeCodeHash(grade, c)) === g.hash;
+  }
+  async function getGradeCodesAdmin() {
+    const s = await db.ref("adminSettings/gradeCodes").get();
+    return s.exists() ? s.val() : {};
+  }
+  /* map = { prep1: "abc12345", prep2: "" (شيل الكود) } — الصف اللي مش في الـ map بيفضل زي ما هو */
+  async function saveGradeCodes(map) {
+    const up = {}, stamp = new Date().toISOString();
+    for (const g of Object.keys(map || {})) {
+      if (GRADE_KEYS.indexOf(g) < 0) continue;
+      const c = normGradeCode(map[g]);
+      if (!c) { up["gradeCodes/" + g] = null; up["adminSettings/gradeCodes/" + g] = null; continue; }
+      if (!validGradeCode(c)) throw new Error("BAD_CODE:" + g);
+      up["gradeCodes/" + g] = { hash: await gradeCodeHash(g, c), updatedAt: stamp };
+      up["adminSettings/gradeCodes/" + g] = c;
+    }
+    await db.ref().update(up);
+  }
+  function randomGradeCode() {
+    const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let out = "";
+    while (out.length < 8) {
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      for (let i = 0; i < a.length && out.length < 8; i++) if (a[i] < 224) out += A[a[i] % 32];
+    }
+    return out;
+  }
+
+  /* ملف الطالب الحالي (نفس شكل ملف العام الدراسي، بيانات لحظية) */
+  async function fetchStudentSnapshot(id) {
+    if (!id) throw new Error("NO_ID");
+    const [user, grades, ud, notes] = await Promise.all([
+      db.ref("users/" + id).get().then((s) => (s.exists() ? s.val() : {})).catch(() => ({})),
+      fetchGrades(id).catch(() => ({})),
+      userDataGet(id).catch(() => ({})),
+      fetchAdminNotes(id).catch(() => []),
+    ]);
+    const data = ud || {};
+    const days = pickAny(data, ["loginDays", "activeDays", "visitDays", "daysLogged", "streakDays"]);
+    const visitDays = Array.isArray(days) ? days.map(String) : (days && typeof days === "object" ? Object.keys(days).filter((k) => days[k]) : []);
+    let lessonsDone = countDoneAny(data.lessonsProgress);
+    if (!lessonsDone) lessonsDone = countDoneAny(pickAny(data, ["completedLessons", "lessonsDone", "lessons", "courses"]));
+    if (!lessonsDone && user.unitProgress) lessonsDone = countDoneAny(user.unitProgress);
+    const now = new Date();
+    const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    return {
+      key: "current", uid: id, current: true,
+      studentName: user.fullName || "",
+      label: start + "/" + (start + 1),
+      createdAt: now.toISOString(),
+      gradeFrom: user.grade || "", gradeTo: user.grade || "", track: user.track || null,
+      points: Number(user.points) || 0,
+      badges: Array.isArray(user.badges) ? user.badges : [],
+      stats: {
+        lessonsDone,
+        storyDone: countDoneAny(data.storyProgress),
+        examsDone: data.exams ? Object.keys(data.exams).length : 0,
+        storyExamsDone: data.storyExams ? Object.keys(data.storyExams).length : 0,
+        sheetsDone: data.sheetSubmissions ? Object.keys(data.sheetSubmissions).length : 0,
+        learningSeconds: Number(data.learningSeconds) || 0,
+        visitDays,
+      },
+      grades: grades && Object.keys(grades).length ? grades : null,
+      notes: Array.isArray(notes) ? notes : [],
+    };
+  }
+
   window.SNAuth = {
     wipeLocalUserData,
     syncAccountGeneration,
@@ -1021,6 +1110,14 @@
     fetchLockOk,
     sweepExpiredLock,
     promoteAllStudents,
+    GRADE_KEYS,
+    validGradeCode,
+    getGradeCodes,
+    verifyGradeCode,
+    getGradeCodesAdmin,
+    saveGradeCodes,
+    randomGradeCode,
+    fetchStudentSnapshot,
     fetchYearReports,
     setUserPassword,
     changeUserEmail,
