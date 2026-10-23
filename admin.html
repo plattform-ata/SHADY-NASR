@@ -1442,7 +1442,19 @@
                     data-enhance></select></div>
               </div>
               <div class="form-field"><label for="anFiles">مرفقات (صور أو PDF — حتى 4 ملفات)</label>
-                <input type="file" id="anFiles" accept="image/*,application/pdf" multiple />
+                <style>
+                  .an-pick{display:flex;align-items:center;justify-content:center;gap:12px;padding:18px 16px;border:2px dashed var(--surface-glass-border);border-radius:18px;cursor:pointer;text-align:start;transition:border-color .2s,background .2s}
+                  .an-pick:hover,.an-pick:focus-within{border-color:var(--accent);background:rgba(127,127,127,.08)}
+                  .an-pick__ico{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}
+                  .an-pick__ico svg{width:22px;height:22px}
+                  .an-pick__txt{display:flex;flex-direction:column;gap:2px;font-weight:800}
+                  .an-pick__txt small{font-weight:600;opacity:.65}
+                </style>
+                <label class="an-pick" for="anFiles">
+                  <span class="an-pick__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>
+                  <span class="an-pick__txt">رفع صور أو ملفات PDF<small>دوس هنا واختار الملفات من جهازك</small></span>
+                </label>
+                <input type="file" id="anFiles" accept="image/*,application/pdf" multiple hidden />
                 <div id="anFilesList" style="margin-top:8px;display:grid;gap:6px"></div></div>
               <p class="form-error" id="anErr" hidden></p>
               <div class="ad-actions">
@@ -1613,7 +1625,14 @@
                       <div class="lk-label">كود الدخول</div>
                       <div class="lk-code" id="lockCodeShow" dir="ltr"></div>
                       <div class="lk-stats" id="lockStats"></div>
-                      <button class="btn btn--ghost lk-print" type="button" id="lockPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>طباعة الكود وQR</button>
+                    </div>
+                  </div>
+                  <div class="lk-sec" id="lockExport" style="margin-top:18px">
+                    <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>تصدير كود وQR المنصة</h4>
+                    <p class="lk-hint" style="margin:0 0 12px">كروت للتوزيع على الطلاب فيها صورة الأستاذ والـ QR والكود، 4 كروت في الصفحة للقص.</p>
+                    <div class="gc-exp">
+                      <button class="btn btn--ghost" type="button" id="lockPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>تصدير PDF</button>
+                      <button class="btn btn--ghost" type="button" id="lockImg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg>تصدير صورة</button>
                     </div>
                   </div>
                 </div>
@@ -3455,7 +3474,7 @@
         var code = await lockGetCode(d.lockId), qr = $("#lockQr");
         LOCK.code = code;
         $("#lockCodeShow").textContent = code || "";
-        $("#lockPrint").hidden = !code;
+        $("#lockExport").hidden = !code;
         qr.hidden = !code;
         if (!code) { $("#lockCodeShow").textContent = "—"; $("#lockCodeShow").title = "الكود مش متاح للعرض من الجهاز ده؛ اقفل المنصة من جديد بكود جديد"; return; }
         try { await loadQrLib(); qr.innerHTML = qrSvg(code); }
@@ -3513,7 +3532,7 @@
             btn.disabled = codeEl.value.length !== 10;
           }
         });
-        $("#lockPrint").addEventListener("click", function () {
+        $("#lockPdf").addEventListener("click", function () {
           var d = LOCK.data, code = d && LOCK.code;
           if (!code) return;
           var svg = $("#lockQr").innerHTML;
@@ -3533,6 +3552,57 @@
             "</style></head><body><div class='grid'>" + one + one + one + one + "</div></body></html>";
           if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت كود دخول المنصة", filename: "platform-code-cards.pdf" });
           else toast("عارض الملفات مش متاح", true);
+        });
+        $("#lockImg").addEventListener("click", async function () {
+          var d = LOCK.data, code = d && LOCK.code;
+          if (!code) return;
+          var loadImg = function (src) { return new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; }); };
+          try { if (document.fonts && document.fonts.load) await document.fonts.load("800 40px Cairo"); } catch (e) { }
+          var svg = $("#lockQr").innerHTML;
+          if (!/xmlns=/.test(svg)) svg = svg.replace("<svg", "<svg xmlns='http://www.w3.org/2000/svg'");
+          var photo = await loadImg("shady-nasr.jpg"), logo = await loadImg("favicon.png");
+          var qr = await loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
+          var W = 1240, H = 1754, pad = 60, gap = 44, cols = 2, rows = 2;
+          var cw = (W - pad * 2 - gap) / cols, ch = (H - pad * 2 - gap) / rows;
+          var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+          var c = cv.getContext("2d");
+          c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+          function rr(x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+          function circleImg(im, cx, cy, r, bg) {
+            c.save(); c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.closePath(); c.fillStyle = bg; c.fill(); c.clip();
+            if (im) { var k = Math.max(2 * r / im.width, 2 * r / im.height); var w = im.width * k, h = im.height * k; c.drawImage(im, cx - w / 2, cy - r, w, h); }
+            c.restore();
+            c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.lineWidth = 7; c.strokeStyle = "#fff"; c.stroke();
+          }
+          function spaced(txt, cx, y, sp) {
+            var chars = txt.split(""), widths = chars.map(function (x) { return c.measureText(x).width; });
+            var total = widths.reduce(function (a, b) { return a + b; }, 0) + sp * (chars.length - 1), x = cx - total / 2;
+            c.textAlign = "left";
+            chars.forEach(function (x2, i) { c.fillText(x2, x, y); x += widths[i] + sp; });
+          }
+          for (var i = 0; i < cols * rows; i++) {
+            var x = pad + (i % cols) * (cw + gap), y = pad + Math.floor(i / cols) * (ch + gap), cx = x + cw / 2;
+            var g = c.createLinearGradient(x, y, x + cw * 0.5, y + ch);
+            g.addColorStop(0, "#35a2b8"); g.addColorStop(0.52, "#4a7fc4"); g.addColorStop(1, "#5b2a9a");
+            rr(x, y, cw, ch, 48); c.fillStyle = g; c.fill();
+            c.save(); c.setLineDash([14, 10]); c.strokeStyle = "#b9b9b9"; c.lineWidth = 3; rr(x - 10, y - 10, cw + 20, ch + 20, 56); c.stroke(); c.restore();
+            var py = y + 120;
+            circleImg(photo, cx, py, 70, "#5b2a9a");
+            circleImg(logo, cx + 70, py + 58, 32, "#fff");
+            var qs = 340, qx = cx - qs / 2, qy = y + 235;
+            rr(qx, qy, qs, qs, 28); c.fillStyle = "#fff"; c.fill();
+            if (qr) c.drawImage(qr, qx + 16, qy + 16, qs - 32, qs - 32);
+            c.direction = "ltr"; c.font = "800 46px Cairo, Tajawal, sans-serif";
+            var tw = code.split("").reduce(function (a, x3) { return a + c.measureText(x3).width + 9; }, -9), bw = tw + 64, bh = 78, by = qy + qs + 34;
+            rr(cx - bw / 2, by, bw, bh, 22); c.fillStyle = "#fff"; c.fill();
+            c.fillStyle = "#5b2a9a"; c.textBaseline = "middle"; spaced(code, cx, by + bh / 2 + 2, 9); c.textBaseline = "alphabetic";
+          }
+          cv.toBlob(function (blob) {
+            if (!blob) { toast("تعذر إنشاء الصورة", true); return; }
+            var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "platform-code-cards.png";
+            document.body.appendChild(a); a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+          }, "image/png");
         });
       }
       /* ================= أكواد الصفوف الدراسية ================= */
