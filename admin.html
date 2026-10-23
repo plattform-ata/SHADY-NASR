@@ -1526,7 +1526,7 @@
 
               <div class="dash-card set-card" data-set-card="lock" hidden>
                 <h3>قفل المنصة</h3>
-                <p class="ad-note">لما تقفل المنصة، أي طالب (سواء داخل بحسابه أو عامل حساب جديد) هتظهرله صفحة قفل قبل لوحة الطالب، ومينفعش يدخل غير بالكود المكوّن من 10 أرقام أو بمسح الـ QR بالكاميرا. لو الكود غلط ما يدخلش. أي طالب يفضل 30 يوم من غير ما يدخل الكود حسابه وكل بياناته بيتمسحوا نهائيًا (المسح بيتنفّذ لما تفتح لوحة الأدمن). فك القفل بيفتح المنصة للكل.</p>
+                <p class="ad-note">زرار «قفل المنصة» أمر بتنفّذه وقت ما تحب (ممكن أكتر من مرة في اليوم أو الأسبوع أو الشهر). بمجرد ما تنفّذه المنصة بتتقفل قدام كل الطلاب، حتى اللي فاتحين المنصة دلوقتي بتظهرلهم صفحة قفل فورًا، ومحدش بيدخل لوحة الطالب غير بالكود المكوّن من 10 أرقام أو بمسح الـ QR. أي حساب جديد كمان لازم يدخل الكود. الطالب اللي يفضل 30 يوم من غير ما يدخل الكود حسابه وكل بياناته بيتمسحوا نهائيًا.</p>
                 <p class="ad-note" id="lockStatus"></p>
                 <div class="ad-form" id="lockFormOff">
                   <div class="form-field">
@@ -1541,7 +1541,6 @@
                   <div id="lockQr" style="max-width:240px;background:#fff;padding:6px;border-radius:12px"></div>
                   <div id="lockCodeShow" dir="ltr" style="font-size:1.4rem;font-weight:700;letter-spacing:.2em"></div>
                   <div><button class="btn" type="button" id="lockPrint">طباعة الكود وQR</button></div>
-                  <div><button class="btn btn--accent" type="button" id="lockOff">فك قفل المنصة</button></div>
                 </div>
               </div>
 
@@ -3213,12 +3212,13 @@
         if (!st) return;
         if (d === undefined) { st.textContent = "تعذر قراءة حالة القفل — راجع الاتصال وقواعد Firebase."; return; }
         var on = !!(d && d.active);
-        $("#lockFormOff").hidden = on; $("#lockOn").hidden = !on;
-        if (!on) { st.textContent = "الحالة: المنصة مفتوحة."; return; }
+        $("#lockFormOff").hidden = false; $("#lockOn").hidden = !on;
+        $("#lockBtn").textContent = on ? "قفل المنصة من جديد" : "قفل المنصة";
+        if (!on) { st.textContent = "لسه ما اتنفّذش قفل للمنصة."; return; }
         var list = students();
         var ok = list.filter(function (u) { return u.lockOk === d.lockId; }).length;
         var left = Math.max(0, 30 - Math.floor((Date.now() - d.lockedAt) / 864e5));
-        st.textContent = "الحالة: المنصة مقفولة من " + new Date(d.lockedAt).toLocaleDateString("ar-EG") + " — دخل الكود " + ok + " من " + list.length + " طالب — فاضل " + left + " يوم قبل مسح اللي ما دخلش الكود.";
+        st.textContent = "آخر قفل اتنفّذ في " + new Date(d.lockedAt).toLocaleDateString("ar-EG") + " — دخل الكود " + ok + " من " + list.length + " طالب — فاضل " + left + " يوم قبل مسح اللي ما دخلش الكود.";
         var code = lockSavedCode(d.lockId), qr = $("#lockQr");
         $("#lockCodeShow").textContent = code || "";
         $("#lockPrint").hidden = !code;
@@ -3256,7 +3256,7 @@
           if (!/^\d{10}$/.test(code)) { setErr(err, "الكود لازم يكون 10 أرقام بالظبط."); return; }
           var cnt = students().length;
           var steps = [
-            { title: "تحذير 1 من 3", message: "هتتقفل المنصة قدام كل الطلاب (" + cnt + " طالب) ومحدش هيدخل لوحة الطالب غير بالكود أو الـ QR. متأكد؟", confirmText: "أوافق (1 من 3)" },
+            { title: "تحذير 1 من 3", message: "هتتقفل المنصة قدام كل الطلاب (" + cnt + " طالب)، حتى اللي فاتحين المنصة دلوقتي، ومحدش هيدخل لوحة الطالب غير بالكود أو الـ QR. " + (LOCK.data && LOCK.data.active ? "ده هيلغي القفل السابق وكل الطلاب لازم يدخلوا الكود الجديد. " : "") + "متأكد؟", confirmText: "أوافق (1 من 3)" },
             { title: "تحذير 2 من 3", message: "الطالب اللي ما يدخلش الكود خلال 30 يوم حسابه وكل بياناته هتتمسح نهائيًا. وكمان أي حساب جديد هيحتاج الكود قبل الدخول. موافق؟", confirmText: "أوافق (2 من 3)" },
             { title: "تحذير أخير 3 من 3", message: "الكود هو " + code + " — سجّله دلوقتي وسلّمه للطلاب. تقفل المنصة؟", confirmText: "أوافق واقفل (3 من 3)" }
           ];
@@ -3276,22 +3276,6 @@
             setErr(err, "تعذر قفل المنصة — راجع صلاحيات Firebase (platformLock) وحاول تاني.");
             btn.disabled = codeEl.value.length !== 10;
           }
-        });
-        $("#lockOff").addEventListener("click", async function () {
-          var steps = [
-            { title: "فك قفل المنصة 1 من 2", message: "المنصة هتتفتح لكل الطلاب من غير كود. متأكد؟", confirmText: "أوافق (1 من 2)" },
-            { title: "فك قفل المنصة 2 من 2", message: "لو قفلتها تاني بعد كده، كل الطلاب هيحتاجوا يدخلوا الكود من جديد وعدّاد الـ 30 يوم هيبدأ من الأول. تفك القفل؟", confirmText: "أوافق وافتح (2 من 2)" }
-          ];
-          for (var i = 0; i < steps.length; i++) {
-            var ok = await window.snDialog.confirm({ title: steps[i].title, message: steps[i].message, confirmText: steps[i].confirmText, cancelText: "إلغاء", tone: "danger", icon: "info" });
-            if (!ok) return;
-          }
-          try {
-            await SNAuth.deactivatePlatformLock();
-            try { localStorage.removeItem(LOCK_CODE_KEY); } catch (e) { }
-            LOCK.data = null; renderLock();
-            toast("تم فك قفل المنصة");
-          } catch (e) { console.error(e); toast("تعذر فك القفل — راجع الاتصال والصلاحيات.", true); }
         });
         $("#lockPrint").addEventListener("click", function () {
           var d = LOCK.data, code = d && lockSavedCode(d.lockId);
