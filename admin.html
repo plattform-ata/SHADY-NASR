@@ -1095,6 +1095,20 @@
       margin-top: 6px;
     }
 
+    .dv-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+    .dv-item { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--surface-glass-border); border-radius: 16px; flex-wrap: wrap; }
+    .dv-item.is-me { border-color: #1f8a57; background: rgba(31, 138, 87, .07); }
+    .dv-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: #fff; }
+    .dv-ico svg { width: 24px; height: 24px; }
+    .dv-main { flex: 1; min-width: 160px; display: grid; gap: 4px; }
+    .dv-name { font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dv-chip { font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #1f8a57; color: #fff; }
+    .dv-sub { font-size: .82rem; opacity: .8; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .dv-dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa5a8; display: inline-block; }
+    .dv-dot.on { background: #1f8a57; }
+    .dv-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dv-actions .btn { padding: 8px 14px; font-size: .85rem; }
+    .dv-foot { margin-top: 16px; }
     .set-tile--danger { border-color: #e5484d; }
     .set-tile--danger strong, .set-tile--danger .set-tile__ico { color: #e5484d; }
     .set-tile--danger:hover { background: rgba(229, 72, 77, .10); }
@@ -1545,6 +1559,12 @@
                     <circle cx="9" cy="10" r="2" />
                     <path d="m21 16-5-5-8 9" />
                   </svg></span><strong>إعدادات المنصة</strong><small>اسم المنصة واللوجو</small></button>
+              <button type="button" class="set-tile" data-set-open="devices"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+                    <path d="M11 18.5h2" />
+                  </svg></span><strong>الأجهزة المسجّلة</strong><small>الأجهزة اللي دخلت بحساب الأدمن</small></button>
               <button type="button" class="set-tile" data-set-open="promote"><span class="set-tile__ico"><svg
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -1591,12 +1611,14 @@
                   <div><button class="btn btn--accent" type="submit">حفظ الاسم</button></div>
                 </form>
 
-                <hr style="border:0;border-top:1px solid var(--surface-glass-border);margin:22px 0" />
-                <h3 style="margin-top:0">الأجهزة المسجّل منها دخول الأدمن</h3>
-                <p class="ad-note">كل جهاز فتح لوحة الأدمن بحسابك بيظهر هنا باسمه (موديل التليفون أو نوع الجهاز والمتصفح). تقدر تسجّل خروج أي جهاز لوحده، أو كل الأجهزة ما عدا الجهاز ده.</p>
-                <ul class="ad-list" id="devList"></ul>
+              </div>
+
+              <div class="dash-card set-card" data-set-card="devices" hidden>
+                <h3>الأجهزة المسجّلة</h3>
+                <p class="ad-note">كل جهاز فتح لوحة الأدمن بحسابك بيظهر هنا باسمه (موديل التليفون أو نوع الجهاز والمتصفح). تقدر تسمّي أي جهاز باسم تعرفه، وتسجّل خروج أي جهاز لوحده أو كل الأجهزة ما عدا الجهاز ده. الجهاز اللي مسجّل دخول من قبل التحديث بيظهر هنا أول ما يفتح لوحة الأدمن.</p>
+                <ul class="dv-list" id="devList"></ul>
                 <p class="form-error" id="devErr" hidden></p>
-                <div><button class="btn btn--danger" type="button" id="devAllBtn" disabled>تسجيل خروج من كل الأجهزة الأخرى</button></div>
+                <div class="dv-foot"><button class="btn btn--danger" type="button" id="devAllBtn" disabled>تسجيل خروج من كل الأجهزة الأخرى</button></div>
               </div>
 
               <div class="dash-card set-card" data-set-card="lock" hidden>
@@ -1862,7 +1884,7 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="firebase.js?v=20261126"></script>
+  <script defer src="firebase.js?v=20261127"></script>
   <script defer src="shared.js?v=20261104"></script>
   <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
@@ -3480,23 +3502,38 @@
         try { crypto.getRandomValues(a); } catch (e) { for (var i = 0; i < 9; i++) a[i] = Math.floor(Math.random() * 256); }
         return "d" + Array.prototype.map.call(a, function (b) { return b.toString(16).padStart(2, "0"); }).join("");
       }
-      async function devGuessName() {
-        var ua = navigator.userAgent || "", model = "", os = "", br = "";
+      var DEV_BRANDS = [
+        [/^SM-|^GT-|^SGH-/i, "Samsung"], [/^Pixel/i, "Google"], [/^(CPH|PGJ|PHM|PCL)/i, "OPPO"], [/^RMX/i, "realme"],
+        [/^(V\d{4}|vivo)/i, "vivo"], [/^(Redmi|POCO|Mi |M\d{4}[A-Z]\d|22\d{6}|23\d{6}|21\d{6})/i, "Xiaomi"],
+        [/^(LE\d|IN\d|KB\d|HD\d|NE\d|CPH)/i, "OnePlus"], [/^(TECNO|Tecno)/, "Tecno"], [/^(Infinix|X6\d{3})/i, "Infinix"],
+        [/^(XT\d|moto)/i, "Motorola"], [/^(ANE|ELE|VOG|LYA|JSN|STK|ALN|NTH|[A-Z]{3}-[LA]\d{2})/, "Huawei"]
+      ];
+      async function devGuess() {
+        var ua = navigator.userAgent || "", model = "", os = "", br = "", winVer = "";
         try {
           var uad = navigator.userAgentData;
-          if (uad && uad.getHighEntropyValues) { var v = await uad.getHighEntropyValues(["model", "platform"]); if (v && v.model) model = v.model; }
+          if (uad && uad.getHighEntropyValues) {
+            var v = await uad.getHighEntropyValues(["model", "platform", "platformVersion"]);
+            if (v && v.model) model = v.model;
+            if (v && v.platform === "Windows" && v.platformVersion) winVer = parseInt(v.platformVersion, 10) >= 13 ? "11" : "10";
+          }
         } catch (e) { }
-        if (/iPhone/.test(ua)) os = "iPhone";
-        else if (/iPad/.test(ua)) os = "iPad";
+        var kind = "desktop";
+        if (/iPhone/.test(ua)) { os = "iPhone"; kind = "phone"; }
+        else if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) { os = "iPad"; kind = "tablet"; }
         else if (/Android/.test(ua)) {
-          os = "Android";
-          if (!model) { var m = /Android [\d.]+;\s*([^;)]+?)(?:\s+Build|\))/.exec(ua); if (m && m[1] && m[1].length > 1 && !/^(K|Mobile)$/.test(m[1])) model = m[1].trim(); }
+          kind = /Mobile/.test(ua) ? "phone" : "tablet";
+          if (!model) { var m = /Android [\d.]+;\s*([^;)]+?)(?:\s+Build|\))/.exec(ua); if (m && m[1] && m[1].length > 1 && !/^(K|Mobile|Android)$/i.test(m[1])) model = m[1].trim(); }
+          if (model) {
+            var brand = ""; DEV_BRANDS.some(function (b) { if (b[0].test(model)) { brand = b[1]; return true; } return false; });
+            os = (brand && model.toLowerCase().indexOf(brand.toLowerCase()) !== 0 ? brand + " " : "") + model;
+          } else os = (kind === "phone" ? "تليفون" : "تابلت") + " Android";
         }
-        else if (/Windows/.test(ua)) os = "Windows";
-        else if (/Mac OS X|Macintosh/.test(ua)) os = "Mac";
+        else if (/Windows/.test(ua)) os = "كمبيوتر Windows" + (winVer ? " " + winVer : "");
+        else if (/Mac OS X|Macintosh/.test(ua)) os = "كمبيوتر Mac";
         else if (/CrOS/.test(ua)) os = "Chromebook";
-        else if (/Linux/.test(ua)) os = "Linux";
-        else os = "جهاز";
+        else if (/Linux/.test(ua)) os = "كمبيوتر Linux";
+        else os = "جهاز غير معروف";
         if (/Edg\//.test(ua)) br = "Edge";
         else if (/OPR\//.test(ua)) br = "Opera";
         else if (/SamsungBrowser/.test(ua)) br = "Samsung Internet";
@@ -3504,8 +3541,13 @@
         else if (/Chrome|CriOS/.test(ua)) br = "Chrome";
         else if (/Safari/.test(ua)) br = "Safari";
         var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
-        return (model || os) + (model && os === "Android" ? "" : "") + " · " + (br || "متصفح") + (standalone ? " (تطبيق)" : "");
+        return { kind: kind, name: os + " · " + (br || "متصفح") + (standalone ? " (تطبيق)" : "") };
       }
+      var DEV_ICONS = {
+        phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
+        tablet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M11 18h2"/></svg>',
+        desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>'
+      };
       function devForceLogout() {
         try { if (DV.stop) DV.stop(); } catch (e) { }
         localStorage.removeItem("shadynasr-auth");
@@ -3527,12 +3569,19 @@
         var map = DV.map || {};
         var list = Object.keys(map).map(function (k) { var d = map[k] || {}; d._id = k; return d; })
           .sort(function (a, b) { return (a._id === DV.id ? -1 : b._id === DV.id ? 1 : String(b.lastSeen || "").localeCompare(String(a.lastSeen || ""))); });
-        if (!list.length) { box.innerHTML = "<li><span class='ad-li-main'><span class='ad-li-name'>مفيش أجهزة ظاهرة</span></span></li>"; if (allBtn) allBtn.disabled = true; return; }
+        if (!list.length) { box.innerHTML = "<li class='dv-item'><span class='dv-main'>مفيش أجهزة ظاهرة لسه.</span></li>"; if (allBtn) allBtn.disabled = true; return; }
         box.innerHTML = list.map(function (d) {
           var me = d._id === DV.id;
-          return "<li><span class='ad-li-main'><span class='ad-li-name'>" + esc(d.name || "جهاز غير معروف") + (me ? " <small style='color:#1f8a57;font-weight:800'>(الجهاز ده)</small>" : "") +
-            "</span><small class='ad-li-sub'>آخر نشاط: " + esc(devAgo(d.lastSeen)) + (d.createdAt ? " • أول دخول: " + esc(new Date(d.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })) : "") + "</small></span>" +
-            (me ? "" : "<button type='button' class='btn btn--ghost' data-dev-del='" + esc(d._id) + "'>تسجيل خروج</button>") + "</li>";
+          var t = Date.parse(d.lastSeen), live = me || (isFinite(t) && Date.now() - t < 12 * 60 * 1000);
+          var title = d.label || d.name || "جهاز غير معروف";
+          var created = d.createdAt ? new Date(d.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }) : "";
+          return "<li class='dv-item" + (me ? " is-me" : "") + "'>" +
+            "<span class='dv-ico' aria-hidden='true'>" + (DEV_ICONS[d.kind] || DEV_ICONS.desktop) + "</span>" +
+            "<div class='dv-main'><div class='dv-name'><span>" + esc(title) + "</span>" + (me ? "<span class='dv-chip'>الجهاز ده</span>" : "") + "</div>" +
+            (d.label && d.name ? "<div class='dv-sub'>" + esc(d.name) + "</div>" : "") +
+            "<div class='dv-sub'><span class='dv-dot" + (live ? " on" : "") + "'></span>" + (live ? "نشط دلوقتي" : "آخر نشاط " + esc(devAgo(d.lastSeen))) + (created ? " • أول دخول " + esc(created) : "") + "</div></div>" +
+            "<div class='dv-actions'><button type='button' class='btn btn--ghost' data-dev-ren='" + esc(d._id) + "'>تسمية</button>" +
+            (me ? "" : "<button type='button' class='btn btn--danger' data-dev-del='" + esc(d._id) + "'>تسجيل خروج</button>") + "</div></li>";
         }).join("");
         if (allBtn) allBtn.disabled = list.length < 2;
       }
@@ -3543,8 +3592,8 @@
         try {
           var exists = await SNAuth.adminDeviceExists(session.id, DV.id);
           if (st.reg && !exists) { devForceLogout(); return; } // اتمسح من جهاز أدمن تاني وإحنا مقفولين
-          var name = await devGuessName();
-          await SNAuth.registerAdminDevice(session.id, DV.id, { name: name, ua: navigator.userAgent });
+          var g = await devGuess();
+          await SNAuth.registerAdminDevice(session.id, DV.id, { name: g.name, kind: g.kind, ua: navigator.userAgent });
           devSave({ id: DV.id, reg: true });
           DV.registered = true;
         } catch (e) { console.warn("تعذر تسجيل جهاز الأدمن (راجع صلاحيات adminDevices)", e); return; }
@@ -3557,9 +3606,20 @@
 
         var err = $("#devErr");
         $("#devList").addEventListener("click", async function (e) {
+          var rn = e.target.closest("[data-dev-ren]");
+          if (rn) {
+            var cur = (DV.map || {})[rn.dataset.devRen] || {};
+            var nm = window.prompt("اكتب اسم للجهاز ده (سيبه فاضي عشان ترجّع الاسم الأصلي):", cur.label || "");
+            if (nm === null) return;
+            setErr(err, "");
+            try { await SNAuth.renameAdminDevice(session.id, rn.dataset.devRen, nm); toast("تم حفظ الاسم"); }
+            catch (x) { setErr(err, "تعذر حفظ الاسم — راجع صلاحيات Firebase."); }
+            return;
+          }
           var b = e.target.closest("[data-dev-del]"); if (!b) return;
           var d = (DV.map || {})[b.dataset.devDel];
-          var ok = await window.snDialog.confirm({ title: "تسجيل خروج جهاز", message: "هيتسجّل خروج «" + ((d && d.name) || "الجهاز") + "» من لوحة الأدمن. تكمّل؟", confirmText: "سجّل الخروج", cancelText: "إلغاء", tone: "danger", icon: "logout" });
+          var dn = d && (d.label || d.name);
+          var ok = await window.snDialog.confirm({ title: "تسجيل خروج جهاز", message: "هيتسجّل خروج «" + (dn || "الجهاز") + "» من لوحة الأدمن. تكمّل؟", confirmText: "سجّل الخروج", cancelText: "إلغاء", tone: "danger", icon: "logout" });
           if (!ok) return;
           setErr(err, "");
           try { await SNAuth.removeAdminDevice(session.id, b.dataset.devDel); toast("تم تسجيل خروج الجهاز"); }
