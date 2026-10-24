@@ -1590,6 +1590,13 @@
                       required /></div>
                   <div><button class="btn btn--accent" type="submit">حفظ الاسم</button></div>
                 </form>
+
+                <hr style="border:0;border-top:1px solid var(--surface-glass-border);margin:22px 0" />
+                <h3 style="margin-top:0">الأجهزة المسجّل منها دخول الأدمن</h3>
+                <p class="ad-note">كل جهاز فتح لوحة الأدمن بحسابك بيظهر هنا باسمه (موديل التليفون أو نوع الجهاز والمتصفح). تقدر تسجّل خروج أي جهاز لوحده، أو كل الأجهزة ما عدا الجهاز ده.</p>
+                <ul class="ad-list" id="devList"></ul>
+                <p class="form-error" id="devErr" hidden></p>
+                <div><button class="btn btn--danger" type="button" id="devAllBtn" disabled>تسجيل خروج من كل الأجهزة الأخرى</button></div>
               </div>
 
               <div class="dash-card set-card" data-set-card="lock" hidden>
@@ -3463,6 +3470,110 @@
         });
       }
 
+      /* ================= أجهزة الأدمن المسجّلة ================= */
+      var DEV_KEY = "shadynasr-admin-device";
+      var DV = { id: "", map: null, registered: false, stop: null };
+      function devState() { try { return JSON.parse(localStorage.getItem(DEV_KEY)) || {}; } catch (e) { return {}; } }
+      function devSave(o) { try { localStorage.setItem(DEV_KEY, JSON.stringify(o)); } catch (e) { } }
+      function devRandomId() {
+        var a = new Uint8Array(9);
+        try { crypto.getRandomValues(a); } catch (e) { for (var i = 0; i < 9; i++) a[i] = Math.floor(Math.random() * 256); }
+        return "d" + Array.prototype.map.call(a, function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+      }
+      async function devGuessName() {
+        var ua = navigator.userAgent || "", model = "", os = "", br = "";
+        try {
+          var uad = navigator.userAgentData;
+          if (uad && uad.getHighEntropyValues) { var v = await uad.getHighEntropyValues(["model", "platform"]); if (v && v.model) model = v.model; }
+        } catch (e) { }
+        if (/iPhone/.test(ua)) os = "iPhone";
+        else if (/iPad/.test(ua)) os = "iPad";
+        else if (/Android/.test(ua)) {
+          os = "Android";
+          if (!model) { var m = /Android [\d.]+;\s*([^;)]+?)(?:\s+Build|\))/.exec(ua); if (m && m[1] && m[1].length > 1 && !/^(K|Mobile)$/.test(m[1])) model = m[1].trim(); }
+        }
+        else if (/Windows/.test(ua)) os = "Windows";
+        else if (/Mac OS X|Macintosh/.test(ua)) os = "Mac";
+        else if (/CrOS/.test(ua)) os = "Chromebook";
+        else if (/Linux/.test(ua)) os = "Linux";
+        else os = "جهاز";
+        if (/Edg\//.test(ua)) br = "Edge";
+        else if (/OPR\//.test(ua)) br = "Opera";
+        else if (/SamsungBrowser/.test(ua)) br = "Samsung Internet";
+        else if (/Firefox|FxiOS/.test(ua)) br = "Firefox";
+        else if (/Chrome|CriOS/.test(ua)) br = "Chrome";
+        else if (/Safari/.test(ua)) br = "Safari";
+        var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+        return (model || os) + (model && os === "Android" ? "" : "") + " · " + (br || "متصفح") + (standalone ? " (تطبيق)" : "");
+      }
+      function devForceLogout() {
+        try { if (DV.stop) DV.stop(); } catch (e) { }
+        localStorage.removeItem("shadynasr-auth");
+        localStorage.removeItem("shadynasr-current-user");
+        try { localStorage.removeItem(DEV_KEY); } catch (e) { }
+        window.location.replace("index.html");
+      }
+      function devAgo(iso) {
+        var t = Date.parse(iso); if (!isFinite(t)) return "—";
+        var d = Math.round((Date.now() - t) / 1000);
+        if (d < 120) return "دلوقتي";
+        if (d < 3600) return "من " + Math.round(d / 60) + " دقيقة";
+        if (d < 86400) return "من " + Math.round(d / 3600) + " ساعة";
+        return "من " + Math.round(d / 86400) + " يوم";
+      }
+      function renderDevices() {
+        var box = $("#devList"), allBtn = $("#devAllBtn");
+        if (!box) return;
+        var map = DV.map || {};
+        var list = Object.keys(map).map(function (k) { var d = map[k] || {}; d._id = k; return d; })
+          .sort(function (a, b) { return (a._id === DV.id ? -1 : b._id === DV.id ? 1 : String(b.lastSeen || "").localeCompare(String(a.lastSeen || ""))); });
+        if (!list.length) { box.innerHTML = "<li><span class='ad-li-main'><span class='ad-li-name'>مفيش أجهزة ظاهرة</span></span></li>"; if (allBtn) allBtn.disabled = true; return; }
+        box.innerHTML = list.map(function (d) {
+          var me = d._id === DV.id;
+          return "<li><span class='ad-li-main'><span class='ad-li-name'>" + esc(d.name || "جهاز غير معروف") + (me ? " <small style='color:#1f8a57;font-weight:800'>(الجهاز ده)</small>" : "") +
+            "</span><small class='ad-li-sub'>آخر نشاط: " + esc(devAgo(d.lastSeen)) + (d.createdAt ? " • أول دخول: " + esc(new Date(d.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })) : "") + "</small></span>" +
+            (me ? "" : "<button type='button' class='btn btn--ghost' data-dev-del='" + esc(d._id) + "'>تسجيل خروج</button>") + "</li>";
+        }).join("");
+        if (allBtn) allBtn.disabled = list.length < 2;
+      }
+      async function initDevices() {
+        if (!session || !session.id || !window.SNAuth || !SNAuth.registerAdminDevice) return;
+        var st = devState();
+        DV.id = st.id || devRandomId();
+        try {
+          var exists = await SNAuth.adminDeviceExists(session.id, DV.id);
+          if (st.reg && !exists) { devForceLogout(); return; } // اتمسح من جهاز أدمن تاني وإحنا مقفولين
+          var name = await devGuessName();
+          await SNAuth.registerAdminDevice(session.id, DV.id, { name: name, ua: navigator.userAgent });
+          devSave({ id: DV.id, reg: true });
+          DV.registered = true;
+        } catch (e) { console.warn("تعذر تسجيل جهاز الأدمن (راجع صلاحيات adminDevices)", e); return; }
+        DV.stop = SNAuth.watchAdminDevices(session.id, function (map) {
+          DV.map = map || {};
+          if (DV.registered && !DV.map[DV.id]) { devForceLogout(); return; }
+          renderDevices();
+        });
+        setInterval(function () { SNAuth.touchAdminDevice(session.id, DV.id).catch(function () { }); }, 5 * 60 * 1000);
+
+        var err = $("#devErr");
+        $("#devList").addEventListener("click", async function (e) {
+          var b = e.target.closest("[data-dev-del]"); if (!b) return;
+          var d = (DV.map || {})[b.dataset.devDel];
+          var ok = await window.snDialog.confirm({ title: "تسجيل خروج جهاز", message: "هيتسجّل خروج «" + ((d && d.name) || "الجهاز") + "» من لوحة الأدمن. تكمّل؟", confirmText: "سجّل الخروج", cancelText: "إلغاء", tone: "danger", icon: "logout" });
+          if (!ok) return;
+          setErr(err, "");
+          try { await SNAuth.removeAdminDevice(session.id, b.dataset.devDel); toast("تم تسجيل خروج الجهاز"); }
+          catch (x) { setErr(err, "تعذر تسجيل الخروج — راجع صلاحيات Firebase."); }
+        });
+        $("#devAllBtn").addEventListener("click", async function () {
+          var ok = await window.snDialog.confirm({ title: "خروج من كل الأجهزة الأخرى", message: "هيتسجّل خروج كل الأجهزة ما عدا الجهاز ده. تكمّل؟", confirmText: "سجّل الخروج للكل", cancelText: "إلغاء", tone: "danger", icon: "logout" });
+          if (!ok) return;
+          setErr(err, "");
+          try { var n = await SNAuth.removeOtherAdminDevices(session.id, DV.id); toast("اتسجّل خروج " + n + " جهاز"); }
+          catch (x) { setErr(err, "تعذر تسجيل الخروج — راجع صلاحيات Firebase."); }
+        });
+      }
+
       /* ================= مسح بيانات المنصة (ما عدا الأدمن) ================= */
       function bindWipe() {
         var word = $("#wipeWord"), btn = $("#wipeBtn"), err = $("#wipeErr");
@@ -4033,6 +4144,8 @@
           }
           if (fresh.fullName !== session.fullName) updateSession({ fullName: fresh.fullName });
         } catch (e) { /* مفيش نت: نكمّل بالجلسة المحلية */ }
+
+        initDevices();
 
         try {
           await corePromise;
