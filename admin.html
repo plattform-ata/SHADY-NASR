@@ -1737,6 +1737,18 @@
                   .lk-qr svg{display:block;width:100%;height:auto}
                   .lk-label{font-size:.85rem;opacity:.7;margin-bottom:4px}
                   .lk-code{font-size:1.6rem;font-weight:800;letter-spacing:.22em;margin-bottom:12px;word-break:break-all}
+                  .lk-codebox{display:flex;align-items:stretch;gap:8px;padding:8px;margin-bottom:12px;border:1.5px solid var(--surface-glass-border);background:rgba(127,127,127,.09);border-radius:16px;transition:border-color .2s}
+                  .lk-codebox:hover,.lk-codebox:focus-within{border-color:var(--accent)}
+                  .lk-codebox .lk-code{flex:1;min-width:0;margin:0;padding:6px 8px 6px calc(8px + .22em);display:flex;align-items:center;justify-content:center;font-size:1.45rem;white-space:nowrap}
+                  .lk-copy{position:relative;width:52px;flex:none;border-radius:12px;border:1.5px solid var(--surface-glass-border);background:var(--surface-glass,transparent);color:var(--accent);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .2s,color .2s,border-color .2s,transform .15s}
+                  .lk-copy:hover,.lk-copy:focus-visible{background:var(--accent);border-color:var(--accent);color:#fff;outline:none}
+                  .lk-copy:active{transform:scale(.94)}
+                  .lk-copy:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+                  .lk-copy svg{width:22px;height:22px;grid-area:1/1;transition:opacity .15s,transform .2s}
+                  .lk-copy .lk-copy__ok{opacity:0;transform:scale(.6)}
+                  .lk-copy.is-done{background:#1f8a57;border-color:#1f8a57;color:#fff}
+                  .lk-copy.is-done .lk-copy__i{opacity:0;transform:scale(.6)}
+                  .lk-copy.is-done .lk-copy__ok{opacity:1;transform:scale(1)}
                   .lk-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
                   .lk-stat{padding:6px 12px;border-radius:12px;background:rgba(127,127,127,.12);font-size:.85rem;font-weight:700}
                   .lk-print{display:inline-flex;align-items:center;gap:8px}
@@ -1757,13 +1769,16 @@
                     <div class="lk-qr" id="lockQr"></div>
                     <div>
                       <div class="lk-label">كود الدخول</div>
-                      <div class="lk-code" id="lockCodeShow" dir="ltr"></div>
+                      <div class="lk-codebox">
+                        <div class="lk-code" id="lockCodeShow" dir="ltr"></div>
+                        <button type="button" class="lk-copy" id="lockCopy" title="نسخ الكود" aria-label="نسخ الكود"><svg class="lk-copy__i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg><svg class="lk-copy__ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+                      </div>
                       <div class="lk-stats" id="lockStats"></div>
                     </div>
                   </div>
                   <div class="lk-sec" id="lockExport" style="margin-top:18px">
                     <h4 class="lk-sec__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>تصدير كود وQR المنصة</h4>
-                    <p class="lk-hint" style="margin:0 0 12px">كروت للتوزيع على الطلاب فيها صورة الأستاذ والـ QR والكود، 4 كروت في الصفحة للقص.</p>
+                    <p class="lk-hint" style="margin:0 0 12px">كارت للتوزيع على الطلاب فيه صورة الأستاذ والـ QR والكود، كارت واحد في الملف.</p>
                     <div class="gc-exp">
                       <button class="btn btn--ghost" type="button" id="lockPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>تصدير PDF</button>
                       <button class="btn btn--ghost" type="button" id="lockImg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg>تصدير صورة</button>
@@ -1972,12 +1987,12 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="firebase.js?v=20261130"></script>
-  <script defer src="shared.js?v=20261130"></script>
+  <script defer src="firebase.js?v=20261132"></script>
+  <script defer src="shared.js?v=20261132"></script>
   <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
   <script defer src="exams-admin.js?v=20261118"></script>
-  <script defer src="grade-access.js?v=20261130"></script>
+  <script defer src="grade-access.js?v=20261132"></script>
   <script defer src="progress-chart.js?v=20261115"></script>
   <script>
     (function () {
@@ -3826,6 +3841,7 @@
         LOCK.code = code;
         $("#lockCodeShow").textContent = code || "";
         $("#lockExport").hidden = !code;
+        var lcb = $("#lockCopy"); if (lcb) lcb.disabled = !code;
         qr.hidden = !code;
         if (!code) { $("#lockCodeShow").textContent = "—"; $("#lockCodeShow").title = "الكود مش متاح للعرض من الجهاز ده؛ اقفل المنصة من جديد بكود جديد"; return; }
         try { await loadQrLib(); qr.innerHTML = qrSvg(code); }
@@ -3899,24 +3915,42 @@
             toast("تعذر فك القفل — راجع صلاحيات Firebase (platformLock) وحاول تاني.", true);
           } finally { b.disabled = false; }
         });
+        $("#lockCopy").addEventListener("click", function () {
+          var btn = this, code = LOCK.code;
+          if (!code) { toast("مفيش كود للنسخ", true); return; }
+          var done = function () {
+            btn.classList.add("is-done"); toast("اتنسخ الكود");
+            setTimeout(function () { btn.classList.remove("is-done"); }, 1400);
+          };
+          var fallback = function () {
+            try {
+              var t = document.createElement("textarea"); t.value = code; t.setAttribute("readonly", "");
+              t.style.cssText = "position:fixed;top:-100px;opacity:0"; document.body.appendChild(t); t.select();
+              var ok = document.execCommand("copy"); t.remove();
+              ok ? done() : toast("تعذر النسخ", true);
+            } catch (e) { toast("تعذر النسخ", true); }
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fallback);
+          else fallback();
+        });
         $("#lockPdf").addEventListener("click", function () {
           var d = LOCK.data, code = d && LOCK.code;
           if (!code) return;
           var svg = $("#lockQr").innerHTML;
           var base = function (f) { return new URL(f, location.href).href; };
-          /* كارت صغير للتوزيع على الطلاب: صورة الأستاذ + اللوجو + QR + الكود بس، 4 كروت في الصفحة للقص */
+          /* كارت صغير للتوزيع على الطلاب: صورة الأستاذ + اللوجو + QR + الكود بس، كارت واحد */
           var one = "<div class='card'><div class='ph'><div class='photo'></div><div class='logo'></div></div>" +
             "<div class='qr'>" + svg + "</div><div class='code'>" + esc(code) + "</div></div>";
           var html = "<!doctype html><html lang='ar' dir='rtl'><head><meta charset='utf-8'><title>كود دخول المنصة</title><style>" +
             "*{box-sizing:border-box}body{font-family:Tajawal,Cairo,'Segoe UI',Tahoma,sans-serif;margin:0;background:#fff}" +
-            ".grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:6px}" +
+            ".grid{display:grid;grid-template-columns:minmax(0,360px);justify-content:center;gap:16px;padding-top:14px}" +
             ".card{height:490px;border-radius:28px;background:linear-gradient(160deg,#35a2b8 0%,#4a7fc4 52%,#5b2a9a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;outline:2px dashed #b9b9b9;outline-offset:6px}" +
             ".ph{position:relative;width:132px;height:132px}" +
             ".photo{width:132px;height:132px;border-radius:50%;border:5px solid #fff;background:#5b2a9a url(" + base("shady-nasr.jpg") + ") center top/cover no-repeat}" +
             ".logo{position:absolute;right:-18px;bottom:-6px;width:62px;height:62px;border-radius:50%;border:4px solid #fff;background:#fff url(" + base("favicon.png") + ") center/cover no-repeat}" +
             ".qr{background:#fff;border-radius:22px;padding:14px;margin-top:6px}.qr svg{display:block;width:212px;height:212px}" +
             ".code{direction:ltr;background:#fff;color:#5b2a9a;border-radius:16px;padding:8px 18px;font-size:30px;font-weight:800;letter-spacing:5px}" +
-            "</style></head><body><div class='grid'>" + one + one + one + one + "</div></body></html>";
+            "</style></head><body><div class='grid'>" + one + "</div></body></html>";
           if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت كود دخول المنصة", filename: "platform-code-cards.pdf" });
           else toast("عارض الملفات مش متاح", true);
         });
@@ -3929,11 +3963,11 @@
           if (!/xmlns=/.test(svg)) svg = svg.replace("<svg", "<svg xmlns='http://www.w3.org/2000/svg'");
           var photo = await loadImg("shady-nasr.jpg"), logo = await loadImg("favicon.png");
           var qr = await loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
-          var W = 1240, H = 1754, pad = 60, gap = 44, cols = 2, rows = 2;
-          var cw = (W - pad * 2 - gap) / cols, ch = (H - pad * 2 - gap) / rows;
+          var cw = 538, ch = 795, m = 40, S = 2, W = (cw + m * 2) * S, H = (ch + m * 2) * S;
           var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
           var c = cv.getContext("2d");
-          c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+          c.scale(S, S);
+          c.fillStyle = "#fff"; c.fillRect(0, 0, W / S, H / S);
           function rr(x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
           function circleImg(im, cx, cy, r, bg) {
             c.save(); c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.closePath(); c.fillStyle = bg; c.fill(); c.clip();
@@ -3947,8 +3981,8 @@
             c.textAlign = "left";
             chars.forEach(function (x2, i) { c.fillText(x2, x, y); x += widths[i] + sp; });
           }
-          for (var i = 0; i < cols * rows; i++) {
-            var x = pad + (i % cols) * (cw + gap), y = pad + Math.floor(i / cols) * (ch + gap), cx = x + cw / 2;
+          for (var i = 0; i < 1; i++) {
+            var x = m, y = m, cx = x + cw / 2;
             var g = c.createLinearGradient(x, y, x + cw * 0.5, y + ch);
             g.addColorStop(0, "#35a2b8"); g.addColorStop(0.52, "#4a7fc4"); g.addColorStop(1, "#5b2a9a");
             rr(x, y, cw, ch, 48); c.fillStyle = g; c.fill();
@@ -3975,6 +4009,7 @@
       /* ================= أكواد الصفوف الدراسية ================= */
       var GC = { saved: {} };
       var GC_ICO_DICE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg>';
+      var GC_ICO_IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>';
       var GC_ICO_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
       function gcGrades() { return window.SNGradeAccess ? SNGradeAccess.GRADES : []; }
       var GC_ICO_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
@@ -3983,7 +4018,8 @@
           "<div class='gc-row__ctl'><input class='sn-code' type='text' maxlength='12' dir='ltr' autocomplete='off' autocorrect='off' spellcheck='false' data-lpignore='true' placeholder='بدون كود' data-gc-input='" + g + "' value='" + esc(GC.saved[g] || "") + "' />" +
           "<button type='button' class='gc-ico' data-gc-gen='" + g + "' title='توليد كود عشوائي' aria-label='توليد كود عشوائي'>" + GC_ICO_DICE + "</button>" +
           "<button type='button' class='gc-ico' data-gc-copy='" + g + "' title='نسخ الكود' aria-label='نسخ الكود'>" + GC_ICO_COPY + "</button>" +
-          "<button type='button' class='gc-ico' data-gc-clear='" + g + "' title='مسح الكود' aria-label='مسح الكود'>" + GC_ICO_X + "</button></div></div>";
+          "<button type='button' class='gc-ico' data-gc-clear='" + g + "' title='مسح الكود' aria-label='مسح الكود'>" + GC_ICO_X + "</button>" +
+          "<button type='button' class='gc-ico' data-gc-img='" + g + "' title='تصدير صورة الكارت' aria-label='تصدير صورة الكارت'>" + GC_ICO_IMG + "</button></div></div>";
       }
       function gcChip(g) {
         var chip = $("[data-gc-chip='" + g + "']"), inp = $("[data-gc-input='" + g + "']"); if (!chip || !inp) return;
@@ -4034,17 +4070,19 @@
         if (window.SNPdf) window.SNPdf.openHtml(html, { title: "كروت أكواد الصفوف الدراسية", filename: "grade-code-cards.pdf" });
         else toast("عارض الملفات مش متاح", true);
       }
-      async function gcExportImage() {
-        var items = gcSavedItems();
+      async function gcExportImage(only) {
+        var items = only ? [{ grade: only, name: GRADE_NAMES[only] || only, code: GC.saved[only] }] : gcSavedItems();
         if (!items.length) { toast("احفظ كود واحد على الأقل الأول", true); return; }
         var loadImg = function (src) { return new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; }); };
         try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load("800 40px Cairo"), document.fonts.load("800 40px Tajawal")]); } catch (e) { }
         var photo = await loadImg("shady-nasr.jpg"), logo = await loadImg("favicon.png");
-        var W = 1240, H = 1754, pad = 60, gap = 44, cols = 2, rows = 3;
+        var W = 1240, H = 1754, pad = 60, gap = 44, cols = 2, rows = 3, S = 1, m = 0;
         var cw = (W - pad * 2 - gap) / cols, ch = (H - pad * 2 - gap * (rows - 1)) / rows;
+        if (only) { cw = 538; ch = 515; m = 40; S = 2; W = (cw + m * 2) * S; H = (ch + m * 2) * S; }
         var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
         var c = cv.getContext("2d");
-        c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+        c.scale(S, S);
+        c.fillStyle = "#fff"; c.fillRect(0, 0, W / S, H / S);
         function rr(x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
         function circleImg(im, cx, cy, r, bg) {
           c.save(); c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.closePath(); c.fillStyle = bg; c.fill(); c.clip();
@@ -4059,7 +4097,7 @@
           chars.forEach(function (ch2, i) { c.fillText(ch2, x, y); x += widths[i] + sp; });
         }
         items.slice(0, cols * rows).forEach(function (it, i) {
-          var x = pad + (i % cols) * (cw + gap), y = pad + Math.floor(i / cols) * (ch + gap), cx = x + cw / 2;
+          var x = only ? m : pad + (i % cols) * (cw + gap), y = only ? m : pad + Math.floor(i / cols) * (ch + gap), cx = x + cw / 2;
           var g = c.createLinearGradient(x, y, x + cw * 0.5, y + ch);
           g.addColorStop(0, "#35a2b8"); g.addColorStop(0.52, "#4a7fc4"); g.addColorStop(1, "#5b2a9a");
           rr(x, y, cw, ch, 44); c.fillStyle = g; c.fill();
@@ -4078,7 +4116,7 @@
         });
         cv.toBlob(function (blob) {
           if (!blob) { toast("تعذر إنشاء الصورة", true); return; }
-          var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "grade-code-cards.png";
+          var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = only ? "grade-code-" + only + ".png" : "grade-code-cards.png";
           document.body.appendChild(a); a.click();
           setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
         }, "image/png");
@@ -4092,10 +4130,16 @@
           i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); setErr(err, ""); gcChip(i.dataset.gcInput);
         });
         list.addEventListener("click", function (e) {
-          var gen = e.target.closest("[data-gc-gen]"), clr = e.target.closest("[data-gc-clear]"), cp = e.target.closest("[data-gc-copy]");
+          var gen = e.target.closest("[data-gc-gen]"), clr = e.target.closest("[data-gc-clear]"), cp = e.target.closest("[data-gc-copy]"), im = e.target.closest("[data-gc-img]");
           var inp = function (g) { return list.querySelector("[data-gc-input='" + g + "']"); };
           if (gen) { inp(gen.dataset.gcGen).value = SNGradeAccess.randomCode(); setErr(err, ""); gcChip(gen.dataset.gcGen); }
           if (clr) { inp(clr.dataset.gcClear).value = ""; setErr(err, ""); gcChip(clr.dataset.gcClear); }
+          if (im) {
+            var gg = im.dataset.gcImg, cur = SNGradeAccess.normalize(inp(gg).value);
+            if (!cur) { toast("مفيش كود للتصدير", true); return; }
+            if (cur !== (GC.saved[gg] || "")) { toast("احفظ الكود الأول عشان الصورة تطابق الكود الشغّال", true); return; }
+            gcExportImage(gg);
+          }
           if (cp) {
             var v = inp(cp.dataset.gcCopy).value;
             if (!v) { toast("مفيش كود للنسخ", true); return; }
