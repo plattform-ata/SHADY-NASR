@@ -10,8 +10,9 @@
 (function () {
   "use strict";
 
-  var GROQ_API_KEY = "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";
-  var GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+  /* المفتاح بقى جوه الـ Cloudflare Worker (Secret) — مفيش أي مفتاح في الكود ده.
+     غيّر الرابط ده لرابط الـ Worker بتاعك (هتلاقيه في Cloudflare ← shady-nasr ← Domains and routes). */
+  var CHAT_URL = "https://shady-nasr.YOUR-SUBDOMAIN.workers.dev";
 
   /* الموديل القديم (llama-3.3-70b-versatile) اتقفل في 16 أغسطس 2026.
      بنجرّب الموديلات دي بالترتيب، وبنفتكر أول واحد اشتغل. */
@@ -445,9 +446,9 @@
       var cfg = MODELS[i];
       var payload = { model: cfg.id, messages: base, temperature: 0.6, max_completion_tokens: 2000, stream: true };
       Object.keys(cfg.extra).forEach(function (k) { payload[k] = cfg.extra[k]; });
-      return fetch(GROQ_URL, {
+      return fetch(CHAT_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + GROQ_API_KEY },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         signal: sess.ctrl.signal
       }).then(function (res) {
@@ -458,6 +459,7 @@
           try { console.warn("[Shady AI] Groq error", res.status, body); } catch (e) { /* ignore */ }
           var msg = res.status === 429 ? "في ضغط كبير دلوقتي، استنى لحظات وجرّب تاني." :
             (res.status === 401 || res.status === 403) ? "مشكلة في إعدادات المساعد (المفتاح). بلّغ المدرس." :
+            res.status === 413 ? "الرسالة طويلة قوي — اختصرها شوية." :
             "حصلت مشكلة وأنا بجهّز الرد. جرّب تاني.";
           throw { friendly: msg };
         });
