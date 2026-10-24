@@ -1172,7 +1172,7 @@
     const ref = db.ref(devPath(adminId, devId));
     const snap = await ref.get();
     const now = new Date().toISOString();
-    await ref.update({ name: info.name || "", ua: String(info.ua || "").slice(0, 300), lastSeen: now, ...(snap.exists() ? {} : { createdAt: now }) });
+    await ref.update({ name: info.name || "", kind: info.kind || "", ua: String(info.ua || "").slice(0, 300), lastSeen: now, ...(snap.exists() ? {} : { createdAt: now }) });
   }
   /* نبض النشاط: بيحدّث آخر ظهور بس لو الجهاز لسه موجود (عشان ما يرجّعش جهاز اتمسح) */
   async function touchAdminDevice(adminId, devId) {
@@ -1182,6 +1182,11 @@
     const ref = db.ref(devPath(adminId));
     const h = ref.on("value", (snap) => cb(snap.exists() ? snap.val() : {}), (e) => { if (onError) onError(e); });
     return () => ref.off("value", h);
+  }
+  /* تسمية الجهاز يدويًا (المتصفح مبيقدرش يقرا الاسم اللي المستخدم مسمّي بيه تليفونه) */
+  async function renameAdminDevice(adminId, devId, label) {
+    const clean = String(label || "").trim().slice(0, 40);
+    await db.ref(devPath(adminId, devId)).transaction((cur) => (cur ? { ...cur, label: clean || null } : undefined));
   }
   async function removeAdminDevice(adminId, devId) {
     if (adminId && devId) await db.ref(devPath(adminId, devId)).remove();
@@ -1195,7 +1200,7 @@
   }
 
   window.SNAuth = {
-    adminDeviceExists, registerAdminDevice, touchAdminDevice, watchAdminDevices, removeAdminDevice, removeOtherAdminDevices,
+    adminDeviceExists, registerAdminDevice, touchAdminDevice, watchAdminDevices, removeAdminDevice, removeOtherAdminDevices, renameAdminDevice,
     wipePlatform,
     compressAvatar, saveUserPhoto, fetchUserPhoto,
     wipeLocalUserData,
