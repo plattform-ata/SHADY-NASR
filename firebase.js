@@ -1072,7 +1072,69 @@
     };
   }
 
+  /* ==========================================================================
+     صورة الملف الشخصي
+     - compressAvatar: بتقصّ الصورة مربع وتصغّرها (128px) وتضغطها WebP/JPEG لحد ~8KB.
+     - saveUserPhoto : بتحفظها في users/{id}/photoURL (نفس المكان اللي لوحة الصدارة بتقرا منه).
+     - fetchUserPhoto: بتقراها من الأونلاين.
+     ========================================================================== */
+  async function loadBitmap(file) {
+    if (window.createImageBitmap) {
+      try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* نجرّب الطريقة التانية */ }
+    }
+    const url = URL.createObjectURL(file);
+    try {
+      return await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("BAD_IMAGE"));
+        img.src = url;
+      });
+    } finally { setTimeout(() => URL.revokeObjectURL(url), 5000); }
+  }
+
+  async function compressAvatar(file) {
+    if (!file) throw new Error("NO_FILE");
+    const bmp = await loadBitmap(file);
+    const sw = bmp.width || bmp.naturalWidth, sh = bmp.height || bmp.naturalHeight;
+    if (!sw || !sh) throw new Error("BAD_IMAGE");
+    const side = Math.min(sw, sh), sx = (sw - side) / 2, sy = (sh - side) / 2;
+    const MAX_BYTES = 8 * 1024;
+    const bytesOf = (d) => Math.floor((d.length - d.indexOf(",") - 1) * 0.75);
+    let best = null;
+    for (const size of [128, 112, 96, 80, 64]) {
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(bmp, sx, sy, side, side, 0, 0, size, size);
+      for (const q of [0.85, 0.7, 0.55, 0.4, 0.3]) {
+        let d = c.toDataURL("image/webp", q);
+        if (!/^data:image\/webp/.test(d)) d = c.toDataURL("image/jpeg", q); // متصفحات مبتعملش WebP
+        best = d;
+        if (bytesOf(d) <= MAX_BYTES) return d;
+      }
+    }
+    if (bmp.close) { try { bmp.close(); } catch (e) { /* ignore */ } }
+    if (best && bytesOf(best) <= 20 * 1024) return best;
+    throw new Error("TOO_BIG");
+  }
+
+  async function saveUserPhoto(id, dataUrl) {
+    if (!id) throw new Error("NO_ID");
+    await db.ref("users/" + id).update({ photoURL: dataUrl || null, photoV: dataUrl ? Date.now() : null });
+  }
+
+  async function fetchUserPhoto(id) {
+    if (!id) return null;
+    const snap = await db.ref("users/" + id + "/photoURL").get();
+    return snap.exists() ? snap.val() : null;
+  }
+
   window.SNAuth = {
+    compressAvatar, saveUserPhoto, fetchUserPhoto,
     wipeLocalUserData,
     syncAccountGeneration,
     fetchHonors,
