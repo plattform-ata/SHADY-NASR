@@ -991,7 +991,7 @@
      ========================================================================== */
   const GRADE_KEYS = ["prep1", "prep2", "prep3", "secondary1", "secondary2", "secondary3"];
   const normGradeCode = (c) => String(c == null ? "" : c).trim().replace(/\s+/g, "").replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x660));
-  const validGradeCode = (c) => /^[A-Za-z0-9]{6,20}$/.test(normGradeCode(c));
+  const validGradeCode = (c) => /^[A-Za-z0-9]{4,20}$/.test(normGradeCode(c));
   const gradeCodeHash = (grade, code) => hashPassword("gc:" + grade + ":" + normGradeCode(code).toLowerCase());
   async function getGradeCodes() { // الصفوف اللي ليها كود (الـ hash بس). null = مقدرناش نقرا
     try { const s = await db.ref("gradeCodes").get(); return s.exists() ? s.val() : {}; } catch (e) { return null; }
