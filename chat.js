@@ -12,7 +12,7 @@
 
   /* المفتاح بقى جوه الـ Cloudflare Worker (Secret) — مفيش أي مفتاح في الكود ده.
      غيّر الرابط ده لرابط الـ Worker بتاعك (هتلاقيه في Cloudflare ← shady-nasr ← Domains and routes). */
-  var CHAT_URL = "https://shady-nasr.abdullaelsharaawi.workers.dev";
+  var CHAT_URL = "https://shady-chat.abdullaelsharaawi.workers.dev";
 
   /* الموديل القديم (llama-3.3-70b-versatile) اتقفل في 16 أغسطس 2026.
      بنجرّب الموديلات دي بالترتيب، وبنفتكر أول واحد اشتغل. */
