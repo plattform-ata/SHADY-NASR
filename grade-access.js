@@ -57,6 +57,11 @@
       remote[g] = { hash: await hashCode(g, c, salt), salt: salt, updatedAt: now };
     }
     await d.ref(PATH).set(Object.keys(remote).length ? remote : null);
+    /* مهم: صفحة إنشاء الحساب (login.html) بتتحقق من gradeCodes/ (نظام firebase.js القديم)،
+       فلازم نحدّثه بنفس الكود، وإلا هيفضل الكود القديم هو المقبول ويطلع "كود الصف غلط". */
+    var legacy = {};
+    for (var j = 0; j < GRADES.length; j++) legacy[GRADES[j]] = plain[GRADES[j]] || "";
+    await SNAuth.saveGradeCodes(legacy);
     await SNAuth.saveAdminSettings({ gradeCodes: plain });
     return plain;
   }
