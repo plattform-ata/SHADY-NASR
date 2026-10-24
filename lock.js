@@ -19,7 +19,12 @@
   const okKey = () => "shadynasr-lock-ok:" + session.id;
   const MAX_FAILS = 5;
   const COOLDOWN_MS = 60 * 1000;
-  const JSQR_SRC = "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js";
+  /* المكتبة بتتحمّل من ملف جوه الموقع الأول (jsQR.min.js جنب lock.js)، ولو مش موجود نجرّب الـ CDN */
+  const JSQR_SRCS = [
+    "jsQR.min.js?v=1",
+    "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js",
+    "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"
+  ];
 
   let lock = null;
   let screen = null;
@@ -201,16 +206,33 @@
   }
 
   /* ---------- مسح QR بالكاميرا ---------- */
-  function loadJsQR() {
+  function loadJsQRFrom(src) {
     return new Promise((resolve, reject) => {
-      if (window.jsQR) return resolve();
       const s = document.createElement("script");
-      s.src = JSQR_SRC;
+      let done = false;
+      const fin = (fn, v) => { if (done) return; done = true; clearTimeout(t); fn(v); };
+      const t = setTimeout(() => { s.remove(); fin(reject, new Error("TIMEOUT")); }, 10000);
+      s.src = src;
       s.async = true;
-      s.onload = () => (window.jsQR ? resolve() : reject(new Error("NO_JSQR")));
-      s.onerror = () => reject(new Error("LOAD_FAILED"));
+      s.onload = () => (typeof window.jsQR === "function" ? fin(resolve) : fin(reject, new Error("NO_JSQR")));
+      s.onerror = () => { s.remove(); fin(reject, new Error("LOAD_FAILED")); };
       document.head.appendChild(s);
     });
+  }
+  let jsQRLoading = null;
+  function loadJsQR() {
+    if (typeof window.jsQR === "function") return Promise.resolve();
+    if (!jsQRLoading) {
+      jsQRLoading = (async () => {
+        let last = null;
+        for (const src of JSQR_SRCS) {
+          try { await loadJsQRFrom(src); return; }
+          catch (e) { last = e; console.warn("[lock] تعذر تحميل قارئ الـ QR من:", src, e && e.message); }
+        }
+        throw last || new Error("LOAD_FAILED");
+      })().catch((e) => { jsQRLoading = null; throw e; });
+    }
+    return jsQRLoading;
   }
 
   /* ---------- نافذة طلب الإذن (بتظهر قبل رسالة المتصفح) ---------- */
@@ -364,12 +386,13 @@
       }
     } catch (e) { /* نجرّب jsQR */ }
     if (!text) {
+      try { await loadJsQR(); }
+      catch (e) { setErr("ما قدرناش نحمّل قارئ الـ QR. اكتب الكود يدويًا أو جرّب تاني بعد شوية."); return; }
       try {
-        await loadJsQR();
         const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const r = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "attemptBoth" });
         if (r && r.data) text = r.data;
-      } catch (e) { setErr("ما قدرناش نحمّل قارئ الـ QR (محتاج نت). اكتب الكود يدويًا."); return; }
+      } catch (e) { console.error("[lock] فشل قراءة الصورة:", e); setErr("ما قدرناش نقرا الـ QR من الصورة دي. جرّب صورة أوضح."); return; }
     }
     const m = String(text).match(/\d{10}/);
     if (!m) { setErr("ما لقيناش QR صالح في الصورة دي. اختار صورة أوضح أو اكتب الكود."); return; }
@@ -409,7 +432,7 @@
     if (!detector) {
       try { await loadJsQR(); } catch (e) {
         stopScan();
-        setErr("ما قدرناش نحمّل قارئ الـ QR (محتاج نت). اكتب الكود يدويًا.");
+        setErr("ما قدرناش نحمّل قارئ الـ QR. اكتب الكود يدويًا أو جرّب تاني بعد شوية.");
         return;
       }
     }
