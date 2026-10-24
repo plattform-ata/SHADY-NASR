@@ -1095,6 +1095,13 @@
       margin-top: 6px;
     }
 
+    .set-tile--danger { border-color: #e5484d; }
+    .set-tile--danger strong, .set-tile--danger .set-tile__ico { color: #e5484d; }
+    .set-tile--danger:hover { background: rgba(229, 72, 77, .10); }
+    .btn--danger { background: #e5484d; border-color: #e5484d; color: #fff; }
+    .btn--danger:hover:not(:disabled) { background: #cf3338; border-color: #cf3338; }
+    .btn--danger:disabled { opacity: .5; cursor: not-allowed; }
+    .ad-danger-note { border: 1px solid #e5484d; background: rgba(229, 72, 77, .08); border-radius: 12px; padding: 12px 14px; }
     .set-tile {
       display: flex;
       flex-direction: column;
@@ -1545,6 +1552,14 @@
                     <path d="m5 12 7-7 7 7" />
                     <path d="M5 21h14" />
                   </svg></span><strong>ترقية الطلاب</strong><small>نهاية العام الدراسي وتصفير البيانات</small></button>
+              <button type="button" class="set-tile set-tile--danger" data-set-open="wipe"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4h8v2" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg></span><strong>مسح بيانات المنصة</strong><small>مسح كل الطلاب والبيانات ما عدا الأدمن</small></button>
               <button type="button" class="set-tile" data-set-open="lock"><span class="set-tile__ico"><svg
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -1725,6 +1740,21 @@
                   </div>
                   <p class="form-error" id="promoErr" hidden></p>
                   <div><button class="btn btn--accent" type="button" id="promoBtn" disabled>ترقية كل الطلاب وتصفير البيانات</button></div>
+                </div>
+              </div>
+
+              <div class="dash-card set-card" data-set-card="wipe" hidden>
+                <h3 style="color:#e5484d">مسح بيانات المنصة بالكامل</h3>
+                <p class="ad-note ad-danger-note"><strong>تحذير:</strong> الزرار ده بيمسح من قاعدة البيانات <strong>كل الطلاب</strong> (حساباتهم وتقدّمهم ودرجاتهم) وكل ما يخصهم: المقالات والامتحانات وتسليماتها والإعلانات ومرفقاتها وصور الأوائل والمحادثات وملاحظات الأدمن وملفات الأعوام ومتوسطات الصفوف. <br />اللي هيفضل: حساب الأدمن وإعدادات المنصة (الاسم واللوجو والألوان وقفل المنصة وأكواد الصفوف). العملية دي <strong>مش بترجع</strong>، فنزّل نسخة احتياطية الأول.</p>
+                <div class="ad-form">
+                  <p class="ad-note" id="wipeCount"></p>
+                  <div><button class="btn btn--ghost" type="button" id="wipeBackup">تنزيل نسخة احتياطية (Excel) الأول</button></div>
+                  <div class="form-field">
+                    <label for="wipeWord">اكتب عبارة «مسح الكل» للتأكيد</label>
+                    <input type="text" id="wipeWord" autocomplete="off" />
+                  </div>
+                  <p class="form-error" id="wipeErr" hidden></p>
+                  <div><button class="btn btn--danger" type="button" id="wipeBtn" disabled>مسح كل بيانات المنصة ما عدا الأدمن</button></div>
                 </div>
               </div>
 
@@ -3377,6 +3407,7 @@
         $$("[data-set-open]").forEach(function (b) { b.addEventListener("click", function () { setOpen(b.dataset.setOpen); }); });
         $("#setBack").addEventListener("click", function () { setOpen(null); });
         bindPromotion();
+        bindWipe();
         bindLock();
         bindGradeCodes();
       }
@@ -3429,6 +3460,52 @@
             setErr(err, "تعذرت الترقية — راجع صلاحيات Firebase وحاول تاني.");
             btn.disabled = word.value.trim() !== "ترقية";
           } finally { word.disabled = false; }
+        });
+      }
+
+      /* ================= مسح بيانات المنصة (ما عدا الأدمن) ================= */
+      function bindWipe() {
+        var word = $("#wipeWord"), btn = $("#wipeBtn"), err = $("#wipeErr");
+        if (!word || !btn) return;
+        var WORD = "مسح الكل";
+        function paintCount() { var n = students().length; $("#wipeCount").textContent = "عدد الطلاب المسجّلين دلوقتي: " + n; }
+        $$("[data-set-open='wipe']").forEach(function (b) {
+          b.addEventListener("click", async function () {
+            word.value = ""; btn.disabled = true; setErr(err, "");
+            try { await loadCore(true); } catch (e) { }
+            paintCount();
+          });
+        });
+        $("#wipeBackup").addEventListener("click", function () { runBackup("xlsx"); });
+        word.addEventListener("input", function () { btn.disabled = word.value.trim() !== WORD; });
+        btn.addEventListener("click", async function () {
+          setErr(err, "");
+          var cnt = students().length;
+          var steps = [
+            { title: "تحذير 1 من 3", message: "هتتمسح كل بيانات المنصة: " + cnt + " طالب بحساباتهم وتقدّمهم ودرجاتهم، والمقالات والامتحانات والإعلانات وصور الأوائل والمحادثات. حساب الأدمن بس هو اللي هيفضل. متأكد؟", confirmText: "أوافق (1 من 3)" },
+            { title: "تحذير 2 من 3", message: "المسح نهائي ومفيش أي طريقة ترجّع البيانات بعده غير نسخة احتياطية عندك. نزّلت نسخة احتياطية؟", confirmText: "أوافق (2 من 3)" },
+            { title: "تحذير أخير 3 من 3", message: "ده آخر تأكيد: هيتم مسح كل شيء ما عدا الأدمن دلوقتي. تنفّذ؟", confirmText: "امسح كل شيء (3 من 3)" }
+          ];
+          for (var si = 0; si < steps.length; si++) {
+            var ok = await window.snDialog.confirm({ title: steps[si].title, message: steps[si].message, confirmText: steps[si].confirmText, cancelText: "إلغاء", tone: "danger", icon: "trash" });
+            if (!ok) return;
+          }
+          btn.disabled = true; word.disabled = true;
+          try {
+            var r = await SNAuth.wipePlatform();
+            await loadCore(true);
+            S.essays = null; S.current = null;
+            renderStudents(); renderOverview(); paintCount();
+            word.value = "";
+            if (r.failed && r.failed.length) {
+              setErr(err, "اتمسح " + r.students + " طالب، لكن مسارات دي ما اتمسحتش (راجع صلاحيات Firebase): " + r.failed.join("، "));
+            } else {
+              toast("تم مسح بيانات المنصة: " + r.students + " طالب وكل بياناتهم");
+            }
+          } catch (e) {
+            console.error(e);
+            setErr(err, "تعذر المسح — راجع صلاحيات Firebase وحاول تاني.");
+          } finally { word.disabled = false; btn.disabled = word.value.trim() !== WORD; }
         });
       }
 
