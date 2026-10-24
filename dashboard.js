@@ -120,9 +120,17 @@
     );
   }
 
-  // قواعد النقط (غيّري الأرقام من هنا لو حابة): بتتحسب وتتخزن في Firebase وبتظهر في لوحة المتصدرين.
+  // قواعد النقط (غيّر الأرقام من هنا لو حابب): بتتحسب وتتخزن في Firebase وبتظهر في لوحة المتصدرين.
+  //  1) كل 10 دقايق نشاط فعلي على المنصة = 10 نقط
+  //  2) كل درجة في أي امتحان = نقطة (بنحسب بس الزيادة عن أعلى درجة سابقة في نفس الامتحان، فإعادة الامتحان مفيهاش تكرار)
+  //  3) فتح درس لأول مرة = 5 نقط، والنجاح في امتحان وحدة لأول مرة = 20 نقطة
   const POINTS_PER_NEW_LESSON = 5;
   const POINTS_FOR_PASSING_UNIT = 20;
+  const POINTS_PER_ACTIVE_BLOCK = 10;       // النقط لكل فترة نشاط
+  const ACTIVE_BLOCK_SECONDS = 600;         // طول الفترة: 10 دقايق
+  const IDLE_LIMIT_MS = 3 * 60 * 1000;      // لو الطالب ما لمسش الشاشة 3 دقايق، الوقت بيقف
+  const POINTS_PER_EXAM_MARK = 1;           // نقطة لكل درجة في الامتحان
+  const EXAM_POINTS_CATEGORIES = ["mcq", "weekly", "exams"];
 
   /** بيضيف نقط/بادج للطالب الحالي ويحفظهم في users/{id} (نفس مكان لوحة المتصدرين). */
   function awardPoints(amount, badgeId) {
@@ -139,6 +147,48 @@
     }
     renderPointsAndBadges(full);
   }
+
+  /* ---------- نقط الامتحانات: نقطة لكل درجة (الزيادة عن أعلى درجة سابقة بس) ---------- */
+  function examPtsKey(user) { return `shadynasr-exam-pts-${user.id}`; }
+  function readExamBest(user) {
+    try {
+      const o = JSON.parse(localStorage.getItem(examPtsKey(user)));
+      return o && typeof o === "object" ? o : {};
+    } catch { return {}; }
+  }
+  function awardExamMarks(user, rawKey, score) {
+    score = Number(score);
+    if (!user || !Number.isFinite(score) || score <= 0) return 0;
+    const key = String(rawKey || "").replace(/-attempt-\d+$/, "").replace(/[.#$\[\]\/]/g, "_").slice(0, 120);
+    if (!key) return 0;
+    const best = readExamBest(user);
+    const prev = Number(best[key]) || 0;
+    if (score <= prev) return 0;
+    best[key] = score;
+    try { localStorage.setItem(examPtsKey(user), JSON.stringify(best)); } catch { /* ignore */ }
+    syncSet(user, "examPointsBest", best);
+    const gain = Math.floor(score) - Math.floor(prev);
+    if (gain > 0) awardPoints(gain * POINTS_PER_EXAM_MARK);
+    return gain;
+  }
+  window.SNPoints = { addExam: (key, score) => awardExamMarks(getFullCurrentUser(), key, score) };
+
+  // أي درجة امتحان بتتسجل للطالب الحالي (دروس / وحدات / قصة / شيتات / امتحانات الأدمن) بتديه نقط تلقائيًا
+  (function hookGradePoints() {
+    const A = window.SNAuth;
+    if (!A || !A.addGradeEntry || A.__pointsHooked) return;
+    const orig = A.addGradeEntry.bind(A);
+    A.addGradeEntry = function (id, category, entry) {
+      try {
+        const me = getFullCurrentUser();
+        if (me && id === me.id && EXAM_POINTS_CATEGORIES.indexOf(category) !== -1 && entry) {
+          awardExamMarks(me, entry.examId || entry.title, entry.score);
+        }
+      } catch (e) { /* النقط ما توقفش حفظ الدرجة */ }
+      return orig(id, category, entry);
+    };
+    A.__pointsHooked = true;
+  })();
 
   // --- Sidebar navigation -------------------------------------------------
   function initNav() {
@@ -2744,10 +2794,24 @@
     }
 
     // بنعدّ الوقت بس والتاب ظاهر قدام الطالب.
+    // نقط الحضور: كل 10 دقايق نشاط فعلي = 10 نقط (الوقت بيقف لو الطالب سايب الشاشة من غير ما يلمسها)
+    let lastActive = Date.now();
+    ["pointerdown", "keydown", "touchstart", "scroll", "mousemove"].forEach((evName) =>
+      window.addEventListener(evName, () => { lastActive = Date.now(); }, { passive: true, capture: true })
+    );
+    const carryKey = `shadynasr-pts-carry-${user.id}`;
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
       learning.seconds += 10;
       learning.dirty = true;
+      if (Date.now() - lastActive <= IDLE_LIMIT_MS) {
+        let carry = (parseInt(localStorage.getItem(carryKey), 10) || 0) + 10;
+        if (carry >= ACTIVE_BLOCK_SECONDS) {
+          carry -= ACTIVE_BLOCK_SECONDS;
+          awardPoints(POINTS_PER_ACTIVE_BLOCK);
+        }
+        try { localStorage.setItem(carryKey, String(carry)); } catch { /* ignore */ }
+      }
       renderProgressStats(user);
     }, 10000);
     setInterval(flush, 60000);
@@ -2874,6 +2938,12 @@
     const daysKey = `bloom-visit-days-${user.id}`;
     const days = Array.from(new Set([...asArray(data.visitDays), ...readLocal(daysKey, [])])).sort().slice(-120);
     localStorage.setItem(daysKey, JSON.stringify(days));
+
+    // أعلى درجة اتحسبت نقط لكل امتحان (عشان ما تتحسبش تاني لو الطالب فتح من جهاز تاني)
+    const remoteBest = data.examPointsBest || {};
+    const mergedBest = { ...readExamBest(user) };
+    Object.keys(remoteBest).forEach((k) => { mergedBest[k] = Math.max(Number(mergedBest[k]) || 0, Number(remoteBest[k]) || 0); });
+    try { localStorage.setItem(examPtsKey(user), JSON.stringify(mergedBest)); } catch { /* ignore */ }
 
     applyRemoteGrades(grades);
   }
