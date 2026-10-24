@@ -1182,6 +1182,48 @@
       height: 18px;
     }
 
+    /* ===== بيانات الأدمن: شبكة بطاقات مرتبة (عمودين، والكارت الفردي الأخير بعرض كامل) ===== */
+    .set-sub .set-card[data-set-card="account"] {
+      padding: 0 !important;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .set-card[data-set-card="account"] .set-tiles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 0;
+    }
+    .set-card[data-set-card="account"] .set-tile {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      grid-template-areas: "ico title" "ico sub";
+      column-gap: 14px;
+      row-gap: 2px;
+      align-items: center;
+      align-content: center;
+      width: 100%;
+      min-height: 92px;
+      padding: 18px 20px;
+      box-sizing: border-box;
+    }
+    .set-card[data-set-card="account"] .set-tile__ico {
+      grid-area: ico;
+      width: 48px;
+      height: 48px;
+      margin: 0;
+    }
+    .set-card[data-set-card="account"] .set-tile strong { grid-area: title; align-self: end; }
+    .set-card[data-set-card="account"] .set-tile small { grid-area: sub; align-self: start; line-height: 1.5; }
+    .set-card[data-set-card="account"] .set-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    @media (max-width: 560px) {
+      .set-card[data-set-card="account"] .set-tiles { grid-template-columns: 1fr; }
+      .set-card[data-set-card="account"] .set-tile { min-height: 80px; padding: 14px 16px; }
+    }
+
     .set-card[hidden],
     .set-hub[hidden],
     .set-sub[hidden] {
