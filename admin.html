@@ -1519,30 +1519,12 @@
         <section class="dash-panel" id="panel-settings">
           <div class="set-hub" id="setHub">
             <div class="set-tiles set-tiles--compact">
-              <button type="button" class="set-tile" data-set-open="profile"><span class="set-tile__ico"><svg
+              <button type="button" class="set-tile" data-set-open="account"><span class="set-tile__ico"><svg
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
                     <circle cx="12" cy="8" r="4" />
                     <path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6" />
-                  </svg></span><strong>بيانات الأدمن</strong><small>الاسم الظاهر</small></button>
-              <button type="button" class="set-tile" data-set-open="loginEmail"><span class="set-tile__ico"><svg
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                    <path d="m3 7 9 6 9-6" />
-                  </svg></span><strong>إيميل تسجيل الدخول</strong><small>تغيير إيميل الدخول</small></button>
-              <button type="button" class="set-tile" data-set-open="password"><span class="set-tile__ico"><svg
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <rect x="4" y="11" width="16" height="10" rx="2" />
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                  </svg></span><strong>كلمة المرور</strong><small>تغيير كلمة مرور الأدمن</small></button>
-              <button type="button" class="set-tile" data-set-open="verify"><span class="set-tile__ico"><svg
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6Z" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg></span><strong>إيميل كود التحقق</strong><small>استلام كود دخول الأدمن</small></button>
+                  </svg></span><strong>بيانات الأدمن</strong><small>الاسم والإيميلات وكلمة المرور والأجهزة</small></button>
               <button type="button" class="set-tile" data-set-open="colors"><span class="set-tile__ico"><svg
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -1559,12 +1541,6 @@
                     <circle cx="9" cy="10" r="2" />
                     <path d="m21 16-5-5-8 9" />
                   </svg></span><strong>إعدادات المنصة</strong><small>اسم المنصة واللوجو</small></button>
-              <button type="button" class="set-tile" data-set-open="devices"><span class="set-tile__ico"><svg
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
-                    <path d="M11 18.5h2" />
-                  </svg></span><strong>الأجهزة المسجّلة</strong><small>الأجهزة اللي دخلت بحساب الأدمن</small></button>
               <button type="button" class="set-tile" data-set-open="promote"><span class="set-tile__ico"><svg
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -1603,8 +1579,43 @@
               </svg><span>رجوع للإعدادات</span></button>
             <div class="ad-card-stack">
 
+              <div class="dash-card set-card" data-set-card="account" hidden>
+                <div class="set-tiles set-tiles--compact">
+              <button type="button" class="set-tile" data-set-open="profile"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6" />
+                  </svg></span><strong>الاسم الظاهر</strong><small>تغيير اسم الأدمن</small></button>
+              <button type="button" class="set-tile" data-set-open="verify"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6Z" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg></span><strong>إيميل كود التحقق</strong><small>استلام كود دخول الأدمن</small></button>
+              <button type="button" class="set-tile" data-set-open="loginEmail"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m3 7 9 6 9-6" />
+                  </svg></span><strong>إيميل تسجيل الدخول</strong><small>تغيير إيميل الدخول</small></button>
+              <button type="button" class="set-tile" data-set-open="password"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="4" y="11" width="16" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                  </svg></span><strong>كلمة المرور</strong><small>تغيير كلمة مرور الأدمن</small></button>
+              <button type="button" class="set-tile" data-set-open="devices"><span class="set-tile__ico"><svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+                    <path d="M11 18.5h2" />
+                  </svg></span><strong>الأجهزة المسجّلة</strong><small>الأجهزة اللي دخلت بحساب الأدمن</small></button>
+                </div>
+              </div>
+
               <div class="dash-card set-card" data-set-card="profile" hidden>
-                <h3>بيانات الأدمن</h3>
+                <h3>الاسم الظاهر</h3>
                 <form class="ad-form" id="setNameForm">
                   <div class="form-field"><label for="setName">الاسم الظاهر</label><input type="text" id="setName"
                       required /></div>
@@ -1885,7 +1896,7 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="firebase.js?v=20261127"></script>
-  <script defer src="shared.js?v=20261104"></script>
+  <script defer src="shared.js?v=20261128"></script>
   <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
   <script defer src="exams-admin.js?v=20261118"></script>
@@ -3423,18 +3434,21 @@
 
 
       /* ================= مركز الإعدادات (عناوين -> صفحة كل إعداد) ================= */
+      var SETKEY = null, ACCOUNT_SUBS = ["profile", "verify", "loginEmail", "password", "devices"];
       function setOpen(key) {
         $("#setHub").hidden = !!key;
         $("#setSub").hidden = !key;
         $$("[data-set-card]").forEach(function (c) { c.hidden = c.dataset.setCard !== key; });
-        var t = key && $("#setHub").querySelector('[data-set-open="' + key + '"] strong');
+        var t = key && document.querySelector('[data-set-open="' + key + '"] strong');
+        SETKEY = key || null;
+        var bk = $("#setBack span"); if (bk) bk.textContent = ACCOUNT_SUBS.indexOf(key) > -1 ? "رجوع لبيانات الأدمن" : "رجوع للإعدادات";
         $("#adTitle").textContent = t ? t.textContent : PANEL_TITLES.settings;
         var m = document.querySelector(".dash-main"); if (m) m.scrollTop = 0;
         navPush({ panel: "settings", set: key || null, student: null });
       }
       function bindSettingsHub() {
         $$("[data-set-open]").forEach(function (b) { b.addEventListener("click", function () { setOpen(b.dataset.setOpen); }); });
-        $("#setBack").addEventListener("click", function () { setOpen(null); });
+        $("#setBack").addEventListener("click", function () { setOpen(ACCOUNT_SUBS.indexOf(SETKEY) > -1 ? "account" : null); });
         bindPromotion();
         bindWipe();
         bindLock();
@@ -3609,7 +3623,7 @@
           var rn = e.target.closest("[data-dev-ren]");
           if (rn) {
             var cur = (DV.map || {})[rn.dataset.devRen] || {};
-            var nm = window.prompt("اكتب اسم للجهاز ده (سيبه فاضي عشان ترجّع الاسم الأصلي):", cur.label || "");
+            var nm = await window.snDialog.prompt({ icon: "info", title: "تسمية الجهاز", message: "اكتب اسم تعرفه للجهاز ده. سيبه فاضي عشان ترجّع الاسم الأصلي.", value: cur.label || "", placeholder: cur.name || "", maxLength: 40, confirmText: "حفظ", cancelText: "إلغاء" });
             if (nm === null) return;
             setErr(err, "");
             try { await SNAuth.renameAdminDevice(session.id, rn.dataset.devRen, nm); toast("تم حفظ الاسم"); }
