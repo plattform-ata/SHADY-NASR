@@ -1133,7 +1133,32 @@
     return snap.exists() ? snap.val() : null;
   }
 
+  /* --- مسح بيانات المنصة بالكامل ما عدا الأدمن ---
+     بيتمسح: كل الطلاب (حساباتهم وتقدّمهم ودرجاتهم وأكواد التحقق) + المقالات + الامتحانات وتسليماتها
+     + الإعلانات ومرفقاتها + صور الأوائل + المحادثات + ملاحظات الأدمن + ملفات الأعوام + متوسطات الصفوف.
+     بيفضل: حسابات الأدمن، وإعدادات المنصة (الاسم/اللوجو/الألوان/قفل المنصة/أكواد الصفوف). --- */
+  async function wipePlatform() {
+    const snap = await db.ref("users").get();
+    const users = snap.exists() ? snap.val() : {};
+    const ids = Object.keys(users).filter((id) => { const u = users[id]; return !(u && u.role === "admin"); });
+    const failed = [];
+    const rm = async (path) => { try { await db.ref(path).remove(); } catch (e) { failed.push(path); } };
+    const chunks = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+
+    ids.forEach((id) => { aliveCache[id] = Promise.resolve(false); });
+    // الحسابات الأول: صفحة الطالب بتلقط الحذف وتخرّجه فورًا
+    for (const part of chunks(ids, 40)) await Promise.all(part.map((id) => rm("users/" + id)));
+    for (const part of chunks(ids, 40)) {
+      await Promise.all(part.reduce((acc, id) => acc.concat([rm("userData/" + id), rm("grades/" + id), rm("otps/" + id)]), []));
+    }
+    const nodes = ["essaySubmissions", "examSubmissions", "exams", "examKeys", "announcements", "announcementFiles",
+      "honors", "honorImages", "chatMeta", "chatMessages", "chatFiles", "adminNotes", "yearReports", "classAvg"];
+    await Promise.all(nodes.map(rm));
+    return { students: ids.length, failed };
+  }
+
   window.SNAuth = {
+    wipePlatform,
     compressAvatar, saveUserPhoto, fetchUserPhoto,
     wipeLocalUserData,
     syncAccountGeneration,
