@@ -87,12 +87,10 @@
 
   /* ---------- رسم ---------- */
   function renderBadges(unread) {
-    const bell = $("#annBell");
-    const b1 = $("#annBellBadge");
+    // عدّاد الجرس بقى في notifications.js؛ هنا بس عدّاد قسم "الإعلانات" في قايمة المزيد
     const b2 = $("#annMoreBadge");
     const label = unread > 9 ? "9+" : String(unread);
-    [b1, b2].forEach((b) => { if (b) { b.hidden = unread === 0; b.textContent = label; } });
-    if (bell) bell.classList.toggle("has-unread", unread > 0);
+    if (b2) { b2.hidden = unread === 0; b2.textContent = label; }
   }
 
   const filesOf = (a) => { const f = a && a.files; return !f ? [] : (Array.isArray(f) ? f : Object.keys(f).map((k) => f[k])).filter(Boolean); };
@@ -200,8 +198,7 @@
     });
     render();
 
-    const bell = $("#annBell");
-    if (bell) { bell.setAttribute("aria-label", tr("ann_aria")); bell.addEventListener("click", openPanel); }
+    // الجرس بيفتح نافذة الإشعارات (notifications.js) مش صفحة الإعلانات
     const strip = $("#homeAnn");
     if (strip) strip.addEventListener("click", openPanel);
 
