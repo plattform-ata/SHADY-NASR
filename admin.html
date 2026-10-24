@@ -1182,7 +1182,8 @@
       height: 18px;
     }
 
-    /* ===== بيانات الأدمن: شبكة بطاقات مرتبة (عمودين، والكارت الفردي الأخير بعرض كامل) ===== */
+    /* ===== بيانات الأدمن: بطاقات مرتبة بشكل أنيق ===== */
+    .set-sub:has(.set-card[data-set-card="account"]:not([hidden])) { max-width: 860px; }
     .set-sub .set-card[data-set-card="account"] {
       padding: 0 !important;
       background: transparent;
@@ -1194,34 +1195,68 @@
     .set-card[data-set-card="account"] .set-tiles {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      gap: 16px;
       margin: 0;
     }
     .set-card[data-set-card="account"] .set-tile {
+      position: relative;
       display: grid;
-      grid-template-columns: 48px minmax(0, 1fr);
-      grid-template-areas: "ico title" "ico sub";
-      column-gap: 14px;
-      row-gap: 2px;
+      grid-template-columns: 56px minmax(0, 1fr) 18px;
+      grid-template-areas: "ico title arrow" "ico sub arrow";
+      column-gap: 16px;
+      row-gap: 3px;
       align-items: center;
       align-content: center;
       width: 100%;
-      min-height: 92px;
-      padding: 18px 20px;
+      min-height: 104px;
+      padding: 20px 22px;
       box-sizing: border-box;
+      border-radius: 20px;
+      box-shadow: 0 1px 2px rgba(20, 30, 50, .04), 0 8px 24px -14px rgba(20, 30, 50, .18);
+      transition: transform .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease);
     }
+    .set-card[data-set-card="account"] .set-tile:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 2px 4px rgba(20, 30, 50, .05), 0 16px 32px -16px rgba(20, 30, 50, .28);
+    }
+    .set-card[data-set-card="account"] .set-tile:active { transform: translateY(-1px); }
+    .set-card[data-set-card="account"] .set-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
     .set-card[data-set-card="account"] .set-tile__ico {
       grid-area: ico;
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       margin: 0;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 18px -8px var(--accent);
+      transition: transform .2s var(--ease);
     }
-    .set-card[data-set-card="account"] .set-tile strong { grid-area: title; align-self: end; }
-    .set-card[data-set-card="account"] .set-tile small { grid-area: sub; align-self: start; line-height: 1.5; }
+    .set-card[data-set-card="account"] .set-tile:hover .set-tile__ico { transform: scale(1.06) rotate(-4deg); }
+    .set-card[data-set-card="account"] .set-tile__ico svg { width: 26px; height: 26px; }
+    .set-card[data-set-card="account"] .set-tile strong { grid-area: title; align-self: end; font-size: 1.05rem; }
+    .set-card[data-set-card="account"] .set-tile small { grid-area: sub; align-self: start; line-height: 1.6; opacity: .7; }
+    .set-card[data-set-card="account"] .set-tile::after {
+      content: "";
+      grid-area: arrow;
+      width: 9px;
+      height: 9px;
+      border-inline-start: 2px solid currentColor;
+      border-block-end: 2px solid currentColor;
+      transform: rotate(45deg);
+      opacity: .35;
+      justify-self: end;
+      transition: opacity .2s var(--ease), translate .2s var(--ease);
+    }
+    .set-card[data-set-card="account"] .set-tile:dir(ltr)::after { transform: rotate(-135deg); }
+    .set-card[data-set-card="account"] .set-tile:hover::after { opacity: .9; translate: -3px 0; }
+    .set-card[data-set-card="account"] .set-tile:dir(ltr):hover::after { translate: 3px 0; }
     .set-card[data-set-card="account"] .set-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
-    @media (max-width: 560px) {
-      .set-card[data-set-card="account"] .set-tiles { grid-template-columns: 1fr; }
-      .set-card[data-set-card="account"] .set-tile { min-height: 80px; padding: 14px 16px; }
+    @media (max-width: 640px) {
+      .set-card[data-set-card="account"] .set-tiles { grid-template-columns: 1fr; gap: 12px; }
+      .set-card[data-set-card="account"] .set-tile { min-height: 88px; padding: 16px 18px; column-gap: 14px; grid-template-columns: 50px minmax(0, 1fr) 16px; }
+      .set-card[data-set-card="account"] .set-tile__ico { width: 50px; height: 50px; }
     }
 
     .set-card[hidden],
@@ -1937,12 +1972,12 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="firebase.js?v=20261128"></script>
-  <script defer src="shared.js?v=20261128"></script>
+  <script defer src="firebase.js?v=20261130"></script>
+  <script defer src="shared.js?v=20261130"></script>
   <script defer src="pdf-viewer.js?v=20261122"></script>
   <script defer src="exams.js?v=20261118"></script>
   <script defer src="exams-admin.js?v=20261118"></script>
-  <script defer src="grade-access.js?v=20261128"></script>
+  <script defer src="grade-access.js?v=20261130"></script>
   <script defer src="progress-chart.js?v=20261115"></script>
   <script>
     (function () {
@@ -4087,7 +4122,7 @@
             toast("تم حفظ أكواد الصفوف");
           } catch (e) {
             console.error(e);
-            setErr(err, String(e && e.message).indexOf("INVALID:") === 0 ? "في كود مش مطابق للشروط." : "تعذر الحفظ — راجع صلاحيات Firebase لمسار gradeAccessCodes وحاول تاني.");
+            setErr(err, String(e && e.message).indexOf("INVALID:") === 0 ? "في كود مش مطابق للشروط." : "تعذر الحفظ — راجع صلاحيات Firebase لمسار gradeCodes وحاول تاني.");
           } finally { save.disabled = false; }
         });
         $("#gcPdf").addEventListener("click", function () {
