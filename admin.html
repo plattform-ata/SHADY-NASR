@@ -2443,7 +2443,8 @@
       async function openStudent(id) {
         var u = S.users.filter(function (x) { return x.id === id; })[0];
         if (!u) return;
-        showPanel("students");
+        navMute++; try { showPanel("students"); } finally { navMute--; }
+        navPush({ panel: "students", set: null, student: id });
         $("#studentsListView").hidden = true;
         var view = $("#studentDetailView");
         view.hidden = false;
@@ -3370,6 +3371,7 @@
         var t = key && $("#setHub").querySelector('[data-set-open="' + key + '"] strong');
         $("#adTitle").textContent = t ? t.textContent : PANEL_TITLES.settings;
         var m = document.querySelector(".dash-main"); if (m) m.scrollTop = 0;
+        navPush({ panel: "settings", set: key || null, student: null });
       }
       function bindSettingsHub() {
         $$("[data-set-open]").forEach(function (b) { b.addEventListener("click", function () { setOpen(b.dataset.setOpen); }); });
@@ -3807,7 +3809,64 @@
         } catch (e) { console.error(e); }
       }
 
-      /* ================= التنقل ================= */
+      /* ================= زرار الرجوع (سجل التنقل) =================
+         - كل قسم/إعداد/صفحة طالب بيتسجّل في history، فالرجوع بيطلّعك للّي قبله.
+         - آخر محطة هي "نظرة عامة" (الرئيسية). الرجوع منها بيظهر رسالة: خروج من المنصة ولا استمرار.
+         - الخروج هنا مش تسجيل خروج من الحساب؛ بس بيطلّعك من الصفحة. */
+      var navCur = { panel: "overview", set: null, student: null };
+      var navMute = 0, navLeaving = false, navAsking = false;
+      function navSame(a, b) { return a.panel === b.panel && (a.set || null) === (b.set || null) && (a.student || null) === (b.student || null); }
+      function navPush(st) {
+        if (navMute) return;
+        if (navSame(navCur, st)) return;
+        navCur = st;
+        try { history.pushState({ snAdm: st }, ""); } catch (e) { }
+      }
+      function navApply(st) {
+        navMute++;
+        try {
+          closeSidebar();
+          if (window.snDialog && snDialog.isOpen && snDialog.isOpen()) { /* لو في رسالة مفتوحة نسيبها وإحنا بنرجع */ }
+          if (st.panel === "students" && !st.student && S.current) closeStudent();
+          showPanel(st.panel);
+          if (st.panel === "settings") setOpen(st.set || null);
+          if (st.panel === "students" && st.student) openStudent(st.student);
+        } finally { navMute--; }
+        navCur = { panel: st.panel, set: st.set || null, student: st.student || null };
+      }
+      async function askExit() {
+        if (navAsking) return;
+        navAsking = true;
+        var leave = false;
+        try {
+          var dlg = { icon: "logout", title: "الخروج من المنصة", message: "عايز تخرج من المنصة؟ حسابك هيفضل مسجّل دخول.", confirmText: "خروج", cancelText: "البقاء في المنصة" };
+          leave = window.snDialog ? await window.snDialog.confirm(dlg) : window.confirm(dlg.message);
+        } catch (e) { leave = false; }
+        navAsking = false;
+        if (leave) {
+          navLeaving = true;
+          history.back(); // بيطلع قبل صفحة الأدمن
+          setTimeout(function () { navLeaving = false; if (window.snDialog) snDialog.toast("اقفل التطبيق/التبويب بإيدك للخروج"); }, 600);
+        } else {
+          navCur = { panel: "overview", set: null, student: null };
+          try { history.pushState({ snAdm: navCur }, ""); } catch (e) { }
+          navApply(navCur);
+        }
+      }
+      function initNav() {
+        try {
+          history.replaceState({ snAdmRoot: true }, "");
+          history.pushState({ snAdm: navCur }, "");
+        } catch (e) { }
+        window.addEventListener("popstate", function (e) {
+          if (navLeaving) return;
+          var st = e.state;
+          if (st && st.snAdm) { navApply(st.snAdm); return; }
+          // وصلنا لأول محطة (قبل الرئيسية) = المستخدم بيحاول يخرج
+          askExit();
+        });
+      }
+
       var settingsLoaded = false;
       function showPanel(name) {
         $$(".dash-panel").forEach(function (p) { p.classList.toggle("is-active", p.id === "panel-" + name); });
@@ -3823,6 +3882,7 @@
         if (name === "honors") loadHonorsAdmin(false);
         if (name === "exams" && window.SNExamsAdmin) SNExamsAdmin.open();
         if (name === "settings" && !settingsLoaded) { settingsLoaded = true; loadSettings(); }
+        navPush({ panel: name, set: null, student: null });
       }
       function openSidebar() { $("#adSidebar").classList.add("is-open"); $("#adBackdrop").hidden = false; document.documentElement.classList.add("dash-sidebar-open"); }
       function closeSidebar() { $("#adSidebar").classList.remove("is-open"); $("#adBackdrop").hidden = true; document.documentElement.classList.remove("dash-sidebar-open"); }
@@ -3831,6 +3891,7 @@
         if (typeof initTheme === "function") initTheme();
         if (typeof initLang === "function") initLang();
         paintIdentity();
+        initNav();
         initStudentFilters();
         bindSettings();
         bindSettingsHub();
