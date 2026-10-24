@@ -1157,7 +1157,45 @@
     return { students: ids.length, failed };
   }
 
+  /* ==========================================================================
+     أجهزة الأدمن المسجّلة: adminDevices/{adminId}/{deviceId} = { name, ua, createdAt, lastSeen }
+     - كل جهاز بيفتح لوحة الأدمن بيسجّل نفسه.
+     - لو الأدمن مسح الجهاز من القايمة، الجهاز ده بيتسجّل خروجه (admin.html بيراقب مدخله).
+     ========================================================================== */
+  const devPath = (aid, did) => "adminDevices/" + aid + (did ? "/" + did : "");
+
+  async function adminDeviceExists(adminId, devId) {
+    const snap = await db.ref(devPath(adminId, devId)).get();
+    return snap.exists();
+  }
+  async function registerAdminDevice(adminId, devId, info) {
+    const ref = db.ref(devPath(adminId, devId));
+    const snap = await ref.get();
+    const now = new Date().toISOString();
+    await ref.update({ name: info.name || "", ua: String(info.ua || "").slice(0, 300), lastSeen: now, ...(snap.exists() ? {} : { createdAt: now }) });
+  }
+  /* نبض النشاط: بيحدّث آخر ظهور بس لو الجهاز لسه موجود (عشان ما يرجّعش جهاز اتمسح) */
+  async function touchAdminDevice(adminId, devId) {
+    await db.ref(devPath(adminId, devId)).transaction((cur) => (cur ? { ...cur, lastSeen: new Date().toISOString() } : undefined));
+  }
+  function watchAdminDevices(adminId, cb, onError) {
+    const ref = db.ref(devPath(adminId));
+    const h = ref.on("value", (snap) => cb(snap.exists() ? snap.val() : {}), (e) => { if (onError) onError(e); });
+    return () => ref.off("value", h);
+  }
+  async function removeAdminDevice(adminId, devId) {
+    if (adminId && devId) await db.ref(devPath(adminId, devId)).remove();
+  }
+  async function removeOtherAdminDevices(adminId, keepId) {
+    const snap = await db.ref(devPath(adminId)).get();
+    if (!snap.exists()) return 0;
+    const ids = Object.keys(snap.val()).filter((k) => k !== keepId);
+    await Promise.all(ids.map((k) => db.ref(devPath(adminId, k)).remove()));
+    return ids.length;
+  }
+
   window.SNAuth = {
+    adminDeviceExists, registerAdminDevice, touchAdminDevice, watchAdminDevices, removeAdminDevice, removeOtherAdminDevices,
     wipePlatform,
     compressAvatar, saveUserPhoto, fetchUserPhoto,
     wipeLocalUserData,
