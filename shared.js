@@ -2449,9 +2449,29 @@ const PagesUI = {
         actions.appendChild(cancel);
       }
 
+      /* حقل نص اختياري (snDialog.prompt): بيرجّع النص لو ضغط تأكيد، أو null لو ألغى */
+      var inp = null, inpWrap = null;
+      if (o.input) {
+        inpWrap = document.createElement("div");
+        inpWrap.className = "form-field sn-dialog__field";
+        inpWrap.style.margin = "14px 0 4px";
+        inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = id + "i";
+        inp.value = o.input.value || "";
+        inp.autocomplete = "off";
+        if (o.input.placeholder) inp.placeholder = o.input.placeholder;
+        if (o.input.maxLength) inp.maxLength = o.input.maxLength;
+        if (o.input.dir) inp.dir = o.input.dir;
+        inp.setAttribute("aria-labelledby", id + "t");
+        inpWrap.appendChild(inp);
+      }
+      var cancelVal = inp ? null : false;
+
       box.appendChild(icon);
       box.appendChild(h);
       if (o.message) box.appendChild(p);
+      if (inpWrap) box.appendChild(inpWrap);
       box.appendChild(actions);
       ov.appendChild(box);
 
@@ -2468,18 +2488,19 @@ const PagesUI = {
         resolve(v);
       }
       function onKey(e) {
-        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(withCancel ? false : true); return; }
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(withCancel ? cancelVal : true); return; }
+        if (e.key === "Enter" && inp && document.activeElement === inp) { e.preventDefault(); close(inp.value); return; }
         if (e.key === "Tab") {
-          var items = cancel ? [ok, cancel] : [ok];
+          var items = (inp ? [inp] : []).concat(cancel ? [ok, cancel] : [ok]);
           var i = items.indexOf(document.activeElement);
           e.preventDefault();
           items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
         }
       }
 
-      ok.addEventListener("click", function () { close(true); });
-      if (cancel) cancel.addEventListener("click", function () { close(false); });
-      ov.addEventListener("click", function (e) { if (e.target === ov) close(withCancel ? false : true); });
+      ok.addEventListener("click", function () { close(inp ? inp.value : true); });
+      if (cancel) cancel.addEventListener("click", function () { close(cancelVal); });
+      ov.addEventListener("click", function (e) { if (e.target === ov) close(withCancel ? cancelVal : true); });
       document.addEventListener("keydown", onKey, true);
 
       if (!open.length) { prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
@@ -2488,6 +2509,7 @@ const PagesUI = {
       requestAnimationFrame(function () {
         ov.classList.add("is-open");
         // في الإجراءات الخطرة التركيز يبدأ على "إلغاء" عشان الضغطة بالغلط ما تنفّذش حاجة
+        if (inp) { inp.focus(); try { inp.select(); } catch (e) { } return; }
         (danger && cancel ? cancel : ok).focus();
       });
     });
@@ -2741,6 +2763,8 @@ const PagesUI = {
   window.snDialog = {
     confirm: function (o) { return show(o, true); },
     alert: function (o) { return show(o, false); },
+    /* نافذة بحقل نص بتصميم المنصة: بترجّع النص المكتوب، أو null لو الطالب/الأدمن ألغى */
+    prompt: function (o) { o = o || {}; return show(Object.assign({}, o, { input: { value: o.value || "", placeholder: o.placeholder || "", maxLength: o.maxLength || 0, dir: o.dir || "" } }), true); },
     toast: toast,
     pick: pick,
     color: color,
