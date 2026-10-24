@@ -3,7 +3,7 @@
    - الأدمن بيحدد/بيعدّل/بيحفظ كود لكل صف من الإعدادات > "أكواد الصفوف".
    - الطالب: قبل ما يدخل لوحته (بعد تسجيل الدخول، أو إنشاء حساب، أو إضافة/تبديل حساب،
      أو لما المنصة تكون مقفولة) لازم يكتب كود صفه الدراسي المسجّل بيه.
-   - الكود نفسه مش متخزّن للطلاب، بس بصمته (SHA-256 + salt) في Firebase: gradeAccessCodes/<grade>
+   - الكود نفسه مش متخزّن للطلاب، بس بصمته في Firebase: gradeCodes/<grade> (نفس نظام صفحة إنشاء الحساب)
      والأدمن بيحتفظ بالنص الأصلي في adminSettings.gradeCodes عشان يشوفه من أي جهاز.
    - لو مفيش كود محفوظ لصف معيّن: الصف ده بيدخل عادي (الميزة مش مفعّلة عليه).
    يتحمّل في studenti.html (بوابة الطالب) وفي admin.html (واجهة الحفظ) بعد firebase.js.
@@ -43,39 +43,32 @@
     var st = await SNAuth.getAdminSettings();
     return (st && st.gradeCodes) || {};
   }
-  /* codes: { prep1: "ABC123", ... } — الفاضي = الصف ده من غير كود */
+  /* codes: { prep1: "ABC123", ... } — الفاضي = الصف ده من غير كود
+     مصدر واحد للأكواد: gradeCodes/ (نفس اللي بتتحقق منه صفحة إنشاء الحساب وبوابة الطالب)،
+     والنص الأصلي بيتحفظ في adminSettings/gradeCodes عن طريق SNAuth.saveGradeCodes. */
   async function saveAll(codes) {
-    var d = db();
-    if (!d) throw new Error("NO_DB");
-    var plain = {}, remote = {}, now = Date.now();
+    if (!(window.SNAuth && SNAuth.saveGradeCodes)) throw new Error("NO_DB");
+    var plain = {}, map = {};
     for (var i = 0; i < GRADES.length; i++) {
       var g = GRADES[i], c = normalize(codes[g]);
-      if (!c) continue;
-      if (!isValid(c)) throw new Error("INVALID:" + g);
-      var salt = newSalt();
-      plain[g] = c;
-      remote[g] = { hash: await hashCode(g, c, salt), salt: salt, updatedAt: now };
+      if (c && !isValid(c)) throw new Error("INVALID:" + g);
+      map[g] = c;
+      if (c) plain[g] = c;
     }
-    await d.ref(PATH).set(Object.keys(remote).length ? remote : null);
-    /* مهم: صفحة إنشاء الحساب (login.html) بتتحقق من gradeCodes/ (نظام firebase.js القديم)،
-       فلازم نحدّثه بنفس الكود، وإلا هيفضل الكود القديم هو المقبول ويطلع "كود الصف غلط". */
-    var legacy = {};
-    for (var j = 0; j < GRADES.length; j++) legacy[GRADES[j]] = plain[GRADES[j]] || "";
-    await SNAuth.saveGradeCodes(legacy);
-    await SNAuth.saveAdminSettings({ gradeCodes: plain });
+    await SNAuth.saveGradeCodes(map);
     return plain;
   }
 
   /* ---------- بوابة الطالب ---------- */
   async function fetchGrade(grade) {
-    var d = db();
-    if (!d) throw new Error("NO_DB");
-    var snap = await d.ref(PATH + "/" + grade).once("value");
-    var v = snap.val();
-    return v && v.hash && v.salt ? v : null;
+    if (!(window.SNAuth && SNAuth.getGradeCodes)) throw new Error("NO_DB");
+    var all = await SNAuth.getGradeCodes();
+    if (all === null) throw new Error("NO_DB");
+    var v = all[grade];
+    return v && v.hash ? v : null;
   }
   async function verify(node, grade, code) {
-    return (await hashCode(grade, code, node.salt)) === node.hash;
+    return !!(await SNAuth.verifyGradeCode(grade, code));
   }
 
   function initGate() {
@@ -171,7 +164,7 @@
       busy = true;
       try {
         var ok = false;
-        try { ok = await verify(node, grade, raw); } catch (e) { setErr("المتصفح ده مش بيدعم التحقق الآمن، جرّب Chrome أو Safari."); return; }
+        try { ok = await verify(node, grade, raw); } catch (e) { setErr("تعذر التحقق من الكود، اتأكد من النت وحاول تاني."); return; }
         if (!ok) {
           fails++;
           if (fails >= 5) { fails = 0; blockedUntil = Date.now() + 60000; setErr("الكود غلط. استنى دقيقة قبل المحاولة الجاية."); }
@@ -184,7 +177,7 @@
     }
 
     async function waitForFirebase() {
-      for (var i = 0; i < 40; i++) { if (db()) return true; await new Promise(function (r) { setTimeout(r, 200); }); }
+      for (var i = 0; i < 40; i++) { if (window.SNAuth && SNAuth.getGradeCodes && SNAuth.verifyGradeCode) return true; await new Promise(function (r) { setTimeout(r, 200); }); }
       return false;
     }
 
