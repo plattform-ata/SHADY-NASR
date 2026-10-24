@@ -1,110 +1,95 @@
 /* ==========================================================================
-   grade-codes.js — كود الصف في "إنشاء حساب" (login.html)
-   - كل صف دراسي ليه كود (الأدمن بيحدده من الإعدادات → "أكواد الصفوف")
-   - الطالب بيختار صفه فبتظهر خانة "كود الصف"، ومينفعش ينشئ الحساب من غير الكود الصح
-   - صف مفيش له كود = التسجيل فيه مفتوح
-   يتحمّل في login.html بعد shared.js.
+   grade-codes.js — خانة "كود الصف" في إنشاء حساب جديد (login.html)
+   - بيضيف خانة كود الصف تحت اختيار الصف الدراسي.
+   - قبل إنشاء الحساب بيتحقق من الكود عن طريق SNAuth.verifyGradeCode (firebase.js)
+     اللي بيقارن بصمة الكود مع gradeCodes/<grade> في Firebase.
+   - لو الصف ملوش كود محفوظ: التسجيل فيه مفتوح (الخانة تتساب فاضية).
+   بيتحمّل في login.html بعد shared.js.
    ========================================================================== */
-(() => {
+(function () {
   "use strict";
 
-  const T = {
-    ar: { label: "كود الصف", hint: "اطلب كود صفك من الأستاذ", ph: "اكتب كود الصف", wrong: "كود الصف غلط", need: "اكتب كود الصف", net: "تعذر التحقق من الكود، اتأكد من النت وحاول تاني" },
-    en: { label: "Grade code", hint: "Ask your teacher for your grade's code", ph: "Enter the grade code", wrong: "Wrong grade code", need: "Enter the grade code", net: "Couldn't verify the code. Check your connection and try again." },
-  };
-  const lang = () => (document.documentElement.lang === "en" ? "en" : "ar");
-  const t = (k) => T[lang()][k];
-  const $ = (s, r) => (r || document).querySelector(s);
+  var form = null, input = null, errEl = null, verified = false, busy = false;
 
-  let codes = null; // { grade: {hash} }
-  let field, input, errEl;
-
-  function build(form) {
-    if ($("#regGradeCodeField")) return;
-    const picker = $("#gradePicker", form);
-    const host = picker ? picker.closest(".form-field") : null;
-    field = document.createElement("div");
-    field.className = "form-field";
-    field.id = "regGradeCodeField";
-    field.hidden = true;
-    field.innerHTML =
-      '<label for="regGradeCode" id="regGradeCodeLbl"></label>' +
-      '<input type="text" id="regGradeCode" name="gradeCode" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr" maxlength="24" />' +
-      '<p class="form-hint" id="regGradeCodeHint"></p>' +
-      '<p class="form-error" id="regGradeCodeErr" hidden></p>';
-    if (host) host.insertAdjacentElement("afterend", field); else form.insertBefore(field, $("#registerError", form));
-    input = $("#regGradeCode", field);
-    errEl = $("#regGradeCodeErr", field);
-    input.addEventListener("input", () => setErr(""));
-    texts();
-  }
-  function texts() {
-    if (!field) return;
-    $("#regGradeCodeLbl", field).textContent = t("label");
-    $("#regGradeCodeHint", field).textContent = t("hint");
-    input.placeholder = t("ph");
-  }
-  function setErr(m) { if (!errEl) return; errEl.textContent = m || ""; errEl.hidden = !m; }
-
-  const needsCode = (g) => !!(g && codes && codes[g] && codes[g].hash);
-  function sync(form) {
-    const g = (form.elements.grade && form.elements.grade.value) || "";
-    const need = needsCode(g);
-    field.hidden = !need;
-    input.required = need;
-    if (!need) { input.value = ""; setErr(""); }
-  }
-  async function load() {
-    if (!window.SNAuth || !SNAuth.getGradeCodes) return null;
-    const c = await SNAuth.getGradeCodes();
-    if (c) codes = c;
-    return c;
+  function showError(msg) {
+    if (!errEl) return;
+    errEl.textContent = msg || "";
+    errEl.hidden = !msg;
   }
 
-  function init() {
-    const form = $("#registerForm");
-    if (!form) return;
-    build(form);
-    const refresh = () => sync(form);
-    form.addEventListener("change", refresh);
-    let lastG = "";
-    setInterval(() => { const g = form.elements.grade ? form.elements.grade.value : ""; if (g !== lastG) { lastG = g; refresh(); } }, 300);
+  function build() {
+    form = document.getElementById("registerForm");
+    if (!form || document.getElementById("regGradeCode")) return;
+    var gradeField = document.getElementById("gradePicker");
+    gradeField = gradeField && gradeField.closest(".form-field");
+    if (!gradeField) return;
 
-    let tries = 0;
-    (function boot() {
-      if (window.SNAuth && SNAuth.getGradeCodes) load().then(refresh).catch(() => {});
-      else if (tries++ < 40) setTimeout(boot, 250);
-    })();
+    errEl = document.getElementById("registerError");
 
-    let passed = false;
-    /* بنعترض الإرسال قبل ما shared.js ينشئ الحساب، نتحقق من الكود، وبعدين نعيد الإرسال */
-    form.addEventListener("submit", async (e) => {
-      if (passed) { passed = false; return; }
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setErr("");
-      const btn = $("button[type=submit]", form);
-      try {
-        if (!codes) await load();
-        const g = form.elements.grade.value;
-        if (!needsCode(g)) { sync(form); passed = true; form.requestSubmit(); return; }
-        if (!String(input.value).trim()) { setErr(t("need")); input.focus(); return; }
-        if (btn) btn.disabled = true;
-        if (!(await SNAuth.verifyGradeCode(g, input.value))) { setErr(t("wrong")); input.focus(); return; }
-        passed = true;
-        form.requestSubmit();
-      } catch (err) {
-        console.warn("[grade-codes]", err);
-        setErr(t("net"));
-        field.hidden = false;
-      } finally {
-        if (btn && !passed) btn.disabled = false;
+    var wrap = document.createElement("div");
+    wrap.className = "form-field";
+    wrap.innerHTML =
+      '<label for="regGradeCode">كود الصف</label>' +
+      '<input type="text" id="regGradeCode" name="gradeCode" autocomplete="off" ' +
+      'autocapitalize="characters" spellcheck="false" maxlength="20" dir="ltr" />' +
+      '<p class="form-hint">اطلب كود صفك من الأستاذ</p>';
+    gradeField.insertAdjacentElement("afterend", wrap);
+
+    input = wrap.querySelector("input");
+    input.addEventListener("input", function () {
+      input.value = input.value.replace(/[^A-Za-z0-9\u0660-\u0669]/g, "");
+      showError("");
+    });
+
+    /* لو غيّر الصف نشيل رسالة الخطأ القديمة */
+    var sel = document.getElementById("regGrade");
+    if (sel) sel.addEventListener("change", function () { showError(""); });
+
+    /* capture على document عشان نسبق مستمع الإرسال بتاع shared.js */
+    document.addEventListener("submit", onSubmit, true);
+  }
+
+  async function onSubmit(e) {
+    if (e.target !== form) return;
+
+    /* التحقق خلص قبل كده: سيب الإرسال يكمّل عادي لـ shared.js */
+    if (verified) { verified = false; return; }
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (busy) return;
+
+    var grade = (document.getElementById("regGrade") || {}).value || "";
+    if (!grade) return;
+
+    if (!window.SNAuth || typeof SNAuth.verifyGradeCode !== "function") {
+      showError("تعذر الاتصال بالخادم، حاول تاني بعد لحظات");
+      return;
+    }
+
+    busy = true;
+    var btn = form.querySelector("button[type=submit]");
+    if (btn) btn.disabled = true;
+    try {
+      var ok = await SNAuth.verifyGradeCode(grade, input ? input.value : "");
+      if (!ok) {
+        showError("كود الصف غلط");
+        if (input) input.focus();
+        return;
       }
-    }, true);
-
-    const lt = $("#langToggle");
-    if (lt) lt.addEventListener("click", () => setTimeout(texts, 0));
+      showError("");
+      verified = true;
+      if (typeof form.requestSubmit === "function") form.requestSubmit();
+      else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    } catch (err) {
+      verified = false;
+      showError("تعذر التحقق من كود الصف، اتأكد من النت وحاول تاني");
+    } finally {
+      busy = false;
+      if (btn) btn.disabled = false;
+    }
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
+  else build();
 })();
