@@ -186,10 +186,13 @@
     var head = '<div class="exm-head"><h2>إدارة الامتحانات</h2><button type="button" class="exm-btn exm-btn--accent" data-act="new">+ امتحان جديد</button></div>' +
       '<div class="exm-tabs" role="tablist"><button type="button" role="tab" aria-selected="' + isEx + '" class="exm-tab' + (isEx ? " is-active" : "") + '" data-act="tab" data-t="exams">الامتحانات</button>' +
       '<button type="button" role="tab" aria-selected="' + !isEx + '" class="exm-tab' + (!isEx ? " is-active" : "") + '" data-act="tab" data-t="subs">التسليمات والمراجعة' + (pc ? '<span class="exm-tab__badge">' + pc + "</span>" : "") + "</button></div>";
-    var tools = '<div class="exm-tools"><div class="exm-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' +
-      '<input class="exm-input" type="search" data-fl="q" dir="auto" value="' + esc(S.q) + '" placeholder="' + (isEx ? "ابحث باسم الامتحان" : "ابحث باسم الطالب أو الامتحان") + '" aria-label="بحث" /></div>' +
-      '<label class="exm-date"><span>' + (isEx ? "تاريخ النشر" : "تاريخ التسليم") + '</span><input class="exm-input" type="date" data-fl="date" value="' + esc(S.fDate) + '" />' +
-      (S.fDate ? '<button type="button" class="exm-btn exm-btn--sm" data-act="clearDate" aria-label="مسح التاريخ">×</button>' : "") + "</label></div>";
+    var dTxt = "";
+    if (S.fDate) { try { dTxt = new Date(S.fDate + "T00:00:00").toLocaleDateString("ar-EG", { day: "numeric", month: "short", year: "numeric" }); } catch (err) { dTxt = S.fDate; } }
+    var tools = '<div class="exm-tools"><div class="exm-search"><input class="exm-input exm-input--pill" type="search" data-fl="q" dir="rtl" value="' + esc(S.q) + '" placeholder="' + (isEx ? "ابحث باسم الامتحان" : "ابحث باسم الطالب أو الامتحان") + '" aria-label="بحث" />' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>' +
+      '<div class="exm-datebtn' + (S.fDate ? " has-value" : "") + '"><span class="exm-datebtn__face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>' + (dTxt ? "<span>" + esc(dTxt) + "</span>" : "") + "</span>" +
+      '<input type="date" class="exm-datebtn__input" data-fl="date" value="' + esc(S.fDate) + '" aria-label="' + (isEx ? "اختيار تاريخ النشر" : "اختيار تاريخ التسليم") + '" />' +
+      (S.fDate ? '<button type="button" class="exm-datebtn__clear" data-act="clearDate" aria-label="مسح التاريخ">×</button>' : "") + "</div></div>";
     var chips = "";
     if (isEx) {
       var n1 = 0, n2 = 0, n0 = 0;
@@ -624,6 +627,11 @@
         S.exam.sections = S.exam.sections.filter(function (x) { return x.id !== b.dataset.s; });
         markDirty(); return renderBuilder();
       }
+    });
+
+    root.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (t && t.dataset && t.dataset.fl === "date" && t.showPicker) { try { t.showPicker(); } catch (err) { /* المتصفح هيفتحه بنفسه */ } }
     });
 
     root.addEventListener("keydown", function (ev) {
