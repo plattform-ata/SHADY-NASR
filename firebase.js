@@ -966,6 +966,19 @@
     return snap.exists() ? snap.val() : null;
   }
 
+  /* الامتحانات الخاصة اللي الطالب فتحها بالرمز/QR: userData/{id}/examUnlocks/{examId} = وقت الفتح */
+  async function fetchExamUnlocks(studentId) {
+    if (!studentId) return {};
+    const snap = await db.ref("userData/" + studentId + "/examUnlocks").get();
+    return snap.exists() ? snap.val() : {};
+  }
+  async function unlockExam(studentId, examId) {
+    if (!studentId || !examId) return false;
+    if (!(await userAlive(studentId))) return false;
+    await db.ref("userData/" + studentId + "/examUnlocks/" + examId).set(new Date().toISOString());
+    return true;
+  }
+
   /* كل التسليمات: { examId: { studentId: submission } } */
   async function fetchAllExamSubmissions() {
     const snap = await db.ref("examSubmissions").get();
@@ -1428,5 +1441,7 @@
     saveExamSubmission,
     updateExamSubmission,
     updateExamFields,
+    fetchExamUnlocks,
+    unlockExam,
   };
 })();
