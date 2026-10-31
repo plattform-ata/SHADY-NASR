@@ -13,7 +13,7 @@
   <title>لوحة تحكم الأدمن — Shady Nasr English Platform</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" href="shared.css?v=20261126" />
-  <link rel="stylesheet" href="exams.css?v=20261504" />
+  <link rel="stylesheet" href="exams.css?v=20261505" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap"
@@ -1530,7 +1530,7 @@
 
         <!-- ===== لوحة الصدارة (صفحة كاملة) ===== -->
         <section class="dash-panel" id="panel-leaderboard">
-          <button class="btn btn--ghost" id="lbBack" type="button" style="margin-bottom:14px">← رجوع للرئيسية</button>
+          <button class="exm-back" id="lbBack" type="button" style="margin-bottom:14px"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>رجوع للرئيسية</span></button>
           <div id="lbBar">
             <div id="lbTabs" class="dash-tabs" role="tablist" style="margin:0"></div>
             <select id="lbGrade" aria-label="الصف الدراسي" data-enhance>
@@ -1553,7 +1553,7 @@
         <section class="dash-panel" id="panel-students">
           <div id="studentsListView">
             <div id="stGradeHead" hidden>
-              <button class="btn btn--ghost" id="stBackGrades" type="button" style="margin-bottom:14px">← رجوع للصفوف</button>
+              <button class="exm-back" id="stBackGrades" type="button" style="margin-bottom:14px"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>رجوع للصفوف</span></button>
               <h2 class="ad-grade-title" id="stGradeTitle"></h2>
             </div>
             <p class="dash-panel__intro" id="stIntro">اختار الصف الدراسي عشان تشوف طلابه، أو ابحث عن أي طالب بالاسم أو الإيميل في كل الصفوف.
@@ -1760,10 +1760,7 @@
           </div>
 
           <div class="set-sub" id="setSub" hidden>
-            <button type="button" class="set-back" id="setBack"><svg viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m9 6 6 6-6 6" />
-              </svg><span>رجوع للإعدادات</span></button>
+            <button type="button" class="set-back exm-back" id="setBack"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>رجوع للإعدادات</span></button>
             <div class="ad-card-stack">
 
               <div class="dash-card set-card" data-set-card="account" hidden>
@@ -2215,11 +2212,11 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="firebase.js?v=20261504"></script>
+  <script defer src="firebase.js?v=20261505"></script>
   <script defer src="shared.js?v=20261132"></script>
   <script defer src="pdf-viewer.js?v=20261405"></script>
-  <script defer src="exams.js?v=20261504"></script>
-  <script defer src="exams-admin.js?v=20261504"></script>
+  <script defer src="exams.js?v=20261505"></script>
+  <script defer src="exams-admin.js?v=20261505"></script>
   <script defer src="questions-unit1.js"></script>
   <script defer src="questions-unit2.js"></script>
   <script defer src="questions-unit3.js"></script>
@@ -3080,7 +3077,7 @@
         }).join("") : '<div class="ad-empty" style="padding:18px">لسه ما خدش شهادات تقدير</div>';
 
         $("#studentDetailView").innerHTML =
-          '<button class="btn btn--ghost" id="backToList" type="button" style="margin-bottom:16px">← رجوع لقائمة الطلاب</button>' +
+          '<button class="exm-back" id="backToList" type="button" style="margin-bottom:16px"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>رجوع لقائمة الطلاب</span></button>' +
           '<div class="sd-hero">' + avatar(u, true) +
           '<div class="sd-hero__main"><h2>' + esc(u.fullName) + '</h2><p class="sd-hero__mail">' + esc(u.email) + '</p><div class="sd-hero__pills">' +
           '<span class="ad-pill">' + esc(gradeFull(u) || "—") + "</span>" +
@@ -3196,7 +3193,7 @@
         function openMonth(k) {
           var rows = cache.filter(function (n) { return noteMonthKey(n.createdAt) === k; }).sort(function (x, y) { return (y.createdAt || 0) - (x.createdAt || 0); });
           var view = $("#studentDetailView");
-          view.innerHTML = '<button class="btn btn--ghost" id="noteBack" type="button" style="margin-bottom:16px">← رجوع لملف ' + esc(u.fullName) + '</button>' +
+          view.innerHTML = '<button class="exm-back" id="noteBack" type="button" style="margin-bottom:16px"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>رجوع لملف ' + esc(u.fullName) + '</span></button>' +
             '<div class="dash-card"><h3>ملاحظات ' + esc(noteMonthLabel(k)) + ' <span class="ad-pill">' + rows.length + '</span></h3><div id="noteMonthList">' +
             (rows.length ? rows.map(noteItemHtml).join("") : '<div class="ad-empty" style="padding:14px">مفيش ملاحظات في الشهر ده</div>') + '</div></div>';
           window.scrollTo({ top: 0 });
