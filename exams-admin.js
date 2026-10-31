@@ -22,7 +22,7 @@
     tab: "exams", view: "list", loaded: false, exams: [], subs: {},
     exam: null, dirty: false, saveTimer: 0, drawer: false, errs: [],
     pick: { type: "mcq", count: 10, header: X.typeOf("mcq").header },
-    fExam: "all", q: "", fDate: "", fTerm: "all", grade: null, more: {}, gStatus: {}, defTerm: 1,
+    fExam: "all", q: "", fDate: "", fTerm: "all", grade: null, more: {}, open: {}, gStatus: {}, defTerm: 1,
     cur: null   // { exam, sub, manualFinal }
   };
 
@@ -103,7 +103,8 @@
     globe: svgI('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>'),
     copy: svgI('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>'),
     dl: svgI('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
-    x: svgI('<path d="M6 6l12 12M18 6 6 18"/>')
+    x: svgI('<path d="M6 6l12 12M18 6 6 18"/>'),
+    chev: svgI('<path d="m6 9 6 6 6-6"/>', "exm-ico exm-ex__chev")
   };
   function nAr(n) { return Number(n).toLocaleString("ar-EG", { useGrouping: false }); }
 
@@ -130,6 +131,19 @@
     if (S.fDate && dayKey(e.publishedAt) !== S.fDate) return false;
     return true;
   }
+  function examMatchesSubs(e) {
+    var q = S.q.trim().toLowerCase();
+    if (q) {
+      var qc = X.normCode(q), hit = String(e.title || "").toLowerCase().indexOf(q) > -1 || (qc && X.normCode(e.code).indexOf(qc) > -1);
+      if (!hit) return false;
+    }
+    if (S.fDate) {
+      var m = S.subs[e.id] || {};
+      var any = Object.keys(m).some(function (u) { return m[u] && dayKey(m[u].submittedAt) === S.fDate; });
+      if (!any) return false;
+    }
+    return true;
+  }
   function subMatches(r) {
     var e = examById(r.examId), q = S.q.trim().toLowerCase();
     if (S.fExam !== "all" && r.examId !== S.fExam) return false;
@@ -138,9 +152,9 @@
     return true;
   }
 
-  /* ---- كارت الامتحان ---- */
+  /* ---- كارت الامتحان: الاسم بس، والتفاصيل بتنزل لما تضغط عليه ---- */
   function examRow(e) {
-    var c = subCounts(e.id), id = esc(e.id), more = !!S.more[e.id];
+    var c = subCounts(e.id), id = esc(e.id), more = !!S.more[e.id], isOpen = !!S.open[e.id];
     var st = e.status === "published" ? '<span class="exm-pill exm-pill--ok">منشور</span>' : e.status === "closed" ? '<span class="exm-pill">مغلق</span>' : '<span class="exm-pill exm-pill--warn">مسودة</span>';
     var facts = [X.countQuestions(e) + " سؤال", X.totalPoints(e) + " درجة"];
     if (e.durationMin > 0) facts.push(e.durationMin + " دقيقة");
@@ -159,14 +173,28 @@
     if (e.status === "closed") extra += '<button type="button" class="exm-btn" data-act="setStatus" data-id="' + id + '" data-st="published">إعادة فتح</button>';
     extra += '<button type="button" class="exm-btn" data-act="paper" data-id="' + id + '">ملف PDF</button>' +
       '<button type="button" class="exm-btn exm-btn--danger" data-act="delExam" data-id="' + id + '">حذف</button>';
-    return '<article class="exm-ex"><div class="exm-ex__top"><h4 class="exm-ex__title" dir="auto">' + esc(e.title || "بدون عنوان") + "</h4>" + st + "</div>" +
+    var head = '<button type="button" class="exm-ex__head" data-act="toggleEx" data-id="' + id + '" aria-expanded="' + isOpen + '" aria-controls="exmx-' + id + '">' +
+      '<span class="exm-ex__name" dir="auto">' + esc(e.title || "بدون عنوان") + "</span>" +
+      '<span class="exm-ex__badges">' + (priv ? '<span class="exm-ex__lock" title="خاص" aria-label="امتحان خاص">' + I.lock + "</span>" : "") + st + "</span>" + I.chev + "</button>";
+    var body = '<div class="exm-ex__panel" id="exmx-' + id + '"><div class="exm-ex__inner"><div class="exm-ex__details">' +
       '<div class="exm-ex__tags">' + acc + code + "</div>" +
       '<p class="exm-facts">' + facts.map(function (f) { return "<span>" + esc(f) + "</span>"; }).join("") + "</p>" +
       '<p class="exm-when">' + esc(when) + "</p>" + prog +
       '<div class="exm-ex__acts"><button type="button" class="exm-btn exm-btn--accent" data-act="edit" data-id="' + id + '">تعديل</button>' +
       '<button type="button" class="exm-btn" data-act="subsOf" data-id="' + id + '">التسليمات (' + c.total + ')</button>' +
       '<button type="button" class="exm-btn exm-btn--icon" data-act="more" data-id="' + id + '" aria-expanded="' + more + '" aria-label="خيارات أخرى">⋯</button></div>' +
-      (more ? '<div class="exm-ex__more">' + extra + "</div>" : "") + "</article>";
+      (more ? '<div class="exm-ex__more">' + extra + "</div>" : "") + "</div></div></div>";
+    return '<article class="exm-ex' + (isOpen ? " is-open" : "") + '">' + head + body + "</article>";
+  }
+
+  /* ---- صف الامتحان جوه تبويب التسليمات: الاسم + عدد التسليمات ---- */
+  function examSubRow(e) {
+    var c = subCounts(e.id), pend = c.total - c.graded, id = esc(e.id);
+    var line = c.total ? c.total + " تسليم" + (c.graded ? " · اتصحّح " + c.graded : "") : "مفيش تسليمات لسه";
+    return '<button type="button" class="exm-xr' + (c.total ? "" : " is-empty") + '" data-act="openExamSubs" data-id="' + id + '">' +
+      '<span class="exm-xr__num">' + c.total + "</span>" +
+      '<span class="exm-xr__main"><strong dir="auto">' + esc(e.title || "بدون عنوان") + "</strong><small>" + esc(line) + "</small></span>" +
+      (pend ? '<span class="exm-grp__alert">' + pend + " بانتظار التصحيح</span>" : "") + I.fwd + "</button>";
   }
 
   /* ---- صف التسليم ---- */
@@ -208,6 +236,14 @@
       var list = S.exams.filter(function (e) { return e.grade === g && examMatches(e); });
       return list.length ? list.map(examRow).join("") : '<p class="exm-empty">' + (filterActive() ? "مفيش نتايج مطابقة للبحث أو الفلتر." : "مفيش امتحانات في الصف ده لسه.") + "</p>";
     }
+    if (S.fExam === "all") {
+      var exl = S.exams.filter(function (e) { return e.grade === g && (e.status !== "draft" || subCounts(e.id).total) && examMatchesSubs(e); })
+        .sort(function (x, y) {
+          var px = subCounts(x.id), py = subCounts(y.id);
+          return ((py.total - py.graded) - (px.total - px.graded)) || String(y.publishedAt || y.createdAt || "").localeCompare(String(x.publishedAt || x.createdAt || ""));
+        });
+      return exl.length ? exl.map(examSubRow).join("") : '<p class="exm-empty">' + (filterActive() ? "مفيش نتايج مطابقة للبحث أو الفلتر." : "مفيش امتحانات في الصف ده لسه.") + "</p>";
+    }
     var all = subList().filter(function (r) { return subGrade(r) === g && subMatches(r); });
     var pend = all.filter(function (r) { return r.sub.status !== "graded"; }).length, st = S.gStatus[g] || "all";
     var chips = [["all", "الكل", all.length], ["pending", "بانتظار التصحيح", pend], ["graded", "اتصحّحت", all.length - pend]].map(function (c) {
@@ -221,7 +257,7 @@
   function renderGradePage() {
     var g = S.grade, isEx = S.tab === "exams";
     var tools = '<div class="exm-tools"><div class="exm-search"><input class="exm-input exm-input--pill" type="search" data-fl="q" dir="rtl" value="' + esc(S.q) + '" placeholder="' +
-      (isEx ? "ابحث باسم الامتحان أو الرمز" : "ابحث باسم الطالب أو الامتحان") + '" aria-label="بحث" />' + I.search + "</div>" +
+      (isEx ? "ابحث باسم الامتحان أو الرمز" : S.fExam === "all" ? "ابحث باسم الامتحان" : "ابحث باسم الطالب") + '" aria-label="بحث" />' + I.search + "</div>" +
       '<div class="exm-datebtn' + (S.fDate ? " has-value" : "") + '"><button type="button" class="exm-datebtn__face" data-act="cal" aria-haspopup="dialog" aria-label="' + (isEx ? "اختيار تاريخ النشر" : "اختيار تاريخ التسليم") + '">' + I.cal + (S.fDate ? "<span>" + esc(dayLabel(S.fDate)) + "</span>" : "") + "</button>" +
       (S.fDate ? '<button type="button" class="exm-datebtn__clear" data-act="clearDate" aria-label="مسح التاريخ">×</button>' : "") + "</div></div>";
     var chips = "";
@@ -233,13 +269,17 @@
       chips = '<div class="exm-chips">' + defs.map(function (c) {
         return '<button type="button" class="exm-chip' + (S.fTerm === c[0] ? " is-active" : "") + '" data-act="fterm" data-v="' + c[0] + '">' + c[1] + " <b>" + c[2] + "</b></button>";
       }).join("") + "</div>";
-    } else if (S.fExam !== "all") {
-      var fe = examById(S.fExam);
-      chips = '<div class="exm-chips"><button type="button" class="exm-chip is-active" data-act="clearExam">الامتحان: ' + esc(fe ? fe.title : "—") + " ×</button></div>";
     }
-    root.innerHTML = '<div class="exm-root"><div class="exm-head"><button type="button" class="exm-btn exm-btn--ghost" data-act="backGrades">' + I.back + " كل الصفوف</button>" +
-      '<button type="button" class="exm-btn exm-btn--accent" data-act="new" data-g="' + g + '">+ امتحان جديد</button></div>' +
-      '<h2 class="exm-gp__title">' + esc(X.GRADE_NAMES[g]) + "</h2>" + tabsHtml() + tools + chips + '<div id="exmListBody" class="exm-groups">' + gradeBodyHtml() + "</div></div>";
+    var fe = !isEx && S.fExam !== "all" ? examById(S.fExam) : null, inExam = !isEx && S.fExam !== "all";
+    var topBtn = inExam
+      ? '<button type="button" class="exm-btn exm-btn--ghost" data-act="clearExam">' + I.back + " كل الامتحانات</button>"
+      : '<button type="button" class="exm-btn exm-btn--ghost" data-act="backGrades">' + I.back + " كل الصفوف</button>";
+    var newBtn = inExam ? "" : '<button type="button" class="exm-btn exm-btn--accent" data-act="new" data-g="' + g + '">+ امتحان جديد</button>';
+    var title = inExam
+      ? '<h2 class="exm-gp__title" dir="auto">' + esc(fe ? fe.title : "الامتحان") + '</h2><p class="exm-sub">' + esc(X.GRADE_NAMES[g]) + "</p>"
+      : '<h2 class="exm-gp__title">' + esc(X.GRADE_NAMES[g]) + "</h2>";
+    root.innerHTML = '<div class="exm-root"><div class="exm-head">' + topBtn + newBtn + "</div>" +
+      title + tabsHtml() + tools + chips + '<div id="exmListBody" class="exm-groups">' + gradeBodyHtml() + "</div></div>";
   }
 
   function renderList() { if (S.grade && X.GRADE_NAMES[S.grade]) renderGradePage(); else { S.grade = null; renderHome(); } }
@@ -720,7 +760,13 @@
       if (a === "fterm") { S.fTerm = b.dataset.v; return render(); }
       if (a === "gst") { S.gStatus[b.dataset.g] = b.dataset.v; return paintListBody(); }
       if (a === "more") { S.more[b.dataset.id] = !S.more[b.dataset.id]; return paintListBody(); }
-      if (a === "clearExam") { S.fExam = "all"; return render(); }
+      if (a === "toggleEx") {
+        var tid = b.dataset.id; S.open[tid] = !S.open[tid];
+        var art = b.closest(".exm-ex"); if (art) art.classList.toggle("is-open", !!S.open[tid]);
+        b.setAttribute("aria-expanded", String(!!S.open[tid])); return;
+      }
+      if (a === "openExamSubs") { S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; S.gStatus[S.grade] = "all"; render(); return window.scrollTo(0, 0); }
+      if (a === "clearExam") { S.fExam = "all"; S.q = ""; S.fDate = ""; render(); return window.scrollTo(0, 0); }
       if (a === "clearDate") { S.fDate = ""; return render(); }
       if (a === "edit") return editExam(b.dataset.id);
       if (a === "subsOf") { var se = examById(b.dataset.id); S.tab = "subs"; S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; if (se) { S.grade = se.grade; S.gStatus[se.grade] = "all"; } return render(); }
