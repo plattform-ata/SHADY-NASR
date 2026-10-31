@@ -5,7 +5,8 @@
 
    نموذج البيانات:
    Exam = {
-     id, title, grade: "prep1".."secondary3", track: "all"|"general"|"bacc",
+     id, title, grade: "prep1".."secondary3", track: "all"|"general"|"bacc", term: 1|2,
+     code: "K7M4QX" (رمز الامتحان)، access: "public" (يظهر لكل طلاب الصف) | "private" (بالرمز أو QR بس),
      durationMin, instructions, status: "draft"|"published"|"closed",
      maxMarks, createdAt, publishedAt,
      sections: [ Section ]
@@ -212,12 +213,86 @@
   }
   function paperHtml(e) { return sheetHtml(e, null, {}); }
 
+
+  /* ---------------- رمز الامتحان (ID) + رابط/QR ---------------- */
+  var CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // من غير I O 0 1 عشان ما يتلخبطوش
+  function makeCode(used) {
+    var taken = {}; arr(used).forEach(function (c) { if (c) taken[String(c).toUpperCase()] = 1; });
+    for (var t = 0; t < 60; t++) {
+      var s = "", buf = null;
+      try { buf = new Uint8Array(6); (window.crypto || window.msCrypto).getRandomValues(buf); } catch (e) { buf = null; }
+      for (var i = 0; i < 6; i++) s += CODE_CHARS.charAt((buf ? buf[i] : Math.floor(Math.random() * 256)) % CODE_CHARS.length);
+      if (!taken[s]) return s;
+    }
+    return s;
+  }
+  function normCode(v) { return String(v == null ? "" : v).toUpperCase().replace(/[^A-Z0-9]/g, ""); }
+  function fmtCode(c) { c = normCode(c); return c.length === 6 ? c.slice(0, 3) + "-" + c.slice(3) : c; }
+  function shareUrl(code) {
+    try { return new URL("studenti.html?exam=" + normCode(code), location.href).href; }
+    catch (e) { return location.origin + "/studenti.html?exam=" + normCode(code); }
+  }
+  /* بياخد نص QR (رابط كامل أو الرمز نفسه) ويرجّع الرمز نضيف */
+  function codeFromText(t) {
+    t = String(t == null ? "" : t).trim();
+    var m = t.match(/[?&#]exam=([A-Za-z0-9-]+)/i);
+    return normCode(m ? m[1] : t);
+  }
+  function isPrivate(e) { return !!e && e.access === "private"; }
+
+  /* ---------------- نافذة منبثقة (شيت من تحت على الموبايل / بطاقة في النص على الكمبيوتر) ---------------- */
+  var modalDepth = 0;
+  function modal(html, o) {
+    o = o || {};
+    var wrap = document.createElement("div");
+    wrap.className = "exm-modal";
+    wrap.innerHTML = '<div class="exm-modal__scrim" data-close="1"></div>' +
+      '<div class="exm-modal__sheet' + (o.cls ? " " + o.cls : "") + '" role="dialog" aria-modal="true" aria-label="' + esc(o.label || "") + '" tabindex="-1">' +
+      '<span class="exm-modal__grab" aria-hidden="true"></span>' + html + "</div>";
+    document.body.appendChild(wrap);
+    modalDepth++; document.documentElement.classList.add("exm-lock");
+    var sheet = wrap.querySelector(".exm-modal__sheet"), prev = document.activeElement, closed = false;
+    function onKey(ev) { if (ev.key === "Escape") { ev.stopPropagation(); close(); } }
+    function close() {
+      if (closed) return; closed = true;
+      document.removeEventListener("keydown", onKey, true);
+      if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      modalDepth = Math.max(0, modalDepth - 1);
+      if (!modalDepth) document.documentElement.classList.remove("exm-lock");
+      if (o.onClose) try { o.onClose(); } catch (e) { }
+      if (prev && prev.focus) try { prev.focus(); } catch (e2) { }
+    }
+    wrap.addEventListener("click", function (ev) { if (ev.target.closest("[data-close]")) close(); });
+    document.addEventListener("keydown", onKey, true);
+    requestAnimationFrame(function () {
+      wrap.classList.add("is-in");
+      var f = sheet.querySelector("[data-autofocus]") || sheet;
+      try { f.focus({ preventScroll: true }); } catch (e) { }
+    });
+    return { el: sheet, close: close };
+  }
+
+  /* تحميل مكتبة عند الحاجة بس (QR) */
+  var loaded = {};
+  function loadScript(src) {
+    if (loaded[src]) return loaded[src];
+    loaded[src] = new Promise(function (res, rej) {
+      var s = document.createElement("script"); s.src = src; s.async = true;
+      s.onload = function () { res(); };
+      s.onerror = function () { delete loaded[src]; rej(new Error("load " + src)); };
+      document.head.appendChild(s);
+    });
+    return loaded[src];
+  }
+
   window.SNExams = {
     GRADE_NAMES: GRADE_NAMES, TRACK_NAMES: TRACK_NAMES, TYPES: TYPES, LETTERS: LETTERS,
     typeOf: typeOf, uid: uid, esc: esc, clean: clean, num: num, round1: round1, arr: arr,
     normalizeExam: normalizeExam, blankQuestion: blankQuestion, generate: generate, retype: retype,
     flatten: flatten, totalPoints: totalPoints, countQuestions: countQuestions,
     suggestScore: suggestScore, validate: validate, levelFor: levelFor, matches: matches,
-    fmtDate: fmtDate, fmtDateTime: fmtDateTime, sheetHtml: sheetHtml, paperHtml: paperHtml
+    fmtDate: fmtDate, fmtDateTime: fmtDateTime, sheetHtml: sheetHtml, paperHtml: paperHtml,
+    makeCode: makeCode, normCode: normCode, fmtCode: fmtCode, shareUrl: shareUrl, codeFromText: codeFromText, isPrivate: isPrivate,
+    modal: modal, loadScript: loadScript
   };
 })();
