@@ -13,16 +13,43 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = X.esc;
 
+  /* رابط/QR الامتحان: studenti.html?exam=CODE — بنحفظ الرمز فورًا (حتى لو الطالب لسه هيسجّل دخول) وبنشيله من الرابط */
+  var LINK_KEY = "shadynasr-exam-link";
+  (function captureLink() {
+    try {
+      var m = location.search.match(/[?&]exam=([A-Za-z0-9-]+)/i);
+      if (!m) return;
+      localStorage.setItem(LINK_KEY, X.normCode(m[1]));
+      var q = location.search.replace(/([?&])exam=[^&]*&?/i, "$1").replace(/[?&]$/, "");
+      history.replaceState(null, "", location.pathname + q + location.hash);
+    } catch (e) { }
+  })();
+
   function session() { try { return JSON.parse(localStorage.getItem("shadynasr-current-user")); } catch (e) { return null; } }
   var me = session();
   if (!me || !me.id || me.role === "admin") return;
 
   var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M15 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M12 11v4M12 18h.01"/></svg>';
 
-  var S = { exams: [], subs: {}, user: me, view: "list", curId: null, answers: {}, startedAt: 0, timer: 0, confirm: false, flash: "", flashBad: false, sending: false };
-  var root, panel;
+  var S = { all: [], unlocks: {}, exams: [], subs: {}, user: me, view: "list", curId: null, answers: {}, startedAt: 0, timer: 0, confirm: false, flash: "", flashBad: false, sending: false };
+  var root, panel, joinDlg = null;
+
+  var ICON_QR = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/></svg>';
+  var ICON_CAM = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>';
+  var ICON_IMG = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>';
+  var ICON_X = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
   /* ------------------------------------------------------------ مساعدات */
+  /* الامتحان الخاص مش بيظهر غير لو الطالب فتحه بالرمز/QR (أو سلّمه قبل كده) */
+  function isVisible(e) { return !X.isPrivate(e) || !!S.unlocks[e.id] || !!S.subs[e.id]; }
+  function applyVisible() { S.exams = S.all.filter(isVisible); }
+  function unlockKey() { return "shadynasr-exam-unlocks:" + me.id; }
+  function localUnlocks() { try { return JSON.parse(localStorage.getItem(unlockKey())) || {}; } catch (e) { return {}; } }
+  function saveLocalUnlock(id) { try { var m = localUnlocks(); m[id] = new Date().toISOString(); localStorage.setItem(unlockKey(), JSON.stringify(m)); } catch (e) { } }
+  function loadUnlocks() {
+    return Promise.resolve(SNAuth.fetchExamUnlocks ? SNAuth.fetchExamUnlocks(me.id) : {}).catch(function () { return {}; })
+      .then(function (m) { S.unlocks = Object.assign({}, localUnlocks(), m || {}); });
+  }
   function find(id) { return S.exams.filter(function (e) { return e.id === id; })[0]; }
   function cur() { return find(S.curId); }
   function pending() { return S.exams.filter(function (e) { return e.status === "published" && !S.subs[e.id]; }); }
@@ -42,7 +69,7 @@
 
   /* ------------------------------------------------------------ تحميل */
   function refreshSubs() {
-    return Promise.all(S.exams.map(function (e) {
+    return Promise.all(S.all.map(function (e) {
       return Promise.resolve(SNAuth.fetchExamSubmission(e.id, me.id))
         .then(function (s) { S.subs[e.id] = s; })
         .catch(function () { });
@@ -50,13 +77,15 @@
   }
 
   function onExams(list) {
-    S.exams = (list || []).map(X.normalizeExam)
+    S.all = (list || []).map(X.normalizeExam)
       .filter(function (e) { return e && e.id && e.status !== "draft" && X.matches(e, S.user); })
       .sort(function (a, b) { return String(b.publishedAt || "").localeCompare(String(a.publishedAt || "")); });
-    refreshSubs().then(function () {
+    Promise.all([loadUnlocks(), refreshSubs()]).then(function () {
+      applyVisible();
       checkLeft();
       if (S.view !== "take") render();
       paintAlert();
+      processLink();
     });
   }
 
@@ -155,9 +184,9 @@
     var wait = S.exams.filter(function (e) { return S.subs[e.id] && S.subs[e.id].status !== "graded"; });
     var done = S.exams.filter(function (e) { return S.subs[e.id] && S.subs[e.id].status === "graded"; });
     var missed = S.exams.filter(function (e) { return e.status === "closed" && !S.subs[e.id]; });
-    var html = '<div class="exm-head"><h2>الامتحانات</h2></div>';
+    var html = '<div class="exm-head"><h2>الامتحانات</h2><button type="button" class="exm-btn exm-btn--accent" data-act="join">' + ICON_QR + " رمز امتحان</button></div>";
     if (S.flash) html += '<div class="exm-note" role="status">' + esc(S.flash) + "</div>";
-    if (!S.exams.length) html += '<p class="exm-empty">مفيش امتحانات لصفك دلوقتي.</p>';
+    if (!S.exams.length) html += '<div class="exm-empty-card"><p class="exm-empty">مفيش امتحانات لصفك دلوقتي.</p><p class="exm-sub">لو الأستاذ إدّاك رمز امتحان أو QR اضغط على «رمز امتحان» عشان يتفتحلك.</p></div>';
     if (pend.length) html += '<h3 class="exm-sec__head">امتحانات جديدة</h3>' + pend.map(function (e) { return examCard(e, "new"); }).join("");
     if (wait.length) html += '<h3 class="exm-sec__head">بانتظار التصحيح</h3>' + wait.map(function (e) { return examCard(e, "wait"); }).join("");
     if (done.length) html += '<h3 class="exm-sec__head">اتصحّحت</h3>' + done.map(function (e) { return examCard(e, "done"); }).join("");
@@ -278,7 +307,7 @@
         : "الامتحان ده اتسلّم قبل كده.";
       S.view = "list"; S.curId = null; S.confirm = false;
       render(); paintAlert(); window.scrollTo(0, 0);
-      if (!ok) refreshSubs().then(function () { render(); paintAlert(); });
+      if (!ok) refreshSubs().then(function () { applyVisible(); render(); paintAlert(); });
       setTimeout(checkLeft, 0);
     }).catch(function () {
       S.sending = false;
@@ -328,13 +357,157 @@
     renderList();
   }
 
+
+  /* ------------------------------------------------------------ فتح امتحان بالرمز / QR */
+  function joinByCode(raw) {
+    var code = X.codeFromText(raw);
+    if (code.length < 4) return { ok: false, msg: "اكتب الرمز كامل الأول." };
+    var e = S.all.filter(function (x) { return X.normCode(x.code) === code; })[0];
+    if (!e) return { ok: false, msg: "الرمز ده مش مظبوط، أو الامتحان مش متاح لصفك." };
+    if (S.subs[e.id]) return { ok: true, id: e.id, msg: "انت سلّمت الامتحان ده قبل كده — هتلاقيه في القايمة." };
+    if (e.status === "closed") return { ok: false, msg: "الامتحان ده اتقفل ومبقاش متاح." };
+    if (S.unlocks[e.id] || !X.isPrivate(e)) return { ok: true, id: e.id, msg: "الامتحان ده ظاهر عندك بالفعل: " + e.title };
+    S.unlocks[e.id] = new Date().toISOString();
+    saveLocalUnlock(e.id);
+    Promise.resolve(SNAuth.unlockExam ? SNAuth.unlockExam(me.id, e.id) : false).catch(function () { });
+    applyVisible();
+    return { ok: true, id: e.id, msg: "تم فتح الامتحان: " + e.title };
+  }
+  function showJoined(res) {
+    S.flash = res.msg; S.view = "list"; S.curId = null;
+    render(); paintAlert();
+    goExams();
+    setTimeout(function () { window.scrollTo(0, 0); }, 50);
+  }
+  /* رابط/QR اتفتح بيه الموقع: نفتح الامتحان تلقائيًا */
+  function processLink() {
+    var code = ""; try { code = localStorage.getItem(LINK_KEY) || ""; } catch (e) { }
+    if (!code || S.view === "take") return;
+    try { localStorage.removeItem(LINK_KEY); } catch (e2) { }
+    var res = joinByCode(code);
+    showJoined(res.ok ? res : { msg: res.msg });
+  }
+
+  function decodeFrom(src, det) {
+    if (det) return det.detect(src).then(function (c) { return c && c[0] ? c[0].rawValue : null; }).catch(function () { return null; });
+    return Promise.resolve().then(function () {
+      var w = src.videoWidth || src.naturalWidth || src.width, h = src.videoHeight || src.naturalHeight || src.height;
+      if (!w || !h) return null;
+      var k = Math.min(1, 900 / Math.max(w, h)), cv = document.createElement("canvas");
+      cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+      var g = cv.getContext("2d", { willReadFrequently: true }); g.drawImage(src, 0, 0, cv.width, cv.height);
+      var d = g.getImageData(0, 0, cv.width, cv.height), r = window.jsQR && window.jsQR(d.data, d.width, d.height);
+      return r ? r.data : null;
+    });
+  }
+  function getDetector() {
+    try { if ("BarcodeDetector" in window) return new window.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { }
+    return null;
+  }
+  function withDecoder() {
+    var det = getDetector();
+    if (det) return Promise.resolve(det);
+    return X.loadScript("exams-qr-scan.js?v=1").then(function () { return null; });
+  }
+
+  function openJoin() {
+    if (joinDlg || S.view === "take") return;
+    var html = '<div class="exm-modal__head"><h3>فتح امتحان بالرمز</h3><button type="button" class="exm-iconbtn" data-close="1" aria-label="إغلاق">' + ICON_X + "</button></div>" +
+      '<p class="exm-sub">اكتب رمز الامتحان اللي الأستاذ إدّاهولك، أو امسح الـ QR.</p>' +
+      '<div class="exm-join__row"><input class="exm-input exm-input--code" id="exmJoinInput" dir="ltr" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="8" placeholder="XXX-XXX" aria-label="رمز الامتحان" data-autofocus />' +
+      '<button type="button" class="exm-btn exm-btn--accent" data-j="go">فتح</button></div>' +
+      '<p class="exm-join__msg" id="exmJoinMsg" role="alert" hidden></p>' +
+      '<div class="exm-or"><span>أو</span></div>' +
+      '<div class="exm-join__acts"><button type="button" class="exm-btn" data-j="scan">' + ICON_CAM + " مسح QR بالكاميرا</button>" +
+      '<button type="button" class="exm-btn" data-j="pick">' + ICON_IMG + " اختيار صورة</button></div>" +
+      '<input type="file" accept="image/*" id="exmJoinFile" hidden />' +
+      '<div class="exm-scan" id="exmScan" hidden><video id="exmScanVideo" playsinline muted></video><span class="exm-scan__frame" aria-hidden="true"></span>' +
+      '<button type="button" class="exm-btn exm-scan__stop" data-j="stop">إيقاف الكاميرا</button></div>';
+    var stream = null, raf = 0, scanning = false;
+    function stopScan() {
+      scanning = false; cancelAnimationFrame(raf);
+      if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+      var sc = $("#exmScan", dlg.el), v = $("#exmScanVideo", dlg.el);
+      if (v) v.srcObject = null;
+      if (sc) sc.hidden = true;
+    }
+    var dlg = X.modal(html, { label: "فتح امتحان بالرمز", cls: "exm-join", onClose: function () { stopScan(); joinDlg = null; } });
+    joinDlg = dlg;
+    var input = $("#exmJoinInput", dlg.el), msg = $("#exmJoinMsg", dlg.el);
+    function say(t, ok) { msg.textContent = t; msg.hidden = !t; msg.classList.toggle("is-ok", !!ok); }
+    function submitCode(raw) {
+      var res = joinByCode(raw);
+      if (!res.ok) { say(res.msg); return; }
+      dlg.close(); showJoined(res);
+    }
+    input.addEventListener("input", function () {
+      var raw = X.normCode(input.value).slice(0, 6);
+      input.value = raw.length > 3 ? raw.slice(0, 3) + "-" + raw.slice(3) : raw; say("");
+    });
+    input.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); submitCode(input.value); } });
+    function onText(t) {
+      if (!t) return false;
+      var code = X.codeFromText(t);
+      input.value = code.length === 6 ? code.slice(0, 3) + "-" + code.slice(3) : code;
+      submitCode(code);
+      return true;
+    }
+    function startScan() {
+      say("");
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return say("الكاميرا مش متاحة في المتصفح ده. اختار صورة أو اكتب الرمز.");
+      withDecoder().then(function (det) {
+        return navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (st) {
+          stream = st; scanning = true;
+          var v = $("#exmScanVideo", dlg.el); v.srcObject = st; $("#exmScan", dlg.el).hidden = false;
+          return v.play().then(function () {
+            var last = 0;
+            (function loop(ts) {
+              if (!scanning) return;
+              if (ts - last > 120 && v.readyState >= 2) {
+                last = ts;
+                decodeFrom(v, det).then(function (t) { if (scanning && t && onText(t)) stopScan(); });
+              }
+              raf = requestAnimationFrame(loop);
+            })(0);
+          });
+        });
+      }).catch(function (err) {
+        stopScan();
+        say(err && err.name === "NotAllowedError" ? "لازم تسمح للموقع باستخدام الكاميرا. أو اختار صورة فيها الـ QR." : "تعذّر تشغيل الكاميرا. اختار صورة أو اكتب الرمز.");
+      });
+    }
+    function fromFile(file) {
+      if (!file) return;
+      say("جاري قراءة الصورة…", true);
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        withDecoder().then(function (det) { return decodeFrom(img, det); }).then(function (t) {
+          URL.revokeObjectURL(url);
+          if (!t || !onText(t)) say("ماقدرتش ألاقي QR واضح في الصورة. جرّب صورة أوضح أو اكتب الرمز.");
+        }).catch(function () { URL.revokeObjectURL(url); say("تعذّر قراءة الصورة."); });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); say("الصورة دي مش مفهومة."); };
+      img.src = url;
+    }
+    dlg.el.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-j]"); if (!b) return;
+      var j = b.dataset.j;
+      if (j === "go") submitCode(input.value);
+      else if (j === "scan") startScan();
+      else if (j === "stop") stopScan();
+      else if (j === "pick") $("#exmJoinFile", dlg.el).click();
+    });
+    $("#exmJoinFile", dlg.el).addEventListener("change", function (ev) { fromFile(ev.target.files && ev.target.files[0]); ev.target.value = ""; });
+  }
+
   /* ------------------------------------------------------------ الأحداث */
   function bind() {
     root.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-act]");
       if (!b) return;
       var act = b.dataset.act;
-      if (act === "start") warn(b.dataset.id);
+      if (act === "join") openJoin();
+      else if (act === "start") warn(b.dataset.id);
       else if (act === "confirmStart") start(S.curId);
       else if (act === "cancelStart") { S.view = "list"; S.curId = null; render(); }
       else if (act === "result") { S.curId = b.dataset.id; S.view = "result"; render(); window.scrollTo(0, 0); }
@@ -360,7 +533,7 @@
     var was = panel.classList.contains("is-active");
     new MutationObserver(function () {
       var on = panel.classList.contains("is-active");
-      if (on && !was && S.view !== "take") refreshSubs().then(function () { render(); paintAlert(); });
+      if (on && !was && S.view !== "take") refreshSubs().then(function () { applyVisible(); render(); paintAlert(); });
       was = on;
     }).observe(panel, { attributes: true, attributeFilter: ["class"] });
   }
