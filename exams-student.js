@@ -34,10 +34,46 @@
   var S = { all: [], unlocks: {}, exams: [], subs: {}, user: me, view: "list", curId: null, answers: {}, startedAt: 0, timer: 0, confirm: false, flash: "", flashBad: false, sending: false, open: {} };
   var root, panel, joinDlg = null;
 
+  /* زرار الرجوع الموحّد: سهم جوه دايرة + الاسم */
+  function backBtn(act, label) {
+    return '<button type="button" class="exm-back" data-act="' + act + '"><span class="exm-back__ico">' + ICON_ARROW + "</span><span>" + esc(label) + "</span></button>";
+  }
+
+  /* نظام الرجوع (زرار الموبايل / المتصفح): فتح تحذير أو نتيجة بيسجّل خطوة، والرجوع بيرجّعك لقايمة الامتحانات.
+     وأثناء الحل الرجوع ممنوع (الخروج = تسليم تلقائي). */
+  var level = 0;   // 0 = القايمة، 1 = جوه شاشة فرعية (تحذير / حل / نتيجة)
+  function pushLevel() {
+    if (level) return;
+    level = 1;
+    try { var b = Object.assign({}, history.state || {}); b.snExmS = 1; history.pushState(b, ""); } catch (e) { }
+  }
+  function toList() { S.view = "list"; S.curId = null; S.confirm = false; render(); window.scrollTo(0, 0); }
+  function goBack() {
+    if (level && history.state && history.state.snExmS === 1) { history.back(); return; }
+    level = 0; toList();
+  }
+  function onPop(ev) {
+    var target = (ev.state && ev.state.snExmS) || 0;
+    setTimeout(function () {
+      if (!panel || !panel.classList.contains("is-active")) return;
+      if (S.view === "take") {
+        if (target < level) {
+          try { var b = Object.assign({}, history.state || {}); b.snExmS = 1; history.pushState(b, ""); } catch (e) { }
+          var n = $("#exmBackNote");
+          if (n) { n.hidden = false; clearTimeout(S.noteT); S.noteT = setTimeout(function () { n.hidden = true; }, 3500); }
+        }
+        return;
+      }
+      if (target < level) { level = 0; toList(); }
+      else if (target > level) { try { history.back(); } catch (e) { } }   // خطوة قديمة فاضية: نتخطّاها
+    }, 0);
+  }
+
   var ICON_QR = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/></svg>';
   var ICON_CAM = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>';
   var ICON_IMG = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>';
   var ICON_CHEV = '<svg class="exm-ico exm-xc__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  var ICON_ARROW = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   var ICON_X = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
   /* ------------------------------------------------------------ مساعدات */
@@ -179,7 +215,7 @@
     var dv = e.publishedAt || e.createdAt, date = dv ? X.fmtDate(dv) : "", isOpen = !!S.open[e.id], id = esc(e.id);
     return '<article class="exm-card exm-xc' + (mode === "new" ? " exm-card--new" : "") + (isOpen ? " is-open" : "") + '">' +
       '<button type="button" class="exm-xc__head" data-act="toggle" data-id="' + id + '" aria-expanded="' + isOpen + '" aria-controls="exmc-' + id + '">' +
-      '<span class="exm-xc__text"><strong class="exm-title" dir="auto">' + esc(e.title) + "</strong>" + (date ? '<small class="exm-xc__date">' + esc(date) + "</small>" : "") + "</span>" + ICON_CHEV + "</button>" +
+      '<span class="exm-xc__text"><strong class="exm-title"><bdi>' + esc(e.title) + "</bdi></strong>" + (date ? '<small class="exm-xc__date">' + esc(date) + "</small>" : "") + "</span>" + ICON_CHEV + "</button>" +
       '<div class="exm-xc__panel" id="exmc-' + id + '"><div class="exm-xc__inner"><div class="exm-xc__details">' + meta +
       (e.instructions ? '<p class="exm-sub">' + esc(e.instructions) + "</p>" : "") +
       '<div class="exm-row">' + act + "</div></div></div></div></article>";
@@ -236,6 +272,7 @@
       '<div class="exm-taking__bar"><div><strong>' + esc(e.title) + '</strong><div class="exm-sub">أجبت على <span id="exmAnswered">' + answeredCount(e) + "</span> من " + total + "</div></div>" +
       (e.durationMin > 0 ? '<span class="exm-timer" id="exmTimer" aria-live="off">--:--</span>' : "") + "</div>" +
       '<div class="exm-note" role="note">ممنوع الخروج من المنصة أثناء الامتحان — لو خرجت هيتسلّم تلقائيًا.</div>' +
+      '<div class="exm-note" id="exmBackNote" role="alert" hidden>ممنوع الرجوع أثناء الامتحان — سلّم الامتحان الأول وبعدها تقدر ترجع.</div>' +
       (S.flash ? '<div class="exm-note" role="alert">' + esc(S.flash) + "</div>" : "") +
       html + foot + "</div>";
   }
@@ -243,7 +280,7 @@
   function renderWarn() {
     var e = cur();
     if (!e) { S.view = "list"; return render(); }
-    root.innerHTML = '<div class="exm-root"><div class="exm-card exm-warn" role="alertdialog">' +
+    root.innerHTML = '<div class="exm-root">' + backBtn("cancelStart", "رجوع") + '<div class="exm-card exm-warn" role="alertdialog">' +
       '<h3 class="exm-title">تحذير مهم قبل ما تبدأ</h3>' +
       '<p class="exm-sub"><strong>' + esc(e.title) + "</strong></p>" +
       '<ul class="exm-warn__list">' +
@@ -252,12 +289,13 @@
       "<li>الوقت شغّال طول الامتحان حتى لو خرجت.</li>" +
       "<li>اتأكد إن النت شغّال وإن مفيش حاجة هتقاطعك قبل ما تبدأ.</li></ul>" +
       '<div class="exm-confirm"><button type="button" class="exm-btn exm-btn--red" data-act="confirmStart">فاهم، ابدأ الامتحان</button>' +
-      '<button type="button" class="exm-btn" data-act="cancelStart">رجوع</button></div></div></div>';
+      "</div></div></div>";
   }
 
   function warn(id) {
     var e = find(id);
     if (!e || e.status !== "published" || S.subs[id]) return;
+    pushLevel();
     S.curId = id; S.view = "warn"; S.flash = "";
     render();
     window.scrollTo(0, 0);
@@ -311,6 +349,7 @@
         ? (auto === "left" ? "الامتحان اتسلّم تلقائيًا لأنك خرجت من المنصة أثناء الحل. هتظهر درجتك بعد التصحيح."
           : auto ? "انتهى الوقت وتم تسليم إجاباتك تلقائيًا. هتظهر درجتك بعد التصحيح." : "تم تسليم الامتحان بنجاح. هتظهر درجتك بعد تصحيح الأستاذ.")
         : "الامتحان ده اتسلّم قبل كده.";
+      level = 0;
       S.view = "list"; S.curId = null; S.confirm = false;
       render(); paintAlert(); window.scrollTo(0, 0);
       if (!ok) refreshSubs().then(function () { applyVisible(); render(); paintAlert(); });
@@ -318,6 +357,7 @@
     }).catch(function () {
       S.sending = false;
       if (auto === "left") {
+        level = 0;
         S.view = "list"; S.curId = null; S.confirm = false;
         S.flash = "خرجت من المنصة أثناء الامتحان — هيتسلّم تلقائيًا أول ما النت يرجع.";
         render();
@@ -340,7 +380,7 @@
       return '<article class="exm-card"><div class="exm-row"><span class="exm-q__no">' + r.no + '</span><span class="exm-pill">' + (got == null ? 0 : esc(got)) + " / " + esc(r.q.points) + "</span></div>" +
         '<p class="exm-q__text" dir="auto">' + esc(r.q.text) + '</p><p class="exm-ans" dir="auto">' + (esc(ans[r.q.id]) || "— من غير إجابة —") + "</p></article>";
     }).join("");
-    root.innerHTML = '<div class="exm-root"><button type="button" class="exm-btn" data-act="back">رجوع</button>' +
+    root.innerHTML = '<div class="exm-root">' + backBtn("back", "رجوع") + '' +
       '<div class="exm-card exm-result"><h3 class="exm-title">' + esc(e.title) + '</h3><div class="exm-result__score">' + esc(sub.finalScore) + " / " + esc(sub.outOf) +
       '</div><span class="exm-pill exm-pill--ok">' + pct + "% · " + lv.label + "</span>" +
       (sub.feedback ? '<p class="exm-sub">ملاحظات الأستاذ: ' + esc(sub.feedback) + "</p>" : "") +
@@ -508,6 +548,7 @@
 
   /* ------------------------------------------------------------ الأحداث */
   function bind() {
+    window.addEventListener("popstate", onPop);
     root.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-act]");
       if (!b) return;
@@ -520,10 +561,10 @@
       else if (act === "join") openJoin();
       else if (act === "start") warn(b.dataset.id);
       else if (act === "confirmStart") start(S.curId);
-      else if (act === "cancelStart") { S.view = "list"; S.curId = null; render(); }
-      else if (act === "result") { S.curId = b.dataset.id; S.view = "result"; render(); window.scrollTo(0, 0); }
+      else if (act === "cancelStart") goBack();
+      else if (act === "result") { pushLevel(); S.curId = b.dataset.id; S.view = "result"; render(); window.scrollTo(0, 0); }
       else if (act === "resultPdf") openResultPdf();
-      else if (act === "back") { S.view = "list"; S.curId = null; render(); }
+      else if (act === "back") goBack();
       else if (act === "askSubmit") { S.confirm = true; S.flash = ""; render(); window.scrollTo(0, document.body.scrollHeight); }
       else if (act === "cancelSubmit") { S.confirm = false; render(); }
       else if (act === "doSubmit") submit(false);
