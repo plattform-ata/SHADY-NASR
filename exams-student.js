@@ -31,12 +31,13 @@
 
   var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M15 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M12 11v4M12 18h.01"/></svg>';
 
-  var S = { all: [], unlocks: {}, exams: [], subs: {}, user: me, view: "list", curId: null, answers: {}, startedAt: 0, timer: 0, confirm: false, flash: "", flashBad: false, sending: false };
+  var S = { all: [], unlocks: {}, exams: [], subs: {}, user: me, view: "list", curId: null, answers: {}, startedAt: 0, timer: 0, confirm: false, flash: "", flashBad: false, sending: false, open: {} };
   var root, panel, joinDlg = null;
 
   var ICON_QR = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/></svg>';
   var ICON_CAM = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg>';
   var ICON_IMG = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>';
+  var ICON_CHEV = '<svg class="exm-ico exm-xc__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   var ICON_X = '<svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
   /* ------------------------------------------------------------ مساعدات */
@@ -53,6 +54,8 @@
   function find(id) { return S.exams.filter(function (e) { return e.id === id; })[0]; }
   function cur() { return find(S.curId); }
   function pending() { return S.exams.filter(function (e) { return e.status === "published" && !S.subs[e.id]; }); }
+  /* الإشعارات (البانر الأحمر + عدّاد الأيقونة) للامتحانات العامة بس — الامتحان الخاص مابيطلعش فيها حتى لو الطالب فتحه بالرمز */
+  function alertable() { return pending().filter(function (e) { return !X.isPrivate(e); }); }
   function draftKey(id) { return "shadynasr-exam-draft:" + me.id + ":" + id; }
   function loadDraft(id) { try { return JSON.parse(localStorage.getItem(draftKey(id))) || {}; } catch (e) { return {}; } }
   function saveDraft() {
@@ -131,7 +134,7 @@
     if (btn) btn.click();
   }
   function paintAlert() {
-    var p = pending();
+    var p = alertable();
     var b = $("#examAlert");
     setDot(p.length);
     if (!p.length) { if (b) b.hidden = true; return; }
@@ -173,10 +176,13 @@
     } else {
       act = '<span class="exm-pill">انتهى — لم يُسلَّم</span>';
     }
-    return '<article class="exm-card' + (mode === "new" ? " exm-card--new" : "") + '">' +
-      '<div class="exm-row"><h3 class="exm-title">' + esc(e.title) + "</h3></div>" + meta +
-      (e.instructions && mode === "new" ? '<p class="exm-sub">' + esc(e.instructions) + "</p>" : "") +
-      '<div class="exm-row">' + act + "</div></article>";
+    var dv = e.publishedAt || e.createdAt, date = dv ? X.fmtDate(dv) : "", isOpen = !!S.open[e.id], id = esc(e.id);
+    return '<article class="exm-card exm-xc' + (mode === "new" ? " exm-card--new" : "") + (isOpen ? " is-open" : "") + '">' +
+      '<button type="button" class="exm-xc__head" data-act="toggle" data-id="' + id + '" aria-expanded="' + isOpen + '" aria-controls="exmc-' + id + '">' +
+      '<span class="exm-xc__text"><strong class="exm-title" dir="auto">' + esc(e.title) + "</strong>" + (date ? '<small class="exm-xc__date">' + esc(date) + "</small>" : "") + "</span>" + ICON_CHEV + "</button>" +
+      '<div class="exm-xc__panel" id="exmc-' + id + '"><div class="exm-xc__inner"><div class="exm-xc__details">' + meta +
+      (e.instructions ? '<p class="exm-sub">' + esc(e.instructions) + "</p>" : "") +
+      '<div class="exm-row">' + act + "</div></div></div></div></article>";
   }
 
   function renderList() {
@@ -506,7 +512,12 @@
       var b = ev.target.closest("[data-act]");
       if (!b) return;
       var act = b.dataset.act;
-      if (act === "join") openJoin();
+      if (act === "toggle") {
+        var tid = b.dataset.id; S.open[tid] = !S.open[tid];
+        var card = b.closest(".exm-xc"); if (card) card.classList.toggle("is-open", !!S.open[tid]);
+        b.setAttribute("aria-expanded", String(!!S.open[tid]));
+      }
+      else if (act === "join") openJoin();
       else if (act === "start") warn(b.dataset.id);
       else if (act === "confirmStart") start(S.curId);
       else if (act === "cancelStart") { S.view = "list"; S.curId = null; render(); }
