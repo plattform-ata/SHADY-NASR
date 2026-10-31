@@ -187,20 +187,18 @@ html[dir="ltr"] .exm-search svg { left: auto; right: 16px; }
 .exm-input--pill { padding-inline: 18px 18px; padding-left: 46px; }
 html[dir="ltr"] .exm-input--pill { padding-left: 18px; padding-right: 46px; }
 
-/* زرار التاريخ الدائري: الضغط عليه بيفتح قايمة التقويم */
+/* زرار التاريخ الدائري: الضغط عليه بيفتح تقويم المنصة */
 .exm-datebtn { position: relative; flex: none; height: 46px; min-width: 46px; }
 .exm-datebtn__face {
   height: 100%; box-sizing: border-box; min-width: 46px; padding: 0 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border-radius: 999px; border: 1px solid var(--surface-glass-border); background: var(--surface-glass); color: var(--ink); font-size: .84rem; font-weight: 700; white-space: nowrap;
+  border-radius: 999px; border: 1px solid var(--surface-glass-border); background: var(--surface-glass); color: var(--ink);
+  font: inherit; font-size: .84rem; font-weight: 700; white-space: nowrap; cursor: pointer;
 }
-.exm-datebtn__face svg { width: 20px; height: 20px; flex: none; }
-.exm-datebtn.has-value .exm-datebtn__face { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); padding-inline-end: 38px; }
-.exm-datebtn:focus-within .exm-datebtn__face { outline: 2px solid var(--accent); outline-offset: 2px; }
-.exm-datebtn__input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; font-size: 16px; }
-.exm-datebtn__input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.exm-datebtn__face:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.exm-datebtn.has-value .exm-datebtn__face { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); padding-inline-end: 40px; }
 .exm-datebtn__clear {
-  position: absolute; z-index: 2; inset-inline-end: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%;
-  border: 0; background: rgba(255, 255, 255, .28); color: inherit; font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer; color: var(--accent-ink);
+  position: absolute; z-index: 2; inset-inline-end: 7px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%;
+  border: 0; background: rgba(127, 127, 127, .3); color: var(--accent-ink); font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer;
 }
 .exm-datebtn__clear:focus-visible { outline: 2px solid var(--accent-ink); }
 
@@ -258,3 +256,123 @@ html[dir="ltr"] .exm-input--pill { padding-left: 18px; padding-right: 46px; }
 .exm-sr__exam { font-size: .84rem; font-weight: 700; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .exm-sr__date { font-size: .76rem; color: var(--ink-soft); }
 .exm-sr__side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+/* ==========================================================================
+   أيقونات + أزرار إضافية
+   ========================================================================== */
+.exm-ico { width: 18px; height: 18px; flex: none; }
+.exm-btn--ghost { border-color: transparent; background: transparent; padding-inline: 6px; }
+.exm-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--surface-glass-border); background: transparent; color: var(--ink); cursor: pointer; font: inherit; }
+.exm-iconbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.exm-pill .exm-ico { width: 13px; height: 13px; }
+.exm-pill--lock { background: rgba(229, 72, 77, .16); color: #d23a40; }
+
+/* ---------- الصفوف الدراسية (الشاشة الرئيسية) ---------- */
+.exm-gr {
+  width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px;
+  border: 1px solid var(--surface-glass-border); background: var(--surface-glass); color: var(--ink); font: inherit; text-align: start; cursor: pointer;
+}
+.exm-gr:hover { border-color: var(--accent); }
+.exm-gr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.exm-gr > .exm-ico { color: var(--ink-soft); }
+.exm-gr.is-empty .exm-gr__num { background: rgba(127, 127, 127, .18); color: var(--ink-soft); }
+.exm-gr__num { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.05rem; }
+.exm-gr__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.exm-gr__main strong { font-size: 1rem; }
+.exm-gr__main small { color: var(--ink-soft); font-size: .82rem; font-weight: 600; }
+.exm-groups { display: flex; flex-direction: column; gap: 10px; }
+.exm-gp__title { margin: 2px 0 0; font-size: 1.25rem; }
+.exm-grp__alert { flex: none; padding: 3px 10px; border-radius: 999px; background: rgba(245, 166, 35, .22); color: #b86e00; font-size: .74rem; font-weight: 800; }
+
+/* ---------- وسوم الكارت (عام/خاص + الرمز) ---------- */
+.exm-ex__tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.exm-codechip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; border: 1px dashed var(--surface-glass-border);
+  background: transparent; color: var(--ink); font: inherit; font-size: .8rem; font-weight: 800; letter-spacing: .06em; cursor: pointer;
+}
+.exm-codechip .exm-ico { width: 15px; height: 15px; }
+.exm-codechip:hover { border-color: var(--accent); }
+.exm-codechip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- اختيار عام / خاص ---------- */
+.exm-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exm-seg__btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--surface-glass-border); background: transparent; color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.exm-seg__btn small { color: var(--ink-soft); font-size: .76rem; font-weight: 600; }
+.exm-seg__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.exm-seg__btn.is-active { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.exm-seg__btn.is-active small { color: inherit; opacity: .85; }
+.exm-coderow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 14px; border: 1px dashed var(--surface-glass-border); }
+.exm-coderow__code { font-weight: 800; font-size: 1.1rem; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   النوافذ المنبثقة (شيت من تحت على الموبايل / بطاقة في النص على الشاشات الكبيرة)
+   ========================================================================== */
+html.exm-lock, html.exm-lock body { overflow: hidden; }
+.exm-modal { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: flex-end; justify-content: center; }
+.exm-modal__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); opacity: 0; transition: opacity .2s ease; }
+.exm-modal.is-in .exm-modal__scrim { opacity: 1; }
+.exm-modal__sheet {
+  position: relative; width: 100%; max-width: 440px; max-height: 90vh; max-height: 90dvh; overflow: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 12px; padding: 10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg, #fff); color: var(--ink); border: 1px solid var(--surface-glass-border); border-bottom: 0;
+  border-radius: 26px 26px 0 0; box-shadow: 0 -12px 40px rgba(0, 0, 0, .3); outline: none;
+  transform: translateY(24px); opacity: 0; transition: transform .22s ease, opacity .22s ease;
+}
+.exm-modal.is-in .exm-modal__sheet { transform: none; opacity: 1; }
+.exm-modal__grab { align-self: center; width: 42px; height: 4px; border-radius: 999px; background: var(--surface-glass-border); flex: none; }
+.exm-modal__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.exm-modal__head h3 { margin: 0; font-size: 1.1rem; }
+@media (min-width: 640px) {
+  .exm-modal { align-items: center; }
+  .exm-modal__sheet { border-radius: 24px; border-bottom: 1px solid var(--surface-glass-border); padding-bottom: 18px; }
+  .exm-modal__grab { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .exm-modal__scrim, .exm-modal__sheet { transition: none; } }
+
+/* ---------- التقويم ---------- */
+.exm-cal__nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.exm-cal__title { font-size: 1.05rem; }
+.exm-cal__week, .exm-cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.exm-cal__week span { text-align: center; font-size: .8rem; font-weight: 800; color: var(--ink-soft); padding: 4px 0; }
+.exm-cal__day {
+  position: relative; aspect-ratio: 1; min-height: 40px; border: 0; border-radius: 50%; background: transparent; color: var(--ink);
+  font: inherit; font-weight: 700; font-size: .95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.exm-cal__day:hover { background: rgba(127, 127, 127, .16); }
+.exm-cal__day:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.exm-cal__day.is-out { color: var(--ink-soft); opacity: .45; }
+.exm-cal__day.is-today { box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.exm-cal__day.is-sel { background: var(--accent); color: var(--accent-ink); opacity: 1; }
+.exm-cal__day.has-mark::after { content: ""; position: absolute; bottom: 5px; width: 5px; height: 5px; border-radius: 50%; background: #30a46c; }
+.exm-cal__day.is-sel.has-mark::after { background: var(--accent-ink); }
+.exm-cal__hint { display: flex; align-items: center; gap: 6px; margin: 0; font-size: .78rem; color: var(--ink-soft); }
+.exm-cal__hint i { width: 8px; height: 8px; border-radius: 50%; background: #30a46c; display: inline-block; }
+.exm-cal__foot { display: flex; gap: 8px; }
+.exm-cal__foot .exm-btn { flex: 1; }
+
+/* ---------- نافذة الـ QR (الأدمن) ---------- */
+.exm-qrm__title { margin: 0; text-align: center; font-weight: 800; overflow-wrap: anywhere; }
+.exm-qrm__qr { align-self: center; width: min(260px, 70vw); padding: 10px; border-radius: 20px; background: #fff; box-shadow: 0 2px 14px rgba(0, 0, 0, .18); }
+.exm-qrm__qr svg { display: block; width: 100%; height: auto; }
+.exm-qrm__code { text-align: center; font-size: 1.7rem; font-weight: 900; letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+.exm-qrm__hint { text-align: center; }
+.exm-qrm__acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exm-qrm__acts .exm-btn--accent { grid-column: 1 / -1; }
+
+/* ---------- نافذة دخول الطالب بالرمز ---------- */
+.exm-join__row { display: flex; gap: 8px; }
+.exm-input--code { height: 48px; flex: 1; min-width: 0; border-radius: 14px; text-align: center; font-size: 1.25rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+.exm-join__row .exm-btn { height: 48px; padding-inline: 22px; }
+.exm-join__msg { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(229, 72, 77, .14); color: var(--ink); font-size: .88rem; font-weight: 700; line-height: 1.6; }
+.exm-join__msg.is-ok { background: rgba(48, 164, 108, .16); }
+.exm-join__msg[hidden] { display: none; }
+.exm-or { display: flex; align-items: center; gap: 10px; color: var(--ink-soft); font-size: .8rem; font-weight: 700; }
+.exm-or::before, .exm-or::after { content: ""; flex: 1; height: 1px; background: var(--surface-glass-border); }
+.exm-join__acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exm-join__acts .exm-btn { padding-inline: 8px; }
+.exm-scan { position: relative; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 1; display: flex; align-items: flex-end; justify-content: center; }
+.exm-scan[hidden] { display: none; }
+.exm-scan video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.exm-scan__frame { position: absolute; inset: 18%; border: 3px solid #fff; border-radius: 18px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none; }
+.exm-scan__stop { position: relative; margin: 0 0 12px; background: rgba(0, 0, 0, .55); color: #fff; border-color: rgba(255, 255, 255, .5); }
+.exm-empty-card { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; padding: 10px 6px; }
