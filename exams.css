@@ -426,3 +426,31 @@ html.exm-lock, html.exm-lock body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .exm-ex__panel, .exm-xc__panel, .exm-ex__chev, .exm-xc__chev, .exm-ex__inner, .exm-xc__inner { transition: none; }
 }
+
+
+/* ==========================================================================
+   زرار الرجوع الموحّد: سهم جوه دايرة + الاسم (في كل صفحات الامتحانات)
+   ========================================================================== */
+.exm-back {
+  display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 5px 16px 5px 5px; padding-inline: 5px 16px;
+  border-radius: 999px; border: 1px solid var(--surface-glass-border); background: var(--surface-glass); color: var(--ink);
+  font: inherit; font-weight: 800; font-size: .92rem; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: border-color .2s ease, transform .15s ease, box-shadow .2s ease;
+}
+.exm-back__ico {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  display: inline-flex; align-items: center; justify-content: center; transition: transform .2s ease;
+}
+.exm-back__ico .exm-ico { width: 18px; height: 18px; }
+html[dir="ltr"] .exm-back__ico .exm-ico { transform: scaleX(-1); }
+.exm-back:hover { border-color: var(--accent); }
+.exm-back:hover .exm-back__ico { transform: translateX(3px); }
+html[dir="ltr"] .exm-back:hover .exm-back__ico { transform: translateX(-3px); }
+.exm-back:active { transform: scale(.97); }
+.exm-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.exm-head .exm-back { align-self: center; }
+@media (prefers-reduced-motion: reduce) { .exm-back, .exm-back__ico { transition: none; } }
+
+/* أسماء الامتحانات: دايمًا على جهة البداية (اليمين في العربي) حتى لو الاسم إنجليزي */
+.exm-ex__name, .exm-xr__main strong, .exm-xc__text .exm-title, .exm-gp__title, .exm-sr__exam, .exm-sr__name { text-align: start; }
+.exm-xr__main, .exm-xc__text { align-items: flex-start; }
