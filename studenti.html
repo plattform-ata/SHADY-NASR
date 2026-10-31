@@ -48,7 +48,7 @@ try {
 <style>html.sn-lock-pending body > *:not(#snLockScreen):not(#snGradeGate){display:none!important}html.sn-lock-pending{background:#f4eee0}html.sn-gc-pending body > *:not(#snGradeGate):not(#snLockScreen){display:none!important}html.sn-gc-pending{background:#f4eee0}</style>
   <style>html.sn-reload .launch-splash,html.sn-reload .student-splash{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important}</style>
   <link rel="stylesheet" href="shared.css?v=20261126" />
-  <link rel="stylesheet" href="exams.css?v=20261504" />
+  <link rel="stylesheet" href="exams.css?v=20261505" />
   <link rel="stylesheet" href="chat.css?v=7" />
   <!-- PWA: تثبيت المنصة كتطبيق -->
   <link rel="manifest" href="manifest.webmanifest" />
@@ -265,7 +265,7 @@ try {
           </div>
 
           <div class="set-sub" id="setSub" hidden>
-          <button type="button" class="set-back" id="setBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg><span data-i18n="set_back">رجوع للإعدادات</span></button>
+          <button type="button" class="set-back exm-back" id="setBack"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span data-i18n="set_back">رجوع للإعدادات</span></button>
 
           <div class="dash-card set-card" data-set-card="general" hidden>
             <h3 data-i18n="settings_general">المظهر واللغة</h3>
@@ -327,8 +327,8 @@ try {
 
         <!-- ======================= صفحة الدرس ======================= -->
         <section class="dash-panel" data-panel="lesson">
-          <button type="button" class="chapter-content__back" id="lessonPageBackBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          <button type="button" class="chapter-content__back exm-back" id="lessonPageBackBtn">
+            <svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             رجوع للدروس
           </button>
           <div class="story-head" id="lessonHead">
@@ -350,8 +350,8 @@ try {
 
         <!-- ======================= محرك الامتحان (MCQ + مقالي) ======================= -->
         <section class="dash-panel" data-panel="exam">
-          <button type="button" class="chapter-content__back" id="examBackBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          <button type="button" class="chapter-content__back exm-back" id="examBackBtn">
+            <svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             رجوع للدرس
           </button>
 
@@ -533,7 +533,7 @@ try {
             </div>
           </div>
           <div class="hn-sub" id="hnSub" hidden>
-            <button type="button" class="set-back" id="hnBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg><span data-i18n="hn_back">رجوع</span></button>
+            <button type="button" class="set-back exm-back" id="hnBack"><svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span data-i18n="hn_back">رجوع</span></button>
             <div id="hnBody"></div>
           </div>
         </section>
@@ -675,8 +675,8 @@ try {
 
       <!-- عرض المحتوى: فيديو / قصة مكتوبة / امتحان -->
       <div class="chapter-modal__view" id="chapterContentView" hidden>
-        <button type="button" class="chapter-content__back" id="chapterContentBackBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        <button type="button" class="chapter-content__back exm-back" id="chapterContentBackBtn">
+          <svg class="exm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           رجوع لخيارات الفصل
         </button>
         <h3 id="chapterContentTitle">—</h3>
@@ -706,7 +706,7 @@ try {
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="firebase.js?v=20261504"></script>
+  <script defer src="firebase.js?v=20261505"></script>
   <script defer src="transfer-ui.js?v=20261405"></script>
   <script defer src="drive.js?v=20261402"></script>
   <script defer src="content.js?v=20261203"></script>
@@ -726,8 +726,8 @@ try {
   <script defer src="pdf-viewer.js?v=20261405"></script>
   <script defer src="video-landscape.js?v=20261126"></script>
   <script defer src="bell-fx.js?v=20261126"></script>
-  <script defer src="exams.js?v=20261504"></script>
-  <script defer src="exams-student.js?v=20261504"></script>
+  <script defer src="exams.js?v=20261505"></script>
+  <script defer src="exams-student.js?v=20261505"></script>
   <script defer src="year-report.js?v=20261117"></script>
   <script defer src="progress-chart.js?v=20261115"></script>
   <script defer src="chat.js?v=9"></script>
