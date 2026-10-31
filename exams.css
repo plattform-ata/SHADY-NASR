@@ -454,3 +454,31 @@ html[dir="ltr"] .exm-back:hover .exm-back__ico { transform: translateX(-3px); }
 /* أسماء الامتحانات: دايمًا على جهة البداية (اليمين في العربي) حتى لو الاسم إنجليزي */
 .exm-ex__name, .exm-xr__main strong, .exm-xc__text .exm-title, .exm-gp__title, .exm-sr__exam, .exm-sr__name { text-align: start; }
 .exm-xr__main, .exm-xc__text { align-items: flex-start; }
+
+
+/* ==========================================================================
+   توحيد كل زراير الرجوع في المنصة (الأدمن + الطالب): سهم جوه دايرة + الاسم
+   بيشتغل على .exm-back وعلى .set-back و .chapter-content__back (حتى لو اتولّدوا من الجافاسكريبت)
+   ========================================================================== */
+html .exm-back, html button.set-back, html button.chapter-content__back {
+  display: inline-flex; align-items: center; justify-content: flex-start; gap: 10px; width: auto; max-width: 100%; box-sizing: border-box;
+  padding: 5px 16px 5px 5px; padding-inline: 5px 16px; border-radius: 999px; border: 1px solid var(--surface-glass-border);
+  background: var(--surface-glass); color: var(--ink); font: inherit; font-weight: 800; font-size: .92rem; line-height: 1.3; text-align: start;
+  box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: border-color .2s ease, transform .15s ease;
+}
+html .exm-back[hidden], html button.set-back[hidden], html button.chapter-content__back[hidden] { display: none; }
+html .exm-back:hover, html button.set-back:hover, html button.chapter-content__back:hover { border-color: var(--accent); }
+html .exm-back:active, html button.set-back:active, html button.chapter-content__back:active { transform: scale(.97); }
+html .exm-back:focus-visible, html button.set-back:focus-visible, html button.chapter-content__back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html .exm-back > svg, html button.set-back > svg, html button.chapter-content__back > svg {
+  box-sizing: border-box; flex: none; width: 34px; height: 34px; padding: 8px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); transition: transform .2s ease;
+}
+html .exm-back > svg.exm-ico, html button.set-back > svg.exm-ico, html button.chapter-content__back > svg.exm-ico { transform: none; }
+html[dir="ltr"] .exm-back > svg.exm-ico, html[dir="ltr"] button.set-back > svg.exm-ico, html[dir="ltr"] button.chapter-content__back > svg.exm-ico { transform: scaleX(-1); }
+html .exm-back:hover > svg.exm-ico, html button.set-back:hover > svg.exm-ico, html button.chapter-content__back:hover > svg.exm-ico { transform: translateX(3px); }
+html[dir="ltr"] .exm-back:hover > svg.exm-ico, html[dir="ltr"] button.set-back:hover > svg.exm-ico, html[dir="ltr"] button.chapter-content__back:hover > svg.exm-ico { transform: scaleX(-1) translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  html .exm-back, html button.set-back, html button.chapter-content__back, html .exm-back > svg { transition: none; }
+}
