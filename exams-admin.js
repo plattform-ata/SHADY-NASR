@@ -22,7 +22,7 @@
     tab: "exams", view: "list", loaded: false, exams: [], subs: {},
     exam: null, dirty: false, saveTimer: 0, drawer: false, errs: [],
     pick: { type: "mcq", count: 10, header: X.typeOf("mcq").header },
-    fExam: "all", q: "", fDate: "", fTerm: "all", open: {}, more: {}, gStatus: {}, defTerm: 1,
+    fExam: "all", q: "", fDate: "", fTerm: "all", grade: null, more: {}, gStatus: {}, defTerm: 1,
     cur: null   // { exam, sub, manualFinal }
   };
 
@@ -88,10 +88,24 @@
     load().then(function () { if (S.view === "review" && S.cur) renderReview(); else { S.view = "list"; render(); } });
   }
 
-  /* ------------------------------------------------------------ القايمة (صفوف دراسية ← امتحانات / تسليمات) */
+  /* ------------------------------------------------------------ القايمة: الصفوف ← صفحة كل صف */
   var GRADE_KEYS = Object.keys(X.GRADE_NAMES);
   var TERM_NAMES = { 1: "الترم الأول", 2: "الترم الثاني" };
-  var CHEV = '<svg class="exm-grp__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  var MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  var WEEK = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];   // السبت أولًا
+  function svgI(d, cls) { return '<svg class="' + (cls || "exm-ico") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>"; }
+  var I = {
+    fwd: svgI('<path d="m15 6-6 6 6 6"/>'), back: svgI('<path d="m9 6 6 6-6 6"/>'),
+    cal: svgI('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>'),
+    search: svgI('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+    qr: svgI('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/>'),
+    lock: svgI('<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+    globe: svgI('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>'),
+    copy: svgI('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>'),
+    dl: svgI('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
+    x: svgI('<path d="M6 6l12 12M18 6 6 18"/>')
+  };
+  function nAr(n) { return Number(n).toLocaleString("ar-EG", { useGrouping: false }); }
 
   function dayKey(v) {
     if (!v) return "";
@@ -99,12 +113,19 @@
     var p = function (n) { return (n < 10 ? "0" : "") + n; };
     return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
   }
+  function dayLabel(k) {
+    try { return new Date(k + "T00:00:00").toLocaleDateString("ar-EG", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return k; }
+  }
   function subGrade(r) { var e = examById(r.examId); return r.sub.grade || (e && e.grade) || ""; }
   function filterActive() { return !!(S.q.trim() || S.fDate || (S.tab === "exams" && S.fTerm !== "all") || (S.tab === "subs" && S.fExam !== "all")); }
+  function resetFilters() { S.q = ""; S.fDate = ""; S.fTerm = "all"; S.fExam = "all"; S.gStatus = {}; S.more = {}; }
 
   function examMatches(e) {
     var q = S.q.trim().toLowerCase();
-    if (q && String(e.title || "").toLowerCase().indexOf(q) < 0) return false;
+    if (q) {
+      var qc = X.normCode(q), hit = String(e.title || "").toLowerCase().indexOf(q) > -1 || (qc && X.normCode(e.code).indexOf(qc) > -1);
+      if (!hit) return false;
+    }
     if (S.fTerm !== "all" && (e.term ? String(e.term) : "none") !== S.fTerm) return false;
     if (S.fDate && dayKey(e.publishedAt) !== S.fDate) return false;
     return true;
@@ -117,6 +138,7 @@
     return true;
   }
 
+  /* ---- كارت الامتحان ---- */
   function examRow(e) {
     var c = subCounts(e.id), id = esc(e.id), more = !!S.more[e.id];
     var st = e.status === "published" ? '<span class="exm-pill exm-pill--ok">منشور</span>' : e.status === "closed" ? '<span class="exm-pill">مغلق</span>' : '<span class="exm-pill exm-pill--warn">مسودة</span>';
@@ -126,6 +148,11 @@
     if (sec) facts.push(sec);
     if (e.term) facts.push(TERM_NAMES[e.term]);
     var when = e.publishedAt ? "نُشر " + X.fmtDate(e.publishedAt) : "لم يُنشر بعد";
+    var priv = X.isPrivate(e);
+    var acc = priv ? '<span class="exm-pill exm-pill--lock">' + I.lock + " خاص</span>" : '<span class="exm-pill">' + I.globe + " عام</span>";
+    var code = e.code
+      ? '<button type="button" class="exm-codechip" data-act="qr" data-id="' + id + '" aria-label="عرض رمز الامتحان وQR">' + I.qr + '<span dir="ltr">' + esc(X.fmtCode(e.code)) + "</span></button>"
+      : '<button type="button" class="exm-codechip" data-act="genCode" data-id="' + id + '">' + I.qr + "<span>إنشاء رمز</span></button>";
     var prog = c.total ? '<div class="exm-prog"><div class="exm-prog__bar"><i style="width:' + Math.round((c.graded / c.total) * 100) + '%"></i></div><span>اتصحّح ' + c.graded + " من " + c.total + "</span></div>" : '<div class="exm-prog"><span>مفيش تسليمات لسه</span></div>';
     var extra = "";
     if (e.status === "published") extra += '<button type="button" class="exm-btn" data-act="setStatus" data-id="' + id + '" data-st="closed">إغلاق الامتحان</button>';
@@ -133,6 +160,7 @@
     extra += '<button type="button" class="exm-btn" data-act="paper" data-id="' + id + '">ملف PDF</button>' +
       '<button type="button" class="exm-btn exm-btn--danger" data-act="delExam" data-id="' + id + '">حذف</button>';
     return '<article class="exm-ex"><div class="exm-ex__top"><h4 class="exm-ex__title" dir="auto">' + esc(e.title || "بدون عنوان") + "</h4>" + st + "</div>" +
+      '<div class="exm-ex__tags">' + acc + code + "</div>" +
       '<p class="exm-facts">' + facts.map(function (f) { return "<span>" + esc(f) + "</span>"; }).join("") + "</p>" +
       '<p class="exm-when">' + esc(when) + "</p>" + prog +
       '<div class="exm-ex__acts"><button type="button" class="exm-btn exm-btn--accent" data-act="edit" data-id="' + id + '">تعديل</button>' +
@@ -141,6 +169,7 @@
       (more ? '<div class="exm-ex__more">' + extra + "</div>" : "") + "</article>";
   }
 
+  /* ---- صف التسليم ---- */
   function subRow(r) {
     var e = examById(r.examId), s = r.sub, graded = s.status === "graded";
     return '<article class="exm-sr" role="button" tabindex="0" data-act="review" data-e="' + esc(r.examId) + '" data-u="' + esc(r.studentId) + '">' +
@@ -150,54 +179,56 @@
         : '<span class="exm-pill exm-pill--warn">بانتظار التصحيح</span>') + "</div></article>";
   }
 
-  function listBodyHtml() {
-    var isEx = S.tab === "exams", fa = filterActive(), html = "", shownAny = false;
-    var items = isEx ? S.exams.filter(examMatches) : subList().filter(subMatches);
-    GRADE_KEYS.forEach(function (g) {
-      var list = items.filter(function (it) { return (isEx ? it.grade : subGrade(it)) === g; });
-      if (fa && !list.length) return;
-      shownAny = true;
-      var key = S.tab + ":" + g, open = S.open[key] !== undefined ? S.open[key] : (fa && list.length > 0);
-      var pend = isEx ? 0 : list.filter(function (r) { return r.sub.status !== "graded"; }).length;
-      var inner = "";
-      if (!isEx) {
-        var st = S.gStatus[g] || "all";
-        var chips = [["all", "الكل", list.length], ["pending", "بانتظار التصحيح", pend], ["graded", "اتصحّحت", list.length - pend]].map(function (c) {
-          return '<button type="button" class="exm-chip' + (st === c[0] ? " is-active" : "") + '" data-act="gst" data-g="' + g + '" data-v="' + c[0] + '">' + c[1] + " <b>" + c[2] + "</b></button>";
-        }).join("");
-        list = list.filter(function (r) { return st === "pending" ? r.sub.status !== "graded" : st === "graded" ? r.sub.status === "graded" : true; });
-        inner = '<div class="exm-chips">' + chips + "</div>";
-      }
-      inner += list.length ? list.map(isEx ? examRow : subRow).join("") : '<p class="exm-empty">' + (isEx ? "مفيش امتحانات في الصف ده لسه." : "مفيش تسليمات في الاختيار ده.") + "</p>";
-      var total = isEx ? list.length : items.filter(function (it) { return subGrade(it) === g; }).length;
-      html += '<section class="exm-grp' + (total ? "" : " is-empty") + '"><button type="button" class="exm-grp__head" data-act="grp" data-k="' + key + '" aria-expanded="' + (open ? "true" : "false") + '">' +
-        '<span class="exm-grp__name">' + esc(X.GRADE_NAMES[g]) + "</span>" +
-        (pend ? '<span class="exm-grp__alert">' + pend + " بانتظار التصحيح</span>" : "") +
-        '<span class="exm-grp__count">' + total + (isEx ? " امتحان" : " تسليم") + "</span>" + CHEV + "</button>" +
-        '<div class="exm-grp__body"' + (open ? "" : " hidden") + ">" + inner + "</div></section>";
-    });
-    if (!shownAny) html = '<p class="exm-empty">مفيش نتايج مطابقة. جرّب تغيّر البحث أو الفلتر.</p>';
-    return html;
-  }
-  function paintListBody() { var el = $("#exmListBody"); if (el) el.innerHTML = listBodyHtml(); }
-
-  function renderList() {
+  /* ---- الشاشة الرئيسية: الصفوف الدراسية ---- */
+  function tabsHtml() {
     var pc = pendingCount(), isEx = S.tab === "exams";
-    var head = '<div class="exm-head"><h2>إدارة الامتحانات</h2><button type="button" class="exm-btn exm-btn--accent" data-act="new">+ امتحان جديد</button></div>' +
-      '<div class="exm-tabs" role="tablist"><button type="button" role="tab" aria-selected="' + isEx + '" class="exm-tab' + (isEx ? " is-active" : "") + '" data-act="tab" data-t="exams">الامتحانات</button>' +
+    return '<div class="exm-tabs" role="tablist"><button type="button" role="tab" aria-selected="' + isEx + '" class="exm-tab' + (isEx ? " is-active" : "") + '" data-act="tab" data-t="exams">الامتحانات</button>' +
       '<button type="button" role="tab" aria-selected="' + !isEx + '" class="exm-tab' + (!isEx ? " is-active" : "") + '" data-act="tab" data-t="subs">التسليمات والمراجعة' + (pc ? '<span class="exm-tab__badge">' + pc + "</span>" : "") + "</button></div>";
-    var dTxt = "";
-    if (S.fDate) { try { dTxt = new Date(S.fDate + "T00:00:00").toLocaleDateString("ar-EG", { day: "numeric", month: "short", year: "numeric" }); } catch (err) { dTxt = S.fDate; } }
-    var tools = '<div class="exm-tools"><div class="exm-search"><input class="exm-input exm-input--pill" type="search" data-fl="q" dir="rtl" value="' + esc(S.q) + '" placeholder="' + (isEx ? "ابحث باسم الامتحان" : "ابحث باسم الطالب أو الامتحان") + '" aria-label="بحث" />' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>' +
-      '<div class="exm-datebtn' + (S.fDate ? " has-value" : "") + '"><span class="exm-datebtn__face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>' + (dTxt ? "<span>" + esc(dTxt) + "</span>" : "") + "</span>" +
-      '<input type="date" class="exm-datebtn__input" data-fl="date" value="' + esc(S.fDate) + '" aria-label="' + (isEx ? "اختيار تاريخ النشر" : "اختيار تاريخ التسليم") + '" />' +
+  }
+  function gradeRow(g) {
+    var isEx = S.tab === "exams", exs = S.exams.filter(function (e) { return e.grade === g; });
+    var subs = subList().filter(function (r) { return subGrade(r) === g; });
+    var pend = subs.filter(function (r) { return r.sub.status !== "graded"; }).length;
+    var n = isEx ? exs.length : subs.length, drafts = exs.filter(function (e) { return e.status === "draft"; }).length;
+    var line = isEx ? (n ? n + " امتحان" + (drafts ? " — منهم " + drafts + " مسودة" : "") : "مفيش امتحانات لسه") : (n ? n + " تسليم" : "مفيش تسليمات لسه");
+    return '<button type="button" class="exm-gr' + (n ? "" : " is-empty") + '" data-act="openGrade" data-g="' + g + '">' +
+      '<span class="exm-gr__num">' + n + "</span>" +
+      '<span class="exm-gr__main"><strong>' + esc(X.GRADE_NAMES[g]) + "</strong><small>" + esc(line) + "</small></span>" +
+      (!isEx && pend ? '<span class="exm-grp__alert">' + pend + " بانتظار التصحيح</span>" : "") + I.fwd + "</button>";
+  }
+  function renderHome() {
+    root.innerHTML = '<div class="exm-root"><div class="exm-head"><h2>إدارة الامتحانات</h2><button type="button" class="exm-btn exm-btn--accent" data-act="new">+ امتحان جديد</button></div>' +
+      tabsHtml() + '<div class="exm-groups">' + GRADE_KEYS.map(gradeRow).join("") + "</div></div>";
+  }
+
+  /* ---- صفحة الصف الدراسي (كل الامتحانات / التسليمات بتاعته) ---- */
+  function gradeBodyHtml() {
+    var g = S.grade, isEx = S.tab === "exams";
+    if (isEx) {
+      var list = S.exams.filter(function (e) { return e.grade === g && examMatches(e); });
+      return list.length ? list.map(examRow).join("") : '<p class="exm-empty">' + (filterActive() ? "مفيش نتايج مطابقة للبحث أو الفلتر." : "مفيش امتحانات في الصف ده لسه.") + "</p>";
+    }
+    var all = subList().filter(function (r) { return subGrade(r) === g && subMatches(r); });
+    var pend = all.filter(function (r) { return r.sub.status !== "graded"; }).length, st = S.gStatus[g] || "all";
+    var chips = [["all", "الكل", all.length], ["pending", "بانتظار التصحيح", pend], ["graded", "اتصحّحت", all.length - pend]].map(function (c) {
+      return '<button type="button" class="exm-chip' + (st === c[0] ? " is-active" : "") + '" data-act="gst" data-g="' + g + '" data-v="' + c[0] + '">' + c[1] + " <b>" + c[2] + "</b></button>";
+    }).join("");
+    var shown = all.filter(function (r) { return st === "pending" ? r.sub.status !== "graded" : st === "graded" ? r.sub.status === "graded" : true; });
+    return '<div class="exm-chips">' + chips + "</div>" + (shown.length ? shown.map(subRow).join("") : '<p class="exm-empty">' + (filterActive() || st !== "all" ? "مفيش تسليمات في الاختيار ده." : "مفيش تسليمات في الصف ده لسه.") + "</p>");
+  }
+  function paintListBody() { var el = $("#exmListBody"); if (el) el.innerHTML = gradeBodyHtml(); }
+
+  function renderGradePage() {
+    var g = S.grade, isEx = S.tab === "exams";
+    var tools = '<div class="exm-tools"><div class="exm-search"><input class="exm-input exm-input--pill" type="search" data-fl="q" dir="rtl" value="' + esc(S.q) + '" placeholder="' +
+      (isEx ? "ابحث باسم الامتحان أو الرمز" : "ابحث باسم الطالب أو الامتحان") + '" aria-label="بحث" />' + I.search + "</div>" +
+      '<div class="exm-datebtn' + (S.fDate ? " has-value" : "") + '"><button type="button" class="exm-datebtn__face" data-act="cal" aria-haspopup="dialog" aria-label="' + (isEx ? "اختيار تاريخ النشر" : "اختيار تاريخ التسليم") + '">' + I.cal + (S.fDate ? "<span>" + esc(dayLabel(S.fDate)) + "</span>" : "") + "</button>" +
       (S.fDate ? '<button type="button" class="exm-datebtn__clear" data-act="clearDate" aria-label="مسح التاريخ">×</button>' : "") + "</div></div>";
     var chips = "";
     if (isEx) {
-      var n1 = 0, n2 = 0, n0 = 0;
-      S.exams.forEach(function (e) { if (e.term === 1 || e.term === "1") n1++; else if (e.term === 2 || e.term === "2") n2++; else n0++; });
-      var defs = [["all", "الكل", S.exams.length], ["1", "الترم الأول", n1], ["2", "الترم الثاني", n2]];
+      var mine = S.exams.filter(function (e) { return e.grade === g; }), n1 = 0, n2 = 0, n0 = 0;
+      mine.forEach(function (e) { if (Number(e.term) === 1) n1++; else if (Number(e.term) === 2) n2++; else n0++; });
+      var defs = [["all", "الكل", mine.length], ["1", "الترم الأول", n1], ["2", "الترم الثاني", n2]];
       if (n0) defs.push(["none", "بدون ترم", n0]);
       chips = '<div class="exm-chips">' + defs.map(function (c) {
         return '<button type="button" class="exm-chip' + (S.fTerm === c[0] ? " is-active" : "") + '" data-act="fterm" data-v="' + c[0] + '">' + c[1] + " <b>" + c[2] + "</b></button>";
@@ -206,7 +237,106 @@
       var fe = examById(S.fExam);
       chips = '<div class="exm-chips"><button type="button" class="exm-chip is-active" data-act="clearExam">الامتحان: ' + esc(fe ? fe.title : "—") + " ×</button></div>";
     }
-    root.innerHTML = '<div class="exm-root">' + head + tools + chips + '<div id="exmListBody" class="exm-groups">' + listBodyHtml() + "</div></div>";
+    root.innerHTML = '<div class="exm-root"><div class="exm-head"><button type="button" class="exm-btn exm-btn--ghost" data-act="backGrades">' + I.back + " كل الصفوف</button>" +
+      '<button type="button" class="exm-btn exm-btn--accent" data-act="new" data-g="' + g + '">+ امتحان جديد</button></div>' +
+      '<h2 class="exm-gp__title">' + esc(X.GRADE_NAMES[g]) + "</h2>" + tabsHtml() + tools + chips + '<div id="exmListBody" class="exm-groups">' + gradeBodyHtml() + "</div></div>";
+  }
+
+  function renderList() { if (S.grade && X.GRADE_NAMES[S.grade]) renderGradePage(); else { S.grade = null; renderHome(); } }
+
+  /* ---- تقويم اختيار التاريخ (بنفس ستايل المنصة) ---- */
+  function markSet() {
+    var set = {};
+    if (S.tab === "exams") S.exams.forEach(function (e) { if (e.grade === S.grade && e.publishedAt) set[dayKey(e.publishedAt)] = 1; });
+    else subList().forEach(function (r) { if (subGrade(r) === S.grade) set[dayKey(r.sub.submittedAt)] = 1; });
+    return set;
+  }
+  function openCalendar() {
+    var base = S.fDate ? new Date(S.fDate + "T00:00:00") : new Date(), cal = { y: base.getFullYear(), m: base.getMonth() };
+    var marks = markSet(), todayK = dayKey(Date.now()), p2 = function (n) { return (n < 10 ? "0" : "") + n; };
+    function grid() {
+      var first = new Date(cal.y, cal.m, 1), lead = (first.getDay() + 1) % 7, start = new Date(cal.y, cal.m, 1 - lead), cells = "";
+      for (var i = 0; i < 42; i++) {
+        var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        var k = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
+        cells += '<button type="button" class="exm-cal__day' + (d.getMonth() !== cal.m ? " is-out" : "") + (k === todayK ? " is-today" : "") + (k === S.fDate ? " is-sel" : "") + (marks[k] ? " has-mark" : "") +
+          '" data-cal="pick" data-d="' + k + '" aria-label="' + esc(dayLabel(k)) + '">' + nAr(d.getDate()) + "</button>";
+      }
+      return cells;
+    }
+    function body() {
+      return '<div class="exm-cal__nav"><button type="button" class="exm-iconbtn" data-cal="prev" aria-label="الشهر اللي قبله">' + I.back + "</button>" +
+        '<strong class="exm-cal__title">' + MONTHS[cal.m] + " " + nAr(cal.y) + '</strong><button type="button" class="exm-iconbtn" data-cal="next" aria-label="الشهر اللي بعده">' + I.fwd + "</button></div>" +
+        '<div class="exm-cal__week" aria-hidden="true">' + WEEK.map(function (w) { return "<span>" + w + "</span>"; }).join("") + "</div>" +
+        '<div class="exm-cal__grid">' + grid() + "</div>" +
+        '<p class="exm-cal__hint"><i></i> أيام فيها ' + (S.tab === "exams" ? "امتحانات اتنشرت" : "تسليمات") + "</p>" +
+        '<div class="exm-cal__foot"><button type="button" class="exm-btn exm-btn--ghost" data-cal="clear">مسح التاريخ</button><button type="button" class="exm-btn" data-cal="today">اليوم</button><button type="button" class="exm-btn exm-btn--accent" data-close="1">إغلاق</button></div>';
+    }
+    var m = X.modal('<div class="exm-modal__head"><h3>' + (S.tab === "exams" ? "تاريخ النشر" : "تاريخ التسليم") + '</h3><button type="button" class="exm-iconbtn" data-close="1" aria-label="إغلاق">' + I.x + '</button></div><div class="exm-cal__body">' + body() + "</div>", { label: "اختيار التاريخ", cls: "exm-cal" });
+    var host = $(".exm-cal__body", m.el);
+    m.el.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-cal]"); if (!b) return;
+      var a = b.dataset.cal;
+      if (a === "prev") { cal.m--; if (cal.m < 0) { cal.m = 11; cal.y--; } host.innerHTML = body(); return; }
+      if (a === "next") { cal.m++; if (cal.m > 11) { cal.m = 0; cal.y++; } host.innerHTML = body(); return; }
+      if (a === "pick") S.fDate = b.dataset.d;
+      else if (a === "today") S.fDate = todayK;
+      else if (a === "clear") S.fDate = "";
+      m.close(); render();
+    });
+  }
+
+  /* ---- رمز الامتحان + QR ---- */
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+    return new Promise(function (res, rej) {
+      var ta = document.createElement("textarea"); ta.value = t; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta);
+    });
+  }
+  function qrModel(text) { var q = qrcode(0, "M"); q.addData(text); q.make(); return q; }
+  function qrSvg(q) {
+    var n = q.getModuleCount(), m = 4, size = n + 2 * m, d = "";
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += "M" + (c + m) + " " + (r + m) + "h1v1h-1z";
+    return '<svg viewBox="0 0 ' + size + " " + size + '" shape-rendering="crispEdges" role="img" aria-label="QR code للامتحان"><rect width="' + size + '" height="' + size + '" fill="#fff"/><path d="' + d + '" fill="#111"/></svg>';
+  }
+  function qrDownload(q, name) {
+    var n = q.getModuleCount(), m = 4, size = n + 2 * m, scale = Math.max(4, Math.floor(1024 / size)), cv = document.createElement("canvas");
+    cv.width = cv.height = size * scale;
+    var g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = "#111";
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect((c + m) * scale, (r + m) * scale, scale, scale);
+    cv.toBlob(function (blob) {
+      if (!blob) return toast("تعذّر إنشاء الصورة", true);
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    }, "image/png");
+  }
+  function openQr(ex) {
+    if (typeof ex === "string") ex = examById(ex);
+    if (!ex || !ex.code) return toast("الامتحان ده ملوش رمز لسه", true);
+    X.loadScript("exams-qr-gen.js?v=1").then(function () {
+      var url = X.shareUrl(ex.code), q = qrModel(url), priv = X.isPrivate(ex);
+      var html = '<div class="exm-modal__head"><h3>رمز الامتحان</h3><button type="button" class="exm-iconbtn" data-close="1" aria-label="إغلاق">' + I.x + "</button></div>" +
+        '<p class="exm-qrm__title" dir="auto">' + esc(ex.title || "امتحان") + "</p>" +
+        '<div class="exm-qrm__qr">' + qrSvg(q) + "</div>" +
+        '<div class="exm-qrm__code" dir="ltr">' + esc(X.fmtCode(ex.code)) + "</div>" +
+        '<p class="exm-sub exm-qrm__hint">' + (priv ? "الامتحان خاص: مش هيظهر للطلاب غير بالرمز ده أو بمسح الـ QR." : "الامتحان عام وبيظهر لكل طلاب الصف، والرمز ده بديل لو حبّيت توزّعه.") + "</p>" +
+        '<div class="exm-qrm__acts"><button type="button" class="exm-btn" data-q="code">' + I.copy + ' نسخ الرمز</button><button type="button" class="exm-btn" data-q="link">' + I.copy + ' نسخ الرابط</button>' +
+        '<button type="button" class="exm-btn exm-btn--accent" data-q="png">' + I.dl + " تنزيل QR</button></div>";
+      var m = X.modal(html, { label: "رمز الامتحان وQR", cls: "exm-qrm" });
+      m.el.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-q]"); if (!b) return;
+        if (b.dataset.q === "png") return qrDownload(q, "exam-" + ex.code + ".png");
+        var txt = b.dataset.q === "code" ? X.fmtCode(ex.code) : url;
+        copyText(txt).then(function () { toast(b.dataset.q === "code" ? "تم نسخ الرمز" : "تم نسخ الرابط"); }).catch(function () { toast("تعذّر النسخ", true); });
+      });
+    }).catch(function () { toast("تعذّر تحميل مولّد الـ QR — اتأكد إن ملف exams-qr-gen.js مرفوع", true); });
+  }
+  function ensureCode(id) {
+    var e = examById(id); if (!e) return Promise.resolve(null);
+    if (e.code) return Promise.resolve(e);
+    var code = X.makeCode(S.exams.map(function (x) { return x.code; }));
+    return Promise.resolve(SNAuth.updateExamFields(id, { code: code })).then(function () { e.code = code; return e; });
   }
 
   /* ------------------------------------------------------------ إنشاء الامتحان */
@@ -219,7 +349,24 @@
       '<div class="exm-field" id="exmTrackField"' + (sec ? "" : " hidden") + '><label>المسار (للثانوي)</label><select class="exm-select" data-ef="track">' + trackOpts + "</select></div></div>" +
       '<div class="exm-grid2"><div class="exm-field"><label>الترم</label><select class="exm-select" data-ef="term"><option value="">غير محدد</option><option value="1"' + (Number(e.term) === 1 ? " selected" : "") + '>الترم الأول</option><option value="2"' + (Number(e.term) === 2 ? " selected" : "") + '>الترم الثاني</option></select></div>' +
       '<div class="exm-field"><label>المدة بالدقائق (0 = بدون مؤقّت)</label><input class="exm-input" type="number" min="0" max="300" data-ef="durationMin" value="' + esc(e.durationMin == null ? 30 : e.durationMin) + '" /></div></div>' +
+      accessField(e) + codeField(e) +
       '<div class="exm-field"><label>تعليمات للطلاب (اختياري)</label><textarea class="exm-textarea" data-ef="instructions">' + esc(e.instructions) + "</textarea></div>";
+  }
+
+  function accessField(e) {
+    var priv = X.isPrivate(e);
+    function seg(v, t, d) { var on = (v === "private") === priv; return '<button type="button" role="radio" aria-checked="' + on + '" class="exm-seg__btn' + (on ? " is-active" : "") + '" data-act="setAccess" data-v="' + v + '"><strong>' + t + "</strong><small>" + d + "</small></button>"; }
+    return '<div class="exm-field"><label>إتاحة الامتحان</label><div class="exm-seg" role="radiogroup" aria-label="إتاحة الامتحان" id="exmAccessSeg">' +
+      seg("public", "عام", "يظهر لكل طلاب الصف") + seg("private", "خاص", "بالرمز أو QR بس") + "</div></div>";
+  }
+  function codeField(e) {
+    if (!e.code) return "";
+    return '<div class="exm-field"><label>رمز الامتحان</label><div class="exm-coderow"><span class="exm-coderow__code" dir="ltr">' + esc(X.fmtCode(e.code)) + '</span>' +
+      '<button type="button" class="exm-btn exm-btn--sm" data-act="qrCur">' + I.qr + " عرض QR</button></div></div>";
+  }
+  function paintAccess() {
+    var priv = X.isPrivate(S.exam);
+    $$("#exmAccessSeg .exm-seg__btn").forEach(function (b) { var on = (b.dataset.v === "private") === priv; b.classList.toggle("is-active", on); b.setAttribute("aria-checked", on); });
   }
 
   function renderSetup() {
@@ -338,15 +485,17 @@
     if (wasDraft) { e.status = "published"; e.publishedAt = new Date().toISOString(); }
     save(true).then(function (ok) {
       if (!ok) { if (wasDraft) { e.status = "draft"; delete e.publishedAt; } return; }
-      toast(wasDraft ? "تم نشر الامتحان — هيظهر لطلاب " + (X.GRADE_NAMES[e.grade] || "") + " فورًا" : "تم حفظ التعديلات");
-      backToList();
+      var priv = X.isPrivate(e), snap = X.clean(e);
+      toast(wasDraft ? (priv ? "تم نشر الامتحان — وزّع الرمز أو الـ QR على الطلاب" : "تم نشر الامتحان — هيظهر لطلاب " + (X.GRADE_NAMES[e.grade] || "") + " فورًا") : "تم حفظ التعديلات");
+      S.grade = e.grade || S.grade;
+      backToList().then(function () { if (wasDraft && priv) openQr(snap); });
     });
   }
 
   function backToList() {
     S.exam = null; S.errs = []; S.drawer = false; S.view = "list"; S.tab = "exams";
     root.innerHTML = '<p class="exm-empty">جاري التحميل…</p>';
-    load().then(render);
+    return load().then(render);
   }
 
   function editExam(id) {
@@ -354,6 +503,8 @@
     if (!base) return;
     Promise.resolve(SNAuth.fetchExamKeys(id)).then(function (keys) {
       var e = X.normalizeExam(X.clean(base));
+      if (!e.code) e.code = X.makeCode(S.exams.map(function (x) { return x.code; }));
+      if (!e.access) e.access = "public";
       e.sections.forEach(function (s) { s.questions.forEach(function (q) { q.answer = keys && keys[q.id] != null ? keys[q.id] : ""; }); });
       S.exam = e; S.errs = []; S.dirty = false; S.drawer = false; S.view = "builder";
       render(); window.scrollTo(0, 0);
@@ -540,9 +691,10 @@
     renderList();
   }
 
-  function newExam() {
+  function newExam(grade) {
     S.exam = {
-      id: SNAuth.newExamId(), title: "", grade: "", track: "all", term: S.defTerm, durationMin: 30, instructions: "",
+      id: SNAuth.newExamId(), title: "", grade: grade || "", track: "all", term: S.defTerm, durationMin: 30, instructions: "",
+      code: X.makeCode(S.exams.map(function (x) { return x.code; })), access: "public",
       status: "draft", maxMarks: 0, sections: [], createdAt: new Date().toISOString(), createdBy: ctx.session ? ctx.session.id : "admin"
     };
     S.errs = []; S.dirty = false; S.view = "setup";
@@ -556,16 +708,22 @@
       var b = ev.target.closest("[data-act]");
       if (!b) return;
       var a = b.dataset.act, s, q;
-      if (a === "new") return newExam();
-      if (a === "tab") { S.tab = b.dataset.t; return render(); }
-      if (a === "grp") { S.open[b.dataset.k] = b.getAttribute("aria-expanded") !== "true"; return paintListBody(); }
+      if (a === "new") return newExam(b.dataset.g);
+      if (a === "tab") { S.tab = b.dataset.t; S.q = ""; S.fDate = ""; S.fTerm = "all"; S.fExam = "all"; return render(); }
+      if (a === "openGrade") { S.grade = b.dataset.g; resetFilters(); render(); return window.scrollTo(0, 0); }
+      if (a === "backGrades") { S.grade = null; resetFilters(); render(); return window.scrollTo(0, 0); }
+      if (a === "cal") return openCalendar();
+      if (a === "qr") return openQr(b.dataset.id);
+      if (a === "genCode") return ensureCode(b.dataset.id).then(function (e) { if (e) { render(); openQr(e); } }).catch(function () { toast("تعذّر إنشاء الرمز", true); });
+      if (a === "qrCur") return openQr(S.exam);
+      if (a === "setAccess") { S.exam.access = b.dataset.v; paintAccess(); if (S.view === "builder") markDirty(); return; }
       if (a === "fterm") { S.fTerm = b.dataset.v; return render(); }
       if (a === "gst") { S.gStatus[b.dataset.g] = b.dataset.v; return paintListBody(); }
       if (a === "more") { S.more[b.dataset.id] = !S.more[b.dataset.id]; return paintListBody(); }
       if (a === "clearExam") { S.fExam = "all"; return render(); }
       if (a === "clearDate") { S.fDate = ""; return render(); }
       if (a === "edit") return editExam(b.dataset.id);
-      if (a === "subsOf") { var se = examById(b.dataset.id); S.tab = "subs"; S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; if (se) { S.open["subs:" + se.grade] = true; S.gStatus[se.grade] = "all"; } return render(); }
+      if (a === "subsOf") { var se = examById(b.dataset.id); S.tab = "subs"; S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; if (se) { S.grade = se.grade; S.gStatus[se.grade] = "all"; } return render(); }
       if (a === "setStatus") {
         var st = b.dataset.st;
         return Promise.resolve(SNAuth.updateExamFields(b.dataset.id, { status: st })).then(function () {
@@ -629,11 +787,6 @@
       }
     });
 
-    root.addEventListener("click", function (ev) {
-      var t = ev.target;
-      if (t && t.dataset && t.dataset.fl === "date" && t.showPicker) { try { t.showPicker(); } catch (err) { /* المتصفح هيفتحه بنفسه */ } }
-    });
-
     root.addEventListener("keydown", function (ev) {
       if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches('.exm-sr[data-act="review"]')) { ev.preventDefault(); ev.target.click(); }
     });
@@ -664,7 +817,6 @@
     root.addEventListener("change", function (ev) {
       var t = ev.target, d = t.dataset || {};
       if (d.stype) { var s = secOf(d.stype); if (s) { X.retype(s, t.value); if (!s.header || X.TYPES.some(function (x) { return x.header === s.header; })) s.header = X.typeOf(t.value).header; markDirty(); renderBuilder(); } return; }
-      if (d.fl === "date") { S.fDate = t.value; return render(); }
     });
   }
 
