@@ -65,6 +65,66 @@
     return false;
   }
 
+  /* زرار الرجوع الموحّد: سهم جوه دايرة + الاسم */
+  function backBtn(act, label) {
+    return '<button type="button" class="exm-back" data-act="' + act + '"><span class="exm-back__ico">' + I.arrow + "</span><span>" + esc(label) + "</span></button>";
+  }
+
+  /* ------------------------------------------------------------ نظام الرجوع (زرار الموبايل / المتصفح)
+     كل تنقّل لقدّام (فتح صف / امتحان / تسليم / بناء امتحان) بيسجّل خطوة في history،
+     فالضغط على رجوع بيرجّعك للشاشة اللي قبلها جوه الامتحانات بدل ما يخرجك من الصفحة. */
+  var stack = [];   // لقطات الحالة قبل كل تنقّل
+  function snapNow() { return { grade: S.grade, tab: S.tab, fExam: S.fExam }; }
+  function pushLevel() {
+    stack.push(snapNow());
+    try { var b = Object.assign({}, history.state || {}); b.snExm = stack.length; history.pushState(b, ""); } catch (e) { }
+  }
+  function canNative() { return stack.length > 0 && !!history.state && history.state.snExm === stack.length; }
+  function goBack() {
+    if (!stack.length) return false;
+    if (canNative()) { history.back(); return true; }
+    undoTo(stack.length - 1); return true;
+  }
+  function undoTo(target) {
+    var snap = null, wasEdit = S.view === "builder" || S.view === "setup";
+    while (stack.length > target) snap = stack.pop();
+    if (!snap) return;
+    var over = S.over || {}, after = S.after; S.over = null; S.after = null;
+    function apply() {
+      S.grade = over.grade != null ? over.grade : snap.grade;
+      S.tab = over.tab || snap.tab; S.fExam = over.fExam || snap.fExam;
+      S.q = ""; S.fDate = ""; S.view = "list"; S.cur = null; S.exam = null; S.errs = []; S.drawer = false; S.dirty = false;
+      render(); window.scrollTo(0, 0);
+      if (after) after();
+    }
+    if (!wasEdit) return apply();
+    clearTimeout(S.saveTimer);
+    Promise.resolve(S.exam && S.dirty ? save(true) : null).catch(function () { }).then(function () {
+      if (root) root.innerHTML = '<p class="exm-empty">جاري التحميل…</p>';
+      return load();
+    }).then(apply, apply);
+  }
+  /* خروج من شاشة البناء بعد النشر: بنرجع بنفس خطوة الـ history لو أمكن */
+  function exitEditor(over, after) {
+    S.dirty = false;
+    if (canNative()) { S.over = over; S.after = after; history.back(); return; }
+    stack.length = 0;
+    if (over && over.grade != null) S.grade = over.grade;
+    backToList().then(function () { if (after) after(); });
+  }
+  function onPop(ev) {
+    var st = ev.state;
+    setTimeout(function () {
+      if (!root || !root.isConnected) return;
+      var pnl = root.closest(".dash-panel");
+      if (pnl && !pnl.classList.contains("is-active")) return;
+      if (!st || !st.snAdm || st.snAdm.panel !== "exams") return;
+      var target = st.snExm || 0;
+      if (target < stack.length) undoTo(target);
+      else if (target > stack.length) { try { history.back(); } catch (e) { } }   // خطوة قديمة فاضية: نتخطّاها
+    }, 0);
+  }
+
   /* ------------------------------------------------------------ تحميل */
   function load() {
     return Promise.all([
@@ -84,8 +144,13 @@
     if (!root) return;
     bind();
     if (S.view === "builder" || S.view === "setup") return render();
-    root.innerHTML = '<p class="exm-empty">جاري التحميل…</p>';
-    load().then(function () { if (S.view === "review" && S.cur) renderReview(); else { S.view = "list"; render(); } });
+    var first = !S.loaded;
+    if (first) root.innerHTML = '<p class="exm-empty">جاري التحميل…</p>'; else render();
+    load().then(function () {
+      if (S.view === "builder" || S.view === "setup") return;
+      if (S.view === "review" && S.cur) { if (first) renderReview(); return; }
+      S.view = "list"; render();
+    });
   }
 
   /* ------------------------------------------------------------ القايمة: الصفوف ← صفحة كل صف */
@@ -104,7 +169,8 @@
     copy: svgI('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>'),
     dl: svgI('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
     x: svgI('<path d="M6 6l12 12M18 6 6 18"/>'),
-    chev: svgI('<path d="m6 9 6 6 6-6"/>', "exm-ico exm-ex__chev")
+    chev: svgI('<path d="m6 9 6 6 6-6"/>', "exm-ico exm-ex__chev"),
+    arrow: svgI('<path d="M5 12h14M13 6l6 6-6 6"/>')
   };
   function nAr(n) { return Number(n).toLocaleString("ar-EG", { useGrouping: false }); }
 
@@ -174,7 +240,7 @@
     extra += '<button type="button" class="exm-btn" data-act="paper" data-id="' + id + '">ملف PDF</button>' +
       '<button type="button" class="exm-btn exm-btn--danger" data-act="delExam" data-id="' + id + '">حذف</button>';
     var head = '<button type="button" class="exm-ex__head" data-act="toggleEx" data-id="' + id + '" aria-expanded="' + isOpen + '" aria-controls="exmx-' + id + '">' +
-      '<span class="exm-ex__name" dir="auto">' + esc(e.title || "بدون عنوان") + "</span>" +
+      '<span class="exm-ex__name"><bdi>' + esc(e.title || "بدون عنوان") + "</bdi></span>" +
       '<span class="exm-ex__badges">' + (priv ? '<span class="exm-ex__lock" title="خاص" aria-label="امتحان خاص">' + I.lock + "</span>" : "") + st + "</span>" + I.chev + "</button>";
     var body = '<div class="exm-ex__panel" id="exmx-' + id + '"><div class="exm-ex__inner"><div class="exm-ex__details">' +
       '<div class="exm-ex__tags">' + acc + code + "</div>" +
@@ -193,7 +259,7 @@
     var line = c.total ? c.total + " تسليم" + (c.graded ? " · اتصحّح " + c.graded : "") : "مفيش تسليمات لسه";
     return '<button type="button" class="exm-xr' + (c.total ? "" : " is-empty") + '" data-act="openExamSubs" data-id="' + id + '">' +
       '<span class="exm-xr__num">' + c.total + "</span>" +
-      '<span class="exm-xr__main"><strong dir="auto">' + esc(e.title || "بدون عنوان") + "</strong><small>" + esc(line) + "</small></span>" +
+      '<span class="exm-xr__main"><strong><bdi>' + esc(e.title || "بدون عنوان") + "</bdi></strong><small>" + esc(line) + "</small></span>" +
       (pend ? '<span class="exm-grp__alert">' + pend + " بانتظار التصحيح</span>" : "") + I.fwd + "</button>";
   }
 
@@ -201,7 +267,7 @@
   function subRow(r) {
     var e = examById(r.examId), s = r.sub, graded = s.status === "graded";
     return '<article class="exm-sr" role="button" tabindex="0" data-act="review" data-e="' + esc(r.examId) + '" data-u="' + esc(r.studentId) + '">' +
-      '<div class="exm-sr__main"><strong class="exm-sr__name" dir="auto">' + esc(uname(s)) + '</strong><span class="exm-sr__exam" dir="auto">' + esc(e ? e.title : s.examTitle || "امتحان") + '</span><span class="exm-sr__date">' + esc(X.fmtDateTime(s.submittedAt)) + "</span></div>" +
+      '<div class="exm-sr__main"><strong class="exm-sr__name"><bdi>' + esc(uname(s)) + '</bdi></strong><span class="exm-sr__exam"><bdi>' + esc(e ? e.title : s.examTitle || "امتحان") + '</bdi></span><span class="exm-sr__date">' + esc(X.fmtDateTime(s.submittedAt)) + "</span></div>" +
       '<div class="exm-sr__side">' + (graded
         ? '<span class="exm-pill exm-pill--ok">' + esc(s.finalScore) + " / " + esc(s.outOf) + '</span><button type="button" class="exm-btn exm-btn--sm" data-act="pdf" data-e="' + esc(r.examId) + '" data-u="' + esc(r.studentId) + '">PDF</button>'
         : '<span class="exm-pill exm-pill--warn">بانتظار التصحيح</span>') + "</div></article>";
@@ -271,15 +337,14 @@
       }).join("") + "</div>";
     }
     var fe = !isEx && S.fExam !== "all" ? examById(S.fExam) : null, inExam = !isEx && S.fExam !== "all";
-    var topBtn = inExam
-      ? '<button type="button" class="exm-btn exm-btn--ghost" data-act="clearExam">' + I.back + " كل الامتحانات</button>"
-      : '<button type="button" class="exm-btn exm-btn--ghost" data-act="backGrades">' + I.back + " كل الصفوف</button>";
+    var prevEx = inExam && stack.length && stack[stack.length - 1].tab === "exams";
+    var topBtn = inExam ? backBtn("clearExam", prevEx ? "رجوع للامتحانات" : "كل الامتحانات") : backBtn("backGrades", "كل الصفوف");
     var newBtn = inExam ? "" : '<button type="button" class="exm-btn exm-btn--accent" data-act="new" data-g="' + g + '">+ امتحان جديد</button>';
     var title = inExam
-      ? '<h2 class="exm-gp__title" dir="auto">' + esc(fe ? fe.title : "الامتحان") + '</h2><p class="exm-sub">' + esc(X.GRADE_NAMES[g]) + "</p>"
+      ? '<h2 class="exm-gp__title"><bdi>' + esc(fe ? fe.title : "الامتحان") + '</bdi></h2><p class="exm-sub">' + esc(X.GRADE_NAMES[g]) + "</p>"
       : '<h2 class="exm-gp__title">' + esc(X.GRADE_NAMES[g]) + "</h2>";
     root.innerHTML = '<div class="exm-root"><div class="exm-head">' + topBtn + newBtn + "</div>" +
-      title + tabsHtml() + tools + chips + '<div id="exmListBody" class="exm-groups">' + gradeBodyHtml() + "</div></div>";
+      title + (inExam ? "" : tabsHtml()) + tools + chips + '<div id="exmListBody" class="exm-groups">' + gradeBodyHtml() + "</div></div>";
   }
 
   function renderList() { if (S.grade && X.GRADE_NAMES[S.grade]) renderGradePage(); else { S.grade = null; renderHome(); } }
@@ -410,7 +475,7 @@
   }
 
   function renderSetup() {
-    root.innerHTML = '<div class="exm-root"><div class="exm-head"><h2>امتحان جديد</h2></div>' +
+    root.innerHTML = '<div class="exm-root"><div class="exm-head">' + backBtn("cancel", "رجوع") + '</div><h2 class="exm-gp__title">امتحان جديد</h2>' +
       '<div class="exm-card">' + settingsFields(S.exam) + '<div class="exm-row" style="justify-content:flex-start"><button type="button" class="exm-btn exm-btn--accent" data-act="setupNext">التالي: بناء الأسئلة</button><button type="button" class="exm-btn" data-act="cancel">إلغاء</button></div></div></div>';
   }
 
@@ -469,7 +534,7 @@
       '<div class="exm-row"><span class="exm-pill" id="exmTotal">' + X.totalPoints(e) + " درجة · " + X.countQuestions(e) + ' سؤال</span>' +
       '<button type="button" class="exm-btn" data-act="saveNow">حفظ</button>' +
       '<button type="button" class="exm-btn exm-btn--accent" data-act="publish">' + (e.status === "draft" ? "نشر الامتحان" : "حفظ التعديلات") + '</button>' +
-      '<button type="button" class="exm-btn" data-act="backList">رجوع</button></div></div>' +
+      backBtn("backList", "رجوع") + "</div></div>" +
       (cnt ? '<div class="exm-note">فيه ' + cnt + " تسليم على الامتحان ده — تعديل الأسئلة أو الإجابات الصحيحة هيأثّر على التصحيح.</div>" : "") +
       (S.errs.length ? '<div class="exm-note" role="alert"><strong>راجع الآتي قبل النشر:</strong><br>' + S.errs.map(esc).join("<br>") + "</div>" : "") +
       '<details class="exm-card"><summary><strong>إعدادات الامتحان</strong></summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">' + settingsFields(e) + "</div></details>" +
@@ -527,8 +592,7 @@
       if (!ok) { if (wasDraft) { e.status = "draft"; delete e.publishedAt; } return; }
       var priv = X.isPrivate(e), snap = X.clean(e);
       toast(wasDraft ? (priv ? "تم نشر الامتحان — وزّع الرمز أو الـ QR على الطلاب" : "تم نشر الامتحان — هيظهر لطلاب " + (X.GRADE_NAMES[e.grade] || "") + " فورًا") : "تم حفظ التعديلات");
-      S.grade = e.grade || S.grade;
-      backToList().then(function () { if (wasDraft && priv) openQr(snap); });
+      exitEditor({ grade: e.grade || S.grade, tab: "exams", fExam: "all" }, function () { if (wasDraft && priv) openQr(snap); });
     });
   }
 
@@ -546,6 +610,7 @@
       if (!e.code) e.code = X.makeCode(S.exams.map(function (x) { return x.code; }));
       if (!e.access) e.access = "public";
       e.sections.forEach(function (s) { s.questions.forEach(function (q) { q.answer = keys && keys[q.id] != null ? keys[q.id] : ""; }); });
+      pushLevel();
       S.exam = e; S.errs = []; S.dirty = false; S.drawer = false; S.view = "builder";
       render(); window.scrollTo(0, 0);
     }).catch(function () { toast("تعذّر تحميل مفاتيح الإجابة — مش هنفتح الامتحان للتعديل عشان ما تضيعش", true); });
@@ -559,6 +624,7 @@
       var ex = X.normalizeExam(X.clean(e));
       ex.sections.forEach(function (s) { s.questions.forEach(function (q) { q.answer = keys && keys[q.id] != null ? keys[q.id] : ""; }); });
       S.cur = { exam: ex, sub: sub, uid: uid, manualFinal: sub.status === "graded" };
+      pushLevel();
       S.view = "review";
       renderReview(); window.scrollTo(0, 0);
     });
@@ -591,7 +657,7 @@
     var rawMax = X.totalPoints(e);
     var outOf = sub.outOf != null ? sub.outOf : (e.maxMarks || rawMax);
     var graded = sub.status === "graded";
-    root.innerHTML = '<div class="exm-root"><div class="exm-head"><button type="button" class="exm-btn" data-act="backSubs">رجوع للتسليمات</button>' +
+    root.innerHTML = '<div class="exm-root"><div class="exm-head">' + backBtn("backSubs", "رجوع للتسليمات") +
       '<span class="exm-pill ' + (graded ? "exm-pill--ok" : "exm-pill--warn") + '">' + (graded ? "اتصحّح" : "بانتظار التصحيح") + "</span></div>" +
       '<div class="exm-card"><h3 class="exm-title">' + esc(uname(sub)) + '</h3><div class="exm-meta"><span class="exm-pill">' + esc(e.title) + '</span><span class="exm-pill">' + esc(gradeFull(sub.grade, sub.track) || "—") + '</span><span class="exm-pill">سُلّم: ' + esc(X.fmtDateTime(sub.submittedAt)) + "</span></div></div>" +
       html +
@@ -732,6 +798,7 @@
   }
 
   function newExam(grade) {
+    pushLevel();
     S.exam = {
       id: SNAuth.newExamId(), title: "", grade: grade || "", track: "all", term: S.defTerm, durationMin: 30, instructions: "",
       code: X.makeCode(S.exams.map(function (x) { return x.code; })), access: "public",
@@ -743,6 +810,7 @@
 
   function bind() {
     if (bound) return; bound = true;
+    window.addEventListener("popstate", onPop);
 
     root.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-act]");
@@ -750,8 +818,8 @@
       var a = b.dataset.act, s, q;
       if (a === "new") return newExam(b.dataset.g);
       if (a === "tab") { S.tab = b.dataset.t; S.q = ""; S.fDate = ""; S.fTerm = "all"; S.fExam = "all"; return render(); }
-      if (a === "openGrade") { S.grade = b.dataset.g; resetFilters(); render(); return window.scrollTo(0, 0); }
-      if (a === "backGrades") { S.grade = null; resetFilters(); render(); return window.scrollTo(0, 0); }
+      if (a === "openGrade") { pushLevel(); S.grade = b.dataset.g; resetFilters(); render(); return window.scrollTo(0, 0); }
+      if (a === "backGrades") { if (goBack()) return; S.grade = null; resetFilters(); render(); return window.scrollTo(0, 0); }
       if (a === "cal") return openCalendar();
       if (a === "qr") return openQr(b.dataset.id);
       if (a === "genCode") return ensureCode(b.dataset.id).then(function (e) { if (e) { render(); openQr(e); } }).catch(function () { toast("تعذّر إنشاء الرمز", true); });
@@ -765,11 +833,11 @@
         var art = b.closest(".exm-ex"); if (art) art.classList.toggle("is-open", !!S.open[tid]);
         b.setAttribute("aria-expanded", String(!!S.open[tid])); return;
       }
-      if (a === "openExamSubs") { S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; S.gStatus[S.grade] = "all"; render(); return window.scrollTo(0, 0); }
-      if (a === "clearExam") { S.fExam = "all"; S.q = ""; S.fDate = ""; render(); return window.scrollTo(0, 0); }
+      if (a === "openExamSubs") { pushLevel(); S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; S.gStatus[S.grade] = "all"; render(); return window.scrollTo(0, 0); }
+      if (a === "clearExam") { if (goBack()) return; S.fExam = "all"; S.q = ""; S.fDate = ""; render(); return window.scrollTo(0, 0); }
       if (a === "clearDate") { S.fDate = ""; return render(); }
       if (a === "edit") return editExam(b.dataset.id);
-      if (a === "subsOf") { var se = examById(b.dataset.id); S.tab = "subs"; S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; if (se) { S.grade = se.grade; S.gStatus[se.grade] = "all"; } return render(); }
+      if (a === "subsOf") { pushLevel(); var se = examById(b.dataset.id); S.tab = "subs"; S.fExam = b.dataset.id; S.q = ""; S.fDate = ""; if (se) { S.grade = se.grade; S.gStatus[se.grade] = "all"; } return render(); }
       if (a === "setStatus") {
         var st = b.dataset.st;
         return Promise.resolve(SNAuth.updateExamFields(b.dataset.id, { status: st })).then(function () {
@@ -786,13 +854,13 @@
       }
       if (a === "review") { if (ev.target.closest('[data-act="pdf"]')) return; return openReview(b.dataset.e, b.dataset.u); }
       if (a === "pdf") { ev.stopPropagation(); return exportPdf(b.dataset.e, b.dataset.u); }
-      if (a === "backSubs") { S.view = "list"; S.tab = "subs"; S.cur = null; return render(); }
+      if (a === "backSubs") { if (goBack()) return; S.view = "list"; S.tab = "subs"; S.cur = null; return render(); }
       if (a === "saveGrade") return saveGrade();
       if (a === "pdfCur") return exportPdf(S.cur.exam.id, S.cur.uid);
       if (a === "paper") return examPaper(b.dataset.id);
 
       /* setup */
-      if (a === "cancel") { S.exam = null; S.view = "list"; return render(); }
+      if (a === "cancel") { if (goBack()) return; S.exam = null; S.view = "list"; return render(); }
       if (a === "setupNext") {
         var errs = [];
         if (!String(S.exam.title).trim()) errs.push("اكتب عنوان الامتحان");
@@ -803,7 +871,7 @@
       }
 
       /* builder */
-      if (a === "backList") { if (S.dirty) save(true).then(backToList); else backToList(); return; }
+      if (a === "backList") { if (goBack()) return; if (S.dirty) save(true).then(backToList); else backToList(); return; }
       if (a === "saveNow") return save(false);
       if (a === "publish") return publish();
       if (a === "blankPlus") { S.exam.sections.push(X.generate("mcq", 1, "")); markDirty(); return renderBuilder(); }
