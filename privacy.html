@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>سياسة الخصوصية والكوكيز</title>
+<meta name="description" content="كيف نجمع بيانات الطلاب ونستخدمها ونحميها، وما الذي نخزنه على جهازك." />
+<script>
+  /* نفس مفتاح الثيم المستخدم في باقي الصفحات */
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light") {
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+<!-- يرث الألوان والخطوط من موقعك. لو الملف في مجلد تاني عدّل المسار. -->
+<link rel="stylesheet" href="shared.css" />
+<style>
+  /* ملاحظة: مفيش Google Fonts هنا عن قصد. الخطوط بتيجي من الموقع لو محمّلة. */
+  .pp-body { background: var(--bg, #f4eee0); color: var(--ink, #0f2d35); font-family: var(--font-body, "Tajawal", "Cairo", system-ui, sans-serif); }
+  .pp-wrap { max-width: 46rem; margin: 0 auto; padding: 28px 20px 80px; line-height: 1.95; font-size: 17px; }
+  .pp-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 28px; }
+  .pp-back { color: var(--brand, #1d5260); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+  .pp-wrap h1 { font-family: var(--font-display, "Cairo", system-ui, sans-serif); font-size: clamp(28px, 5vw, 40px); line-height: 1.35; margin: 0 0 8px; color: var(--brand-strong, #0f2d35); }
+  .pp-meta { color: var(--ink-soft, #4d6a71); margin: 0 0 28px; font-size: 15px; }
+  .pp-lead { font-size: 19px; margin: 0 0 28px; }
+  .pp-toc { margin: 0 0 40px; padding: 16px 22px; background: var(--surface-glass, #fbf8ef); border: 1px solid var(--surface-glass-border, rgba(15,45,53,.14)); border-radius: var(--radius-md, 14px); }
+  .pp-toc strong { display: block; margin-bottom: 4px; font-family: var(--font-display, "Cairo", sans-serif); }
+  .pp-toc ol { margin: 0; padding-inline-start: 22px; }
+  .pp-toc a { color: var(--brand, #1d5260); text-decoration: underline; text-underline-offset: 3px; }
+  .pp-wrap h2 { font-family: var(--font-display, "Cairo", system-ui, sans-serif); font-size: 24px; line-height: 1.4; margin: 44px 0 10px; color: var(--brand-strong, #0f2d35); scroll-margin-top: 20px; }
+  .pp-wrap p { margin: 0 0 14px; }
+  .pp-wrap ul { margin: 0 0 16px; padding-inline-start: 24px; }
+  .pp-wrap li { margin-bottom: 6px; }
+  .pp-wrap a { color: var(--brand, #1d5260); }
+  .pp-tablewrap { overflow-x: auto; margin: 14px 0 20px; border: 1px solid var(--surface-glass-border, rgba(15,45,53,.14)); border-radius: var(--radius-md, 14px); }
+  .pp-wrap table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.7; min-width: 560px; }
+  .pp-wrap th, .pp-wrap td { padding: 10px 14px; text-align: right; vertical-align: top; border-bottom: 1px solid var(--surface-glass-border, rgba(15,45,53,.14)); }
+  .pp-wrap th { background: var(--bg-soft, #e8e1ce); font-weight: 800; }
+  .pp-wrap tr:last-child td { border-bottom: 0; }
+  .pp-wrap code { direction: ltr; unicode-bidi: embed; font-size: 13px; background: var(--bg-soft, #e8e1ce); padding: 1px 6px; border-radius: 6px; }
+  .pp-btn { min-height: 44px; padding: 8px 22px; border-radius: 999px; border: 1.5px solid var(--brand, #1d5260); background: var(--brand, #1d5260); color: var(--bg, #f4eee0); font: inherit; font-weight: 800; cursor: pointer; }
+  .pp-btn:focus-visible, .pp-wrap a:focus-visible { outline: 3px solid var(--accent, #2c8097); outline-offset: 3px; }
+  /* خانات لازم تملاها قبل النشر */
+  mark.pp-ph { background: #ffe58a; color: #3b2f00; padding: 0 6px; border-radius: 6px; }
+</style>
+</head>
+<body class="pp-body">
+<!--
+  راجع الصفحة كلها مع محامي متخصص قبل الاعتماد عليها.
+-->
+<main class="pp-wrap">
+  <div class="pp-top">
+    <a class="pp-back" href="index.html">العودة إلى الرئيسية</a>
+  </div>
+
+  <h1>سياسة الخصوصية والكوكيز</h1>
+  <p class="pp-meta">آخر تحديث: 8 نوفمبر 2026</p>
+  <p class="pp-lead">هذه الصفحة تشرح بالتفصيل ما الذي نعرفه عنك كطالب على المنصة، ولماذا نحتاجه، ومن يصل إليه، وكيف تتحكم فيه.</p>
+
+  <nav class="pp-toc" aria-label="محتويات الصفحة">
+    <strong>المحتويات</strong>
+    <ol>
+      <li><a href="#who">من نحن</a></li>
+      <li><a href="#data">البيانات التي نجمعها</a></li>
+      <li><a href="#why">لماذا نستخدم بياناتك</a></li>
+      <li><a href="#share">مع من نشاركها</a></li>
+      <li><a href="#minors">الطلاب دون 18 سنة</a></li>
+      <li><a href="#where">أين تُخزَّن ولكم من الوقت</a></li>
+      <li><a href="#cookies">الكوكيز والتخزين المحلي</a></li>
+      <li><a href="#rights">حقوقك</a></li>
+      <li><a href="#security">الأمان</a></li>
+      <li><a href="#contact">التواصل والتعديلات</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="who">1. من نحن</h2>
+  <p>منصة شادي نصر (Shady Nasr Platform) منصة تعليمية يديرها شادي نصر، وهو المسؤول عن بياناتك الشخصية بموجب هذه السياسة. للتواصل بخصوص الخصوصية: <a href="mailto:ab.tech.webapps@gmail.com" dir="ltr">ab.tech.webapps@gmail.com</a>.</p>
+
+  <h2 id="data">2. البيانات التي نجمعها</h2>
+  <ul>
+    <li><strong>بيانات الحساب:</strong> الاسم، والبريد الإلكتروني، وكلمة المرور، والسن، والنوع، والصف أو المسار الدراسي.</li>
+    <li><strong>بيانات الدراسة:</strong> تقدمك في الدروس، والنقاط والشارات، ونتائج الامتحانات والدرجات، والشهادات، وما تكتبه أو ترفعه من إجابات وملفات.</li>
+    <li><strong>الصورة الشخصية:</strong> فقط إذا اخترت رفعها.</li>
+    <li><strong>بيانات الجهاز والأمان:</strong> نوع الجهاز والمتصفح وآخر وقت استخدام، لحماية حسابك ومنع الدخول غير المصرّح به.</li>
+    <li><strong>رسائل التحقق:</strong> كود يُرسل إلى بريدك عند تسجيل الدخول أو استعادة كلمة المرور.</li>
+    <li><strong>المحادثات مع المساعد الذكي:</strong> الرسائل التي تكتبها للمساعد تُرسل عبر خدمة Cloudflare إلى نموذج Grok (من شركة xAI) لتوليد الرد، ويصاحبها رقم حسابك. لا تكتب في المحادثة بيانات شخصية حساسة. لا نحفظ المحادثات على خوادمنا، بل يُحفظ سجلها على جهازك في المتصفح فقط. وقد تحتفظ شركة xAI بالرسائل وفق سياستها الخاصة.</li>
+  </ul>
+  <p>لا نبيع بياناتك، ولا نستخدمها في الإعلانات.</p>
+
+  <h2 id="why">3. لماذا نستخدم بياناتك</h2>
+  <ul>
+    <li><strong>لتقديم الخدمة التعليمية:</strong> إنشاء حسابك، وعرض المحتوى المناسب لصفك، وحفظ تقدمك ونتائجك، وإصدار الشهادات.</li>
+    <li><strong>لحماية الحساب:</strong> التحقق من هويتك عند الدخول، ورصد محاولات الدخول المشبوهة.</li>
+    <li><strong>للتواصل بشأن حسابك:</strong> إرسال أكواد التحقق وإشعارات الحساب.</li>
+    <li><strong>لتحسين المنصة:</strong> لا نفعل ذلك حاليًا بأدوات إحصائية. وإن فعلناه لاحقًا فلن يبدأ إلا بموافقتك.</li>
+  </ul>
+
+  <h2 id="share">4. مع من نشاركها</h2>
+  <p>نستعين بجهات تقنية تعالج البيانات بالنيابة عنا. هذه هي الجهات التي تتصل بها المنصة:</p>
+  <div class="pp-tablewrap">
+    <table>
+      <thead><tr><th>الجهة</th><th>ما تستخدمه المنصة فيه</th><th>ما يصلها</th></tr></thead>
+      <tbody>
+        <tr><td>Google Firebase</td><td>قاعدة البيانات، وتخزين الملفات، وتسجيل الدخول</td><td>بيانات الحساب والدراسة التي ذكرناها في القسم 2</td></tr>
+        <tr><td>EmailJS</td><td>إرسال رسائل كود التحقق بالبريد</td><td>اسمك وبريدك وكود التحقق</td></tr>
+        <tr><td>Google Fonts</td><td>تحميل خطوط الموقع</td><td>عنوان IP وبيانات المتصفح</td></tr>
+        <tr><td>jsDelivr وCloudflare (cdnjs) وGoogle (gstatic)</td><td>تحميل مكتبات برمجية تشغّل الموقع</td><td>عنوان IP وبيانات المتصفح</td></tr>
+        <tr><td>GitHub Pages (GitHub / Microsoft)</td><td>استضافة ملفات الموقع</td><td>عنوان IP وسجلات الخادم</td></tr>
+        <tr><td>Google Drive</td><td>تحميل ملفات الدروس (PDF) وبنوك الأسئلة التي ترفعها الإدارة</td><td>عنوان IP وبيانات المتصفح، ومعرّف الملف المطلوب</td></tr>
+        <tr><td>Cloudflare Workers</td><td>وسيط يمرّر رسائل المساعد الذكي</td><td>نص رسائلك ورقم حسابك وعنوان IP</td></tr>
+        <tr><td>xAI (Grok)</td><td>توليد ردود المساعد الذكي</td><td>نص رسائلك</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>قد نكشف بياناتك أيضًا إذا طلبت ذلك جهة مختصة وفق القانون.</p>
+
+  <h2 id="minors">5. الطلاب دون 18 سنة</h2>
+  <p>المنصة موجّهة لطلاب من سن 10 إلى 20 سنة، ونتعامل مع بيانات الطلاب دون 18 سنة بحرص إضافي. لولي الأمر أن يطلب الاطلاع على بيانات ابنه أو ابنته أو تصحيحها أو حذفها عبر التواصل معنا.</p>
+  <p>عند التسجيل بسن أقل من 18 سنة نطلب منك تأكيد أن ولي الأمر يعلم بتسجيلك ويوافق عليه، ونحفظ تاريخ هذا التأكيد مع حسابك.</p>
+
+  <h2 id="where">6. أين تُخزَّن ولكم من الوقت</h2>
+  <p>قاعدة بيانات المنصة تعمل على خوادم Google في أوروبا (المنطقة <code>europe-west1</code>). وبعض الجهات في القسم 4 قد تعالج بياناتك خارج مصر.</p>
+  <p>نحتفظ ببيانات حسابك طالما كان حسابك نشطًا، ونحذفها خلال 30 يومًا من طلبك حذف الحساب، إلا ما يلزمنا الاحتفاظ به قانونًا. بيانات الحسابات غير النشطة نحذفها بعد 24 شهرًا من آخر استخدام.</p>
+
+  <h2 id="cookies">7. الكوكيز والتخزين المحلي</h2>
+  <p>لا نستخدم ملفات كوكيز للتتبع أو الإعلانات. نستخدم <strong>التخزين المحلي في المتصفح</strong> (localStorage وsessionStorage)، وهو يعمل عمل الكوكيز ويخضع لنفس القواعد، لذلك نعرضه هنا بنفس الشفافية.</p>
+  <div class="pp-tablewrap">
+    <table>
+      <thead><tr><th>الفئة</th><th>الغرض</th><th>أمثلة</th><th>المدة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>ضرورية</td>
+          <td>تسجيل الدخول وحفظ الجلسة، وقفل المحتوى حسب الصف، وحفظ اختيارك في بانر الكوكيز</td>
+          <td><code>shadynasr-auth</code> <code>shadynasr-current-user</code> <code>shadynasr-login-at</code> <code>shadynasr-cookie-consent</code></td>
+          <td>حتى تسجيل الخروج أو مسح بيانات المتصفح. اختيار الكوكيز: 12 شهرًا</td>
+        </tr>
+        <tr>
+          <td>تفضيلات تقنية</td>
+          <td>تطبيق اختياراتك: اللغة، والثيم، والصورة الشخصية، وآخر درس فتحته، والإعلانات التي اطّلعت عليها، وسجل محادثاتك مع المساعد</td>
+          <td><code>lang</code> <code>theme</code> <code>shadynasr-user-theme</code> <code>shadynasr-avatar</code> <code>shadynasr-last-lesson</code> <code>shadynasr-ai-chats-*</code></td>
+          <td>حتى مسحها من المتصفح</td>
+        </tr>
+        <tr>
+          <td>تخزين التطبيق</td>
+          <td>حفظ ملفات الموقع على جهازك لتسريع التحميل (Service Worker)</td>
+          <td><code>sw.js</code></td>
+          <td>حتى تحديث الموقع أو مسحه</td>
+        </tr>
+        <tr>
+          <td>إحصائيات وتحسين</td>
+          <td>غير مستخدمة حاليًا. إن فعّلناها فلن تعمل إلا بموافقتك</td>
+          <td>لا يوجد</td>
+          <td>لا ينطبق</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>الفئتان الأوليان لازمتان لتشغيل ما طلبته من المنصة، فلا تحتاجان موافقة. أما أي فئة اختيارية فتبدأ بموافقتك فقط.</p>
+  <p><strong>كيف تغيّر اختيارك:</strong> اضغط الزر أدناه في أي وقت لفتح الإعدادات وتغيير موافقتك أو سحبها. ويمكنك أيضًا مسح بيانات الموقع من إعدادات المتصفح.</p>
+  <p><button type="button" class="pp-btn" data-cookie-settings>إعدادات الكوكيز</button></p>
+
+  <h2 id="rights">8. حقوقك</h2>
+  <p>يحق لك، أو لولي أمرك إن كنت دون 18 سنة، أن:</p>
+  <ul>
+    <li>تعرف البيانات التي نحتفظ بها عنك وتحصل على نسخة منها.</li>
+    <li>تطلب تصحيح أي بيانات غير صحيحة.</li>
+    <li>تطلب حذف بياناتك أو حذف حسابك.</li>
+    <li>تعترض على معالجة بياناتك أو تطلب تقييدها.</li>
+    <li>تسحب موافقتك في أي وقت، دون أن يؤثر ذلك على ما سبق.</li>
+  </ul>
+  <p>لممارسة أي حق، راسلنا على <a href="mailto:ab.tech.webapps@gmail.com" dir="ltr">ab.tech.webapps@gmail.com</a> وسنرد خلال 30 يومًا. وإذا رأيت أننا لم نحترم حقوقك، يحق لك تقديم شكوى إلى مركز حماية البيانات الشخصية في مصر، وإذا كنت داخل الاتحاد الأوروبي فإلى هيئة حماية البيانات في بلدك (في إيطاليا: Garante per la protezione dei dati personali).</p>
+
+  <h2 id="security">9. الأمان</h2>
+  <p>نتخذ إجراءات تقنية وتنظيمية معقولة لحماية بياناتك من الوصول غير المصرّح به. لا يوجد نظام آمن بنسبة مئة بالمئة، ولذلك إذا وقع اختراق يمس بياناتك فسنخطرك والجهات المختصة وفق ما يطلبه القانون. ننصحك باختيار كلمة مرور قوية وعدم مشاركتها مع أحد.</p>
+
+  <h2 id="contact">10. التواصل والتعديلات</h2>
+  <p>قد نعدّل هذه السياسة من وقت لآخر، وسننشر النسخة الجديدة هنا مع تاريخ التحديث. وإذا تغيّر استخدامنا للكوكيز تغيّرًا جوهريًا فسيظهر لك بانر الموافقة من جديد.</p>
+  <p>لأي سؤال: <a href="mailto:ab.tech.webapps@gmail.com" dir="ltr">ab.tech.webapps@gmail.com</a>.</p>
+</main>
+
+<script src="cookie-consent.js" defer></script>
+</body>
+</html>

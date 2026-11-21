@@ -1,0 +1,131 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "teachers": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && newData.child('k').val() === root.child('secrets').child('teacher').val()",
+        ".validate": "newData.hasChildren(['k'])",
+        "k": {
+          ".validate": "newData.isString() && newData.val().length <= 128"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "owners": {
+      "$tid": {
+        ".read": "auth != null && (root.child('teachers').child(auth.uid).exists() || data.val() === auth.uid)",
+        ".write": "auth != null && (root.child('teachers').child(auth.uid).exists() || (!data.exists() && newData.val() === auth.uid))",
+        ".validate": "newData.isString() && newData.val().length <= 128"
+      },
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    },
+    "threads": {
+      ".read": "auth != null && root.child('teachers').child(auth.uid).exists()",
+      ".indexOn": [
+        "lastAt"
+      ],
+      "$tid": {
+        ".read": "auth != null && (root.child('teachers').child(auth.uid).exists() || root.child('owners').child($tid).val() === auth.uid)",
+        ".write": "auth != null && (root.child('teachers').child(auth.uid).exists() || root.child('owners').child($tid).val() === auth.uid)",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "grade": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "last": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "lastAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "lastFrom": {
+          ".validate": "newData.val() === 's' || newData.val() === 't'"
+        },
+        "tUnread": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "sUnread": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "tReadAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "sReadAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "clearedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    },
+    "messages": {
+      "$tid": {
+        ".read": "auth != null && (root.child('teachers').child(auth.uid).exists() || root.child('owners').child($tid).val() === auth.uid)",
+        ".indexOn": [
+          "ts"
+        ],
+        "$mid": {
+          ".write": "auth != null && (root.child('teachers').child(auth.uid).exists() || (root.child('owners').child($tid).val() === auth.uid && ((!data.exists() && newData.child('from').val() === 's') || (data.exists() && !newData.exists() && data.child('ts').val() < now - 604800000))))",
+          ".validate": "newData.hasChildren(['from', 'ts']) && (newData.child('text').exists() || newData.child('thumb').exists()) && (newData.child('from').val() === 's' || (auth.uid != null && root.child('teachers').child(auth.uid).exists() && newData.child('from').val() === 't')) && newData.child('ts').val() === now",
+          "from": {
+            ".validate": "newData.val() === 's' || newData.val() === 't'"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1000"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "thumb": {
+            ".validate": "newData.isString() && newData.val().length <= 24000 && newData.val().matches(/^data:image\\/jpeg;base64,/)"
+          },
+          "w": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 20000"
+          },
+          "h": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 20000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    },
+    "presence": {
+      "teacher": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('teachers').child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['on','at'])",
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "images": {
+      "$tid": {
+        ".write": "auth != null && root.child('teachers').child(auth.uid).exists()",
+        "$mid": {
+          ".read": "auth != null && (root.child('teachers').child(auth.uid).exists() || root.child('owners').child($tid).val() === auth.uid)",
+          ".write": "auth != null && (root.child('teachers').child(auth.uid).exists() || (root.child('owners').child($tid).val() === auth.uid && ((!data.exists() && newData.exists()) || (!newData.exists() && (!root.child('messages').child($tid).child($mid).exists() || root.child('messages').child($tid).child($mid).child('ts').val() < now - 604800000)))))",
+          ".validate": "newData.isString() && newData.val().length <= 420000 && newData.val().matches(/^data:image\\/jpeg;base64,/)"
+        }
+      },
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    }
+  }
+}

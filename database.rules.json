@@ -1,0 +1,116 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "threads": {
+      ".read": true,
+      ".indexOn": [
+        "lastAt"
+      ],
+      "$tid": {
+        ".write": true,
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "grade": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "last": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "lastAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "lastFrom": {
+          ".validate": "newData.val() === 's' || newData.val() === 't'"
+        },
+        "tUnread": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "sUnread": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "tReadAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "sReadAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "clearedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      ".write": "root.child('wipe').child('token').val() === 'nyosxuAWS9bj9eZP10OrzJuu'"
+    },
+    "messages": {
+      "$tid": {
+        ".read": true,
+        ".indexOn": [
+          "ts"
+        ],
+        "$mid": {
+          ".write": "!data.exists() || (!newData.exists() && data.child('ts').val() < now - 604800000)",
+          ".validate": "newData.hasChildren(['from', 'ts']) && (newData.child('text').exists() || newData.child('thumb').exists()) && newData.child('ts').val() === now",
+          "from": {
+            ".validate": "newData.val() === 's' || newData.val() === 't'"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1000"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "thumb": {
+            ".validate": "newData.isString() && newData.val().length <= 24000 && newData.val().matches(/^data:image\\/jpeg;base64,/)"
+          },
+          "w": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 20000"
+          },
+          "h": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 20000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      ".write": "root.child('wipe').child('token').val() === 'nyosxuAWS9bj9eZP10OrzJuu'"
+    },
+    "presence": {
+      "teacher": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['on', 'at'])",
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "images": {
+      "$tid": {
+        "$mid": {
+          ".read": true,
+          ".write": "(!data.exists() && newData.exists()) || (!newData.exists() && (!root.child('messages').child($tid).child($mid).exists() || root.child('messages').child($tid).child($mid).child('ts').val() < now - 604800000))",
+          ".validate": "newData.isString() && newData.val().length <= 420000 && newData.val().matches(/^data:image\\/jpeg;base64,/)"
+        }
+      },
+      ".write": "root.child('wipe').child('token').val() === 'nyosxuAWS9bj9eZP10OrzJuu'"
+    },
+    "wipe": {
+      "token": {
+        ".read": false,
+        ".write": "newData.val() === 'nyosxuAWS9bj9eZP10OrzJuu' || !newData.exists()",
+        ".validate": "newData.val() === 'nyosxuAWS9bj9eZP10OrzJuu'"
+      }
+    }
+  }
+}

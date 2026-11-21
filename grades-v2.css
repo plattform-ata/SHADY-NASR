@@ -1,0 +1,241 @@
+/* ==========================================================================
+   grades-v2.css — مربعات الصفوف الدراسية (الصفحة الرئيسية)
+   v4: "فقاعات كلام" — الكروت على شكل Speech Bubble (فكرة اللغة والمحادثة)
+   الرقم هو البطل: رقم ضخم بتدرّج لون، وفوقه كلمة GRADE صغيرة، وذيل الفقاعة بيشاور على الدروس.
+   موبايل: 3 فقاعات في سطر واحد. من 640px: فقاعات أفقية. من 760px: الوصف يظهر.
+   بيتحمّل بعد shared.css وبيستخدم نفس متغيّرات المنصة، فبيتغيّر مع ألوان الأدمن والدارك مود.
+   ========================================================================== */
+
+.grades-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 10px; /* المسافة الرأسية أكبر عشان ذيل الفقاعة */
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+/* الدروس بتفتح تحت سطر الكروت */
+.grades-grid .grade-carousel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ---------- الفقاعة (موبايل) ---------- */
+.grades-grid .grade-card {
+  position: relative;
+  overflow: visible; /* عشان الذيل يطلع بره الكارت */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "num"
+    "title";
+  justify-items: center;
+  align-content: center;
+  row-gap: 6px;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  padding: 16px 6px 16px;
+  margin: 0;
+  text-align: center;
+  border-radius: 24px 24px 24px 24px;
+  border: 1.5px solid rgba(0, 0, 0, 0.09);
+  border: 1.5px solid color-mix(in srgb, var(--ink, #12303a) 13%, transparent);
+  background: var(--surface-glass, var(--bg-soft, #fffdf8));
+  color: var(--ink, #12303a);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 20px -14px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+/* ذيل الفقاعة */
+.grades-grid .grade-card::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  inset-inline-start: 22px;
+  width: 14px;
+  height: 14px;
+  background: inherit;
+  border-right: 1.5px solid;
+  border-bottom: 1.5px solid;
+  border-color: inherit;
+  border-radius: 0 0 5px 0;
+  transform: rotate(45deg);
+  transition: background 0.2s ease;
+}
+
+/* الرقم: ضخم بتدرّج لون + كلمة GRADE فوقه */
+.grades-grid .grade-card__badge {
+  grid-area: num;
+  position: static;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  height: auto;
+  padding: 0 2px;
+  font-family: "Cairo", "Tajawal", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 3rem;
+  line-height: 1;
+  opacity: 1;
+  color: var(--sunset-500, #2c8097);
+  background: linear-gradient(160deg, var(--sunset-500, #2c8097) 10%, var(--sunset-600, #1f6377) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  transition: transform 0.25s ease;
+}
+.grades-grid .grade-card__badge::before {
+  content: "GRADE";
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  padding-inline-start: 0.22em;
+  opacity: 0.75;
+}
+.grades-grid .grade-card__icon { display: none; }
+
+.grades-grid .grade-card h3 {
+  grid-area: title;
+  margin: 2px 0 0;
+  font-family: "Cairo", "Tajawal", system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ink, #12303a);
+  transition: color 0.2s ease;
+}
+/* الوصف بيظهر بس في الشاشات الكبيرة */
+.grades-grid .grade-card p {
+  grid-area: desc;
+  display: none;
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink-soft, #5a6b72);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s ease;
+}
+
+/* السهم: دايرة صغيرة في الركن */
+.grades-grid .grade-card__toggle-hint {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  min-width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--sunset-600, #1f6377);
+  background: rgba(44, 128, 151, 0.12);
+  background: color-mix(in srgb, var(--sunset-500, #2c8097) 14%, transparent);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.grades-grid .grade-card__toggle-hint > span { display: none; }
+.grades-grid .grade-card__toggle-hint svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.25s ease;
+}
+
+/* ---------- حالة الفتح: الفقاعة بتتملي بلون المنصة ---------- */
+.grades-grid .grade-card.is-open {
+  border-color: var(--sunset-600, #1f6377);
+  background: var(--sunset-500, #2c8097);
+  background: linear-gradient(165deg, var(--sunset-500, #2c8097), var(--sunset-600, #1f6377));
+  box-shadow: 0 14px 24px -12px var(--sunset-500, #2c8097);
+}
+.grades-grid .grade-card.is-open::after { background: var(--sunset-600, #1f6377); }
+.grades-grid .grade-card.is-open .grade-card__badge {
+  background: none;
+  -webkit-text-fill-color: var(--accent-ink, #fff);
+  color: var(--accent-ink, #fff);
+  transform: scale(1.06);
+}
+.grades-grid .grade-card.is-open h3 { color: var(--accent-ink, #fff); }
+.grades-grid .grade-card.is-open p { color: var(--accent-ink, #fff); opacity: 0.85; }
+.grades-grid .grade-card.is-open .grade-card__toggle-hint {
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--accent-ink, #fff);
+}
+.grades-grid .grade-card.is-open .grade-card__toggle-hint svg { transform: rotate(180deg); }
+
+@media (hover: hover) {
+  .grades-grid .grade-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--sunset-500, #2c8097);
+    box-shadow: 0 16px 26px -14px var(--sunset-500, #2c8097);
+  }
+  .grades-grid .grade-card:hover .grade-card__badge { transform: scale(1.05); }
+}
+.grades-grid .grade-card:active { transform: scale(0.96); }
+.grades-grid .grade-card:focus-visible { outline: 3px solid var(--sunset-500, #2c8097); outline-offset: 3px; }
+
+/* موبايل صغير جدًا */
+@media (max-width: 380px) {
+  .grades-grid { gap: 16px 8px; }
+  .grades-grid .grade-card { padding: 14px 4px 14px; border-radius: 20px; }
+  .grades-grid .grade-card::after { inset-inline-start: 18px; }
+  .grades-grid .grade-card__badge { font-size: 2.6rem; }
+  .grades-grid .grade-card h3 { font-size: 0.74rem; }
+}
+
+/* ---------- من 640px: فقاعات أفقية (رقم + عنوان + سهم) ---------- */
+@media (min-width: 640px) {
+  .grades-grid { gap: 22px 14px; }
+  .grades-grid .grade-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num title hint"
+      "num desc  hint";
+    justify-items: stretch;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 2px;
+    padding: 14px 16px;
+    text-align: start;
+  }
+  .grades-grid .grade-card::after { inset-inline-start: 28px; }
+  .grades-grid .grade-card__badge { font-size: 2.8rem; }
+  .grades-grid .grade-card h3 { font-size: 0.95rem; }
+  .grades-grid .grade-card__toggle-hint {
+    position: static;
+    min-width: 30px;
+    height: 30px;
+  }
+  .grades-grid .grade-card__toggle-hint svg { width: 18px; height: 18px; }
+}
+
+/* تابلت / كمبيوتر: الوصف يظهر */
+@media (min-width: 760px) {
+  .grades-grid { gap: 26px 18px; }
+  .grades-grid .grade-card { padding: 18px 22px; column-gap: 18px; border-radius: 28px; }
+  .grades-grid .grade-card::after { inset-inline-start: 36px; width: 16px; height: 16px; bottom: -9px; }
+  .grades-grid .grade-card__badge { font-size: 3.4rem; }
+  .grades-grid .grade-card__badge::before { font-size: 0.56rem; }
+  .grades-grid .grade-card h3 { font-size: 1.1rem; }
+  .grades-grid .grade-card p { display: -webkit-box; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grades-grid .grade-card, .grades-grid .grade-card__badge, .grades-grid .grade-card__toggle-hint svg { transition: none; }
+  .grades-grid .grade-card:hover, .grades-grid .grade-card:hover .grade-card__badge { transform: none; }
+}

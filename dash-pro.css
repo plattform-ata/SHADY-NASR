@@ -1,0 +1,329 @@
+/* ==========================================================================
+   dash-pro.css — تصميم لوحة الأدمن + لوحة الطالب (طبقة فوق shared.css)
+   - من غير أي تغيير في الألوان: كله بمتغيرات المنصة (--bg, --ink, --accent …)
+   - بيتحمّل بعد shared.css و exams.css، ومحدّد بـ .dash-body عشان ما يأثرش على باقي الصفحات
+   ========================================================================== */
+
+.dash-body {
+  --pro-r: 16px;
+  --pro-r-sm: 10px;
+  --pro-line: var(--surface-glass-border);
+  --pro-hover: color-mix(in srgb, var(--ink) 6%, transparent);
+  --pro-sidebar: 264px;
+  background: var(--bg);
+  letter-spacing: 0;
+}
+
+/* ---------- الشريط الجانبي ---------- */
+.dash-body .dash-sidebar {
+  width: var(--pro-sidebar);
+  padding: 18px 14px;
+  gap: 18px;
+  background: var(--bg);
+  border-inline-end: 1px solid var(--pro-line);
+  box-shadow: none;
+}
+.dash-body .dash-brand {
+  padding: 8px 10px 14px;
+  border-bottom: 1px solid var(--pro-line);
+  margin-bottom: 2px;
+}
+.dash-body .dash-brand .brand__mark { width: 38px; height: 38px; border-radius: 10px; }
+.dash-body .dash-brand .brand__name { font-size: 1rem; font-weight: 800; }
+.dash-body .dash-brand .brand__tagline { font-size: 0.72rem; color: var(--ink-soft); }
+
+.dash-body .dash-nav__list { gap: 2px; }
+.dash-body .dash-nav__link {
+  padding: 9px 12px;
+  border-radius: var(--pro-r-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  gap: 11px;
+  color: var(--ink-soft);
+  position: relative;
+}
+.dash-body .dash-nav__link svg { width: 18px; height: 18px; stroke-width: 1.8; opacity: 0.9; }
+.dash-body .dash-nav__link:hover { background: var(--pro-hover); color: var(--ink); }
+.dash-body .dash-nav__link.is-active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  box-shadow: none;
+}
+.dash-body .dash-nav__link.is-active svg { opacity: 1; }
+
+.dash-body .dash-side-utility {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--pro-line);
+  display: grid;
+  gap: 4px;
+}
+.dash-body .dash-side-utility .mobile-menu__utility-btn,
+.dash-body .dash-side-utility .more-contact {
+  border-radius: var(--pro-r-sm);
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+}
+.dash-body .dash-side-utility .mobile-menu__utility-btn:hover,
+.dash-body .dash-side-utility .more-contact:hover { background: var(--pro-hover); }
+.dash-body .dash-logout {
+  margin-top: 4px;
+  border-radius: var(--pro-r-sm);
+  border: 1px solid var(--pro-line);
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  justify-content: center;
+}
+
+/* ---------- الشريط العلوي ---------- */
+.dash-body .dash-topbar {
+  padding: 12px clamp(16px, 3vw, 32px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-bottom: 1px solid var(--pro-line);
+  min-height: 64px;
+}
+.dash-body .dash-topbar__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-body .dash-topbar__title::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.dash-body .dash-user-chip {
+  border-radius: var(--pro-r-sm);
+  padding: 5px 10px 5px 5px;
+  border-color: var(--pro-line);
+  background: var(--surface-glass);
+}
+.dash-body .dash-bell,
+.dash-body .icon-btn { border-radius: var(--pro-r-sm); }
+
+/* ---------- المحتوى والكروت ---------- */
+.dash-body .dash-main { max-width: 1280px; padding: clamp(16px, 2.4vw, 30px); }
+
+.dash-body .dash-card,
+.dash-body .set-card,
+.dash-body .home-tile,
+.dash-body .chapter-card,
+.dash-body .lesson-item,
+.dash-body .ad-table-wrap,
+.dash-body .ad-gcard,
+.dash-body .grp__head {
+  border-radius: var(--pro-r);
+  border: 1px solid var(--pro-line);
+  background: var(--surface-glass);
+  box-shadow: none;
+}
+.dash-body .dash-card { padding: 20px; }
+.dash-body .dash-card h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-body .dash-card:hover,
+.dash-body .home-tile:hover { border-color: color-mix(in srgb, var(--ink) 28%, transparent); }
+
+/* شريط اسم الطالب وكارت النصيحة: خلفيتهم بلون المنصة والنص أبيض، فنسيبهم زي ما هم */
+.dash-body .home-identity-strip,
+.dash-body .home-quote {
+  border-radius: var(--pro-r);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  box-shadow: none;
+}
+.dash-body .home-identity-strip strong,
+.dash-body .home-identity-strip span,
+.dash-body .home-quote__text,
+.dash-body .home-quote__label,
+.dash-body .home-quote__source { color: inherit; }
+
+/* ---------- كروت الإحصائيات (الأولى مقلوبة زي التصميم المرجعي) ---------- */
+.dash-body .ad-stats,
+.dash-body .dash-stats-grid,
+.dash-body .stats-grid {
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.dash-body .stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: start;
+  padding: 18px 18px 16px;
+  border-radius: var(--pro-r);
+  border: 1px solid var(--pro-line);
+  background: var(--surface-glass);
+  box-shadow: none;
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.dash-body .ad-stats .stat-card { padding: 18px 18px 16px; }
+.dash-body .stat-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--ink) 28%, transparent); }
+.dash-body .stat-card__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+.dash-body .stat-card__value {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.dash-body .stat-card__icon {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 16px;
+  width: 22px;
+  height: 22px;
+  opacity: 0.55;
+}
+.dash-body .ad-stats > .stat-card:first-child,
+.dash-body .dash-stats-grid > .stat-card:first-child {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.dash-body .ad-stats > .stat-card:first-child .stat-card__value,
+.dash-body .dash-stats-grid > .stat-card:first-child .stat-card__value { color: var(--bg); }
+.dash-body .ad-stats > .stat-card:first-child .stat-card__label,
+.dash-body .dash-stats-grid > .stat-card:first-child .stat-card__label { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.dash-body .dash-stats-grid > .stat-card:first-child .stat-card__icon { color: var(--bg); opacity: 0.8; }
+
+/* ---------- أشرطة التوزيع (حسب الصف) ---------- */
+.dash-body .ad-bar__track {
+  height: 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  overflow: hidden;
+}
+.dash-body .ad-bar__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.8s var(--ease);
+}
+.dash-body .ad-bar b { font-family: var(--font-display); font-weight: 800; }
+
+/* ---------- الدونات + الأعمدة (لوحة الطالب) ---------- */
+.dash-body .dash-donut__track { stroke-width: 16; stroke: color-mix(in srgb, var(--ink) 9%, transparent); }
+.dash-body .dash-donut__value { stroke-width: 16; stroke: var(--accent); stroke-linecap: round; }
+.dash-body .dash-donut { width: 190px; height: 190px; }
+.dash-body .dash-bars__chart { height: 190px; gap: 16px; }
+.dash-body .dash-bar__col {
+  max-width: 34px;
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.dash-body .dash-bar:nth-child(even) .dash-bar__col {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 60%, transparent), color-mix(in srgb, var(--accent) 24%, transparent));
+}
+
+/* ---------- دونات الأدمن (بتتضاف من dash-pro.js) ---------- */
+.pro-donut { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-bottom: 16px; }
+.pro-donut svg { width: 170px; height: 170px; flex: none; }
+.pro-donut .seg { fill: none; stroke-width: 18; transition: stroke-dasharray 0.9s var(--ease); }
+.pro-donut .bg { fill: none; stroke-width: 18; stroke: color-mix(in srgb, var(--ink) 7%, transparent); }
+.pro-donut text.n { font-family: var(--font-display); font-weight: 800; font-size: 26px; fill: var(--ink); }
+.pro-donut text.l { font-size: 9px; font-weight: 700; fill: var(--ink-soft); }
+.pro-donut ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 150px; flex: 1; }
+.pro-donut li { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft); }
+.pro-donut li i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.pro-donut li b { margin-inline-start: auto; color: var(--ink); font-family: var(--font-display); }
+
+/* ---------- قوائم وجداول الطلاب ---------- */
+.dash-body .ad-table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.dash-body .ad-table tbody tr:hover { background: var(--pro-hover); }
+.dash-body .ad-srow {
+  border-radius: var(--pro-r);
+  border: 1px solid var(--pro-line);
+  background: var(--surface-glass);
+  box-shadow: none;
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.dash-body .ad-srow:hover { border-color: color-mix(in srgb, var(--ink) 30%, transparent); transform: translateY(-1px); }
+.dash-body .ad-gcard { padding: 18px; }
+.dash-body .ad-gcard:hover { border-color: var(--ink); }
+.dash-body .ad-gcard__n b { color: var(--ink); font-family: var(--font-display); }
+.dash-body .ad-list li { border-radius: var(--pro-r-sm); }
+.dash-body .ad-list li[data-open]:hover { background: var(--pro-hover); }
+.dash-body .ad-avatar { border-radius: 50%; }
+
+/* ---------- تبويبات / أزرار / خانات ---------- */
+.dash-body .dash-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  border: 0;
+}
+.dash-body .dash-tab {
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.dash-body .dash-tab.is-active { background: var(--surface-glass); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+
+.dash-body .btn { border-radius: var(--pro-r-sm); font-weight: 700; }
+.dash-body .btn--accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.dash-body .btn--accent:hover { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); }
+.dash-body .btn--ghost { background: transparent; border: 1px solid var(--pro-line); color: var(--ink); }
+.dash-body .btn--ghost:hover { background: var(--pro-hover); }
+
+.dash-body .ad-toolbar input[type="search"],
+.dash-body .ad-toolbar select,
+.dash-body .ad-input,
+.dash-body .ad-textarea { border-radius: var(--pro-r-sm); background: var(--surface-glass); }
+.dash-body .ad-input:focus-visible,
+.dash-body .ad-textarea:focus-visible,
+.dash-body .ad-toolbar input:focus-visible,
+.dash-body .ad-toolbar select:focus-visible { border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
+
+.dash-body .progress-track { height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.dash-body .progress-fill { border-radius: 99px; background: var(--accent); }
+
+/* ---------- موبايل ---------- */
+@media (max-width: 979px) {
+  .dash-body .dash-sidebar { box-shadow: 0 0 40px rgba(0, 0, 0, 0.25); }
+  .dash-body .dash-tabbar {
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--pro-line);
+    background: var(--bg);
+  }
+  .dash-body .dash-tabbar .dash-nav__link.is-active { background: var(--accent); color: var(--accent-ink); border-radius: 12px; }
+  .pro-donut { justify-content: center; }
+}
+@media (max-width: 640px) {
+  .dash-body .stat-card { padding: 14px; }
+  .dash-body .dash-card { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-body .stat-card, .dash-body .ad-bar__fill, .pro-donut .seg { transition: none; }
+}

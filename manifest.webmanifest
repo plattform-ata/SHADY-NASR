@@ -1,0 +1,28 @@
+{
+  "name": "Shady Nasr English Platform",
+  "short_name": "Shady Nasr",
+  "description": "منصة تعليم اللغة الإنجليزية — مستر شادي نصر",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4eee0",
+  "theme_color": "#f4eee0",
+  "icons": [
+    {
+      "src": "shady-nasr-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "shady-nasr-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
